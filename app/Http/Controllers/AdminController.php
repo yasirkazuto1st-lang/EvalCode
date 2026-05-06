@@ -216,7 +216,8 @@ class AdminController extends Controller
             'password' => \Illuminate\Support\Facades\Hash::make($request->password),
         ]);
 
-        return redirect()->route('admin.users')->with('success', 'User berhasil ditambahkan.');
+        $tab = strtolower($request->role);
+        return redirect()->route('admin.users', ['tab' => $tab])->with('success', 'User berhasil ditambahkan.');
     }
 
     public function updateUser(Request $request, $id)
@@ -252,15 +253,18 @@ class AdminController extends Controller
         }
         $user->save();
 
-        return redirect()->route('admin.users')->with('success', 'User berhasil diperbarui.');
+        $tab = strtolower($request->role);
+        return redirect()->route('admin.users', ['tab' => $tab])->with('success', 'User berhasil diperbarui.');
     }
 
-    public function destroyUser($id)
+    public function destroyUser(Request $request, $id)
     {
         $user = \App\Models\User::findOrFail($id);
+        $role = $user->role;
         $user->delete();
         
-        return redirect()->route('admin.users')->with('success', 'User berhasil dihapus.');
+        $tab = strtolower($role);
+        return redirect()->route('admin.users', ['tab' => $tab])->with('success', 'User berhasil dihapus.');
     }
 }
 ?>
