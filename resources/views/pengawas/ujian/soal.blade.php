@@ -11,14 +11,14 @@
 @section('content')
 <div class="container-fluid">
     <!-- Back Button -->
-    <a href="{{ route('pengawas.ujian.detail') }}" class="btn btn-sm btn-back mb-3">
+    <a href="{{ route('pengawas.ujian.detail', $exam->ujian_id) }}" class="btn btn-sm btn-back mb-3">
         <i class="bi bi-arrow-left"></i>
     </a>
 
     <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
         <div>
-            <h3 class="fw-bold text-unsulbar mb-1">1. Hello World & Basic I/O</h3>
-            <p class="text-muted mb-0">Ujian Komprehensif Dasar Pemrograman | Bobot: 20</p>
+            <h3 class="fw-bold text-unsulbar mb-1">{{ $soal->nama_soal }}</h3>
+            <p class="text-muted mb-0">{{ $exam->judul }} | Bobot: {{ $soal->bobot_nilai }}</p>
         </div>
     </div>
 
@@ -30,11 +30,14 @@
                     <h5 class="fw-bold mb-0"><i class="bi bi-file-earmark-pdf text-danger me-2"></i> Dokumen Soal (PDF)</h5>
                 </div>
                 <div class="card-body">
-                    <div class="w-100 h-100 bg-light border rounded d-flex align-items-center justify-content-center flex-column text-muted" style="min-height: 500px;">
-                        <i class="bi bi-file-pdf fs-1 mb-2"></i>
-                        <p class="mb-0">PDF Viewer Placeholder</p>
-                        <small>soal_helloworld.pdf</small>
-                    </div>
+                    @if($soal->soal_pdf)
+                        <iframe src="{{ asset('storage/' . $soal->soal_pdf) }}" width="100%" height="500" style="border: 1px solid #dee2e6; border-radius: 12px;"></iframe>
+                    @else
+                        <div class="w-100 h-100 bg-light border rounded d-flex align-items-center justify-content-center flex-column text-muted" style="min-height: 500px;">
+                            <i class="bi bi-file-pdf fs-1 mb-2"></i>
+                            <p class="mb-0">Belum ada file PDF</p>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -56,36 +59,15 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td class="text-center align-middle">1</td>
-                                    <td>
-                                        <pre class="mb-0 p-2 bg-light rounded border">5</pre>
-                                    </td>
-                                    <td>
-                                        <pre class="mb-0 p-2 bg-light rounded border">Hello World
-Input Anda: 5</pre>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="text-center align-middle">2</td>
-                                    <td>
-                                        <pre class="mb-0 p-2 bg-light rounded border">EvalCode</pre>
-                                    </td>
-                                    <td>
-                                        <pre class="mb-0 p-2 bg-light rounded border">Hello World
-Input Anda: EvalCode</pre>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="text-center align-middle">3</td>
-                                    <td>
-                                        <pre class="mb-0 p-2 bg-light rounded border">Test</pre>
-                                    </td>
-                                    <td>
-                                        <pre class="mb-0 p-2 bg-light rounded border">Hello World
-Input Anda: Test</pre>
-                                    </td>
-                                </tr>
+                                @forelse($soal->testCases as $index => $tc)
+                                    <tr>
+                                        <td class="text-center align-middle">{{ $index + 1 }}</td>
+                                        <td><pre class="mb-0 p-2 bg-light rounded border">{{ $tc->input }}</pre></td>
+                                        <td><pre class="mb-0 p-2 bg-light rounded border">{{ $tc->expected_output }}</pre></td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="3" class="text-center text-muted py-3">Belum ada test case.</td></tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>

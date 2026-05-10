@@ -3,99 +3,237 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
+use App\Models\Ujian;
+use App\Models\Token;
 
 class PengawasUjianController extends Controller
 {
     /**
-     * Show the monitoring detail for an exam.
-     *
-     * For now we use a dummy empty collection and paginate it.
-     * In a real implementation this would query the database
-     * for participants of the specific exam.
+     * Dashboard: show all ujians grouped by status
      */
-    public function detail(Request $request)
+    public function dashboard()
     {
-        // Dummy data for demonstration – replace with real DB query later
-        $raw = collect([
-            [
-                'id' => 1,
-                'nim' => 'D0221001',
-                'name' => 'Ahmad Fauzi',
-                'status_badge' => '4/5 Selesai',
-                'similarity' => 85,
-                'total_score' => 150,
-                'submissions' => [
-                    [
-                        'time' => '10:15:32',
-                        'question' => '2. Deret Fibonacci',
-                        'status_badge' => '<span class="badge bg-success">Accepted</span>',
-                        'score' => 30,
-                        'similarity' => 85,
-                    ],
-                    [
-                        'time' => '09:45:10',
-                        'question' => '1. Hello World',
-                        'status_badge' => '<span class="badge bg-success">Accepted</span>',
-                        'score' => 20,
-                        'similarity' => 15,
-                    ],
-                ],
-            ],
-            [
-                'id' => 2,
-                'nim' => 'D0221002',
-                'name' => 'Budi Santoso',
-                'status_badge' => '2/5 Selesai',
-                'similarity' => 12,
-                'total_score' => 20,
-                'submissions' => [
-                    [
-                        'time' => '10:30:22',
-                        'question' => '1. Hello World',
-                        'status_badge' => '<span class="badge bg-success">Accepted</span>',
-                        'score' => 20,
-                        'similarity' => 12,
-                    ],
-                    [
-                        'time' => '10:12:05',
-                        'question' => '1. Hello World',
-                        'status_badge' => '<span class="badge bg-danger">Wrong Answer</span>',
-                        'score' => 0,
-                        'similarity' => 8,
-                    ],
-                ],
-            ],
+        $activeExams = Ujian::where('status', 'active')->orderBy('updated_at', 'desc')->get();
+        $closedExams = Ujian::where('status', 'closed')->orderBy('updated_at', 'desc')->get();
+
+        return view('pengawas.dashboard', [
+            'activeExams' => $activeExams,
+            'closedExams' => $closedExams,
         ]);
-
-        // Convert arrays to stdClass objects for Blade property access
-        $participants = $raw->map(function($item){
-            $item['submissions'] = collect($item['submissions'])->map(fn($s) => (object) $s);
-            return (object) $item;
-        });
-
-        $page = LengthAwarePaginator::resolveCurrentPage();
-        $perPage = 10;
-        $total = $participants->count();
-        $results = $participants->forPage($page, $perPage);
-        $paginator = new LengthAwarePaginator(
-            $results,
-            $total,
-            $perPage,
-            $page,
-            [
-                'path' => $request->url(),
-                'query' => $request->query(),
-            ]
-        );
-
-        return view('pengawas.ujian.detail', ['participants' => $paginator]);
     }
 
-    public function soal()
+    /**
+     * Detail monitoring for a specific exam
+     */
+    public function detail(Request $request, $id)
     {
-        return view('pengawas.ujian.soal');
+        $exam = Ujian::with('soals')->findOrFail($id);
+
+        // Get active token for this exam
+        $activeToken = Token::where('ujian_id', $exam->ujian_id)
+            ->where('status_aktif', true)
+            ->latest()
+            ->first();
+
+        // Calculate Real Participants Data
+        $subQuery = \Illuminate\Support\Facades\DB::table('submissions')
+            ->join('soals', 'submissions.soal_id', '=', 'soals.soal_id')
+            ->where('soals.ujian_id', $exam->ujian_id)
+            ->select(
+                'submissions.user_id', 
+                'submissions.soal_id', 
+                \Illuminate\Support\Facades\DB::raw('MAX(submissions.skor) as max_skor'), 
+                \Illuminate\Support\Facades\DB::raw("MAX(CASE WHEN submissions.status = 'Accepted' THEN 1 ELSE 0 END) as is_accepted"), 
+                \Illuminate\Support\Facades\DB::raw("MAX(CASE WHEN submissions.justification_note IS NULL THEN submissions.similarity_index ELSE NULL END) as max_similarity_soal")
+            )
+            ->groupBy('submissions.user_id', 'submissions.soal_id');
+
+        $query = \Illuminate\Support\Facades\DB::table(\Illuminate\Support\Facades\DB::raw("({$subQuery->toSql()}) as sub"))
+            ->mergeBindings($subQuery)
+            ->join('users', 'sub.user_id', '=', 'users.user_id')
+            ->select('users.name', 'users.nim_nip', 'users.user_id', \Illuminate\Support\Facades\DB::raw('SUM(sub.max_skor) as total_skor'), \Illuminate\Support\Facades\DB::raw('SUM(sub.is_accepted) as accepted_count'), \Illuminate\Support\Facades\DB::raw('MAX(sub.max_similarity_soal) as highest_similarity'));
+
+        if (request('search')) {
+            $search = request('search');
+            $query->where(function($q) use ($search) {
+                $q->where('users.name', 'like', "%{$search}%")
+                  ->orWhere('users.nim_nip', 'like', "%{$search}%");
+            });
+        }
+
+        $participants = $query->groupBy('users.name', 'users.nim_nip', 'users.user_id')
+            ->orderByDesc('total_skor')
+            ->paginate(10)->withQueryString();
+
+        $totalSoal = $exam->soals->count();
+        $maxScore = $exam->soals->sum('bobot_nilai');
+        $passingGrade = $exam->passing_grade;
+
+        $allSubmissions = \Illuminate\Support\Facades\DB::table('submissions')
+            ->join('soals', 'submissions.soal_id', '=', 'soals.soal_id')
+            ->where('soals.ujian_id', $exam->ujian_id)
+            ->select('submissions.*', 'soals.nama_soal', 'soals.bobot_nilai')
+            ->orderByDesc('submissions.created_at')
+            ->get()
+            ->groupBy('user_id');
+
+        // Add progress percentage to participants
+        foreach ($participants as $p) {
+            $p->progress_percentage = $totalSoal > 0 ? ($p->accepted_count / $totalSoal) * 100 : 0;
+            $scorePercentage = $maxScore > 0 ? ($p->total_skor / $maxScore) * 100 : 0;
+            $p->status = $scorePercentage >= $passingGrade ? 'Lulus' : 'Tidak Lulus';
+            $p->submissions = $allSubmissions->get($p->user_id) ?? collect([]);
+        }
+
+        // Calculate Soal Statistics
+        $soalStats = \Illuminate\Support\Facades\DB::table('submissions')
+            ->where('status', 'Accepted')
+            ->select('soal_id', \Illuminate\Support\Facades\DB::raw('COUNT(DISTINCT user_id) as success_count'))
+            ->groupBy('soal_id')
+            ->get()
+            ->keyBy('soal_id');
+
+        $totalParticipants = $participants->total();
+
+        foreach ($exam->soals as $soal) {
+            $stat = $soalStats->get($soal->soal_id);
+            $soal->success_count = $stat ? $stat->success_count : 0;
+            $soal->success_percentage = $totalParticipants > 0 ? ($soal->success_count / $totalParticipants) * 100 : 0;
+        }
+
+        return view('pengawas.ujian.detail', [
+            'exam' => $exam,
+            'activeToken' => $activeToken,
+            'participants' => $participants,
+            'totalParticipants' => $totalParticipants
+        ]);
+    }
+
+    public function pesertaRiwayat(Request $request, $examId, $userId)
+    {
+        $exam = Ujian::with('soals')->findOrFail($examId);
+        $user = \App\Models\User::findOrFail($userId);
+
+        $submissions = \Illuminate\Support\Facades\DB::table('submissions')
+            ->join('soals', 'submissions.soal_id', '=', 'soals.soal_id')
+            ->where('soals.ujian_id', $examId)
+            ->where('submissions.user_id', $userId)
+            ->select('submissions.*', 'soals.nama_soal', 'soals.bobot_nilai')
+            ->orderByDesc('submissions.created_at')
+            ->get();
+
+        return view('pengawas.ujian.riwayat_peserta', compact('exam', 'user', 'submissions'));
+    }
+
+    public function overrideScore(Request $request, $submissionId)
+    {
+        $request->validate([
+            'skor' => 'required|numeric|min:0',
+            'justification_note' => 'required|string|max:500',
+        ]);
+
+        \Illuminate\Support\Facades\DB::table('submissions')->where('submission_id', $submissionId)->update([
+            'skor' => $request->skor,
+            'justification_note' => $request->justification_note,
+        ]);
+
+        return back()->with('success', 'Skor submisi berhasil di-override.');
+    }
+
+    /**
+     * Start an exam: set status to active & generate first token
+     */
+    public function startExam($id)
+    {
+        $exam = Ujian::findOrFail($id);
+        $exam->update(['status' => 'active']);
+
+        // Deactivate all old tokens
+        Token::where('ujian_id', $exam->ujian_id)->update(['status_aktif' => false]);
+
+        // Create new token
+        Token::create([
+            'ujian_id' => $exam->ujian_id,
+            'kode_token' => Token::generateCode(),
+            'status_aktif' => true,
+        ]);
+
+        return redirect()->back()->with('success', 'Ujian berhasil dimulai!');
+    }
+
+    /**
+     * End an exam: set status to closed & deactivate tokens
+     */
+    public function endExam($id)
+    {
+        $exam = Ujian::findOrFail($id);
+        $exam->update(['status' => 'closed']);
+
+        Token::where('ujian_id', $exam->ujian_id)->update(['status_aktif' => false]);
+
+        return redirect()->back()->with('success', 'Ujian berhasil diakhiri.');
+    }
+
+    /**
+     * API endpoint: refresh token (called by JS every 60 seconds)
+     * Returns JSON with new token and timestamp
+     */
+    public function refreshToken($id)
+    {
+        $exam = Ujian::findOrFail($id);
+
+        // Only refresh if exam is active
+        if ($exam->status !== 'active') {
+            return response()->json(['error' => 'Ujian tidak aktif'], 400);
+        }
+
+        // Deactivate old tokens
+        Token::where('ujian_id', $exam->ujian_id)->update(['status_aktif' => false]);
+
+        // Generate new token
+        $token = Token::create([
+            'ujian_id' => $exam->ujian_id,
+            'kode_token' => Token::generateCode(),
+            'status_aktif' => true,
+        ]);
+
+        return response()->json([
+            'token' => $token->kode_token,
+            'created_at' => $token->created_at->toISOString(),
+        ]);
+    }
+
+    /**
+     * API endpoint: get current active token (for polling)
+     */
+    public function currentToken($id)
+    {
+        $exam = Ujian::findOrFail($id);
+
+        $token = Token::where('ujian_id', $exam->ujian_id)
+            ->where('status_aktif', true)
+            ->latest()
+            ->first();
+
+        if (!$token) {
+            return response()->json(['token' => null, 'created_at' => null]);
+        }
+
+        return response()->json([
+            'token' => $token->kode_token,
+            'created_at' => $token->created_at->toISOString(),
+        ]);
+    }
+
+    public function soal($examId, $soalId)
+    {
+        $exam = Ujian::findOrFail($examId);
+        $soal = \App\Models\Soal::with('testCases')->findOrFail($soalId);
+
+        return view('pengawas.ujian.soal', [
+            'exam' => $exam,
+            'soal' => $soal,
+        ]);
     }
 
     public function password()
@@ -103,4 +241,3 @@ class PengawasUjianController extends Controller
         return view('pengawas.password');
     }
 }
-?>

@@ -9,221 +9,590 @@
 @endsection
 
 @section('content')
-<style>
-    .rotate-180 { transform: rotate(180deg); }
-</style>
-<div class="container-fluid py-4">
-    <!-- Back Button -->
-    <a href="{{ route('pengawas.dashboard') }}" class="btn btn-sm btn-back mb-3">
-        <i class="bi bi-arrow-left"></i>
-    </a>
+    <style>
+        .rotate-180 {
+            transform: rotate(180deg);
+        }
 
-    <!-- Header Informasi Ujian -->
-    <div class="card border-0 shadow-sm rounded-4 mb-4 detail-ujian-header position-relative overflow-hidden" style="background: linear-gradient(135deg, var(--bs-primary) 0%, #4a0000 100%); color: white;">
-        <!-- Decorative Background Icon -->
-        <i class="bi bi-laptop position-absolute opacity-10" style="font-size: 12rem; right: -2rem; top: -3rem; transform: rotate(15deg);"></i>
-        
-        <div class="card-body p-3 p-md-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center position-relative z-1">
-            <div class="mb-3 mb-md-0">
-                <span class="badge bg-white text-primary mb-2 px-2 py-1 rounded-pill shadow-sm fw-bold"><i class="bi bi-circle-fill text-success small me-1"></i> Sedang Berlangsung</span>
-                <h4 class="fw-bold mb-1">Ujian Komprehensif Dasar Pemrograman</h4>
-                <div class="d-flex flex-wrap align-items-center gap-3 opacity-75 fs-6 mt-1">
-                    <span><i class="bi bi-clock me-1"></i> Waktu Ujian: 120 Menit</span>
-                    <span><i class="bi bi-check2-square me-1"></i> Passing Grade: 75</span>
-                </div>
+        .token-display {
+            font-family: 'Courier New', monospace;
+            letter-spacing: 4px;
+            font-size: 1.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .token-display.refreshing {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .countdown-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .countdown-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffc107, #ff5722);
+            border-radius: 2px;
+            transition: width 1s linear;
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 5px rgba(255, 193, 7, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 20px rgba(255, 193, 7, 0.6);
+            }
+        }
+
+        .token-box.active-pulse {
+            animation: pulse-glow 2s infinite;
+        }
+    </style>
+
+    <div class="container-fluid py-4">
+        <!-- Back Button -->
+        <a href="{{ route('pengawas.dashboard') }}" class="btn btn-sm btn-back mb-3">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+
+        @if (session('success'))
+            <div class="alert alert-success alert-dismissible fade show rounded-4" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
-            <div class="d-flex flex-column gap-2" style="min-width: 200px;">
-                <div class="bg-black bg-opacity-25 rounded-4 p-2 px-3 border border-white border-opacity-25 shadow-sm text-center" style="backdrop-filter: blur(10px);">
-                    <span class="small opacity-75 d-block text-uppercase fw-semibold" style="letter-spacing: 1px; font-size: 10px;">Token Ujian Aktif</span>
-                    <h4 class="fw-bold font-monospace mb-0 text-white" style="letter-spacing: 3px;">A7X-92Q</h4>
-                    <small class="d-block opacity-50 mt-1" style="font-size: 10px;"><i class="bi bi-arrow-repeat me-1"></i>Diperbarui tiap 1 menit</small>
+        @endif
+
+        <!-- Header Informasi Ujian -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4 position-relative overflow-hidden"
+            style="background: linear-gradient(135deg, var(--bs-primary) 0%, #4a0000 100%); color: white;">
+            <i class="bi bi-laptop position-absolute opacity-10"
+                style="font-size: 12rem; right: -2rem; top: -3rem; transform: rotate(15deg);"></i>
+
+            <div
+                class="card-body p-3 p-md-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center position-relative z-1">
+                <div class="mb-3 mb-md-0">
+                    @if ($exam->status === 'active')
+                        <span class="badge bg-white text-primary mb-2 px-2 py-1 rounded-pill shadow-sm fw-bold">
+                            <i class="bi bi-circle-fill text-success small me-1"></i> Sedang Berlangsung
+                        </span>
+                    @else
+                        <span class="badge bg-warning text-dark mb-2 px-2 py-1 rounded-pill shadow-sm fw-bold">
+                            <i class="bi bi-pause-circle small me-1"></i> Belum Dimulai
+                        </span>
+                    @endif
+                    <h4 class="fw-bold mb-1">{{ $exam->judul }}</h4>
+                    <p class="mb-1 opacity-75 small">{{ $exam->deskripsi }}</p>
+                    <div class="d-flex flex-wrap align-items-center gap-3 opacity-75 fs-6 mt-1">
+                        <span><i class="bi bi-clock me-1"></i> Durasi: {{ $exam->durasi }} Menit</span>
+                        <span><i class="bi bi-check2-square me-1"></i> Passing Grade: {{ $exam->passing_grade }} Pts</span>
+                        <span><i class="bi bi-file-text me-1"></i> {{ $exam->soals->count() }} Soal</span>
+                    </div>
                 </div>
-                <button id="toggleUjianBtn" class="btn btn-danger w-100 fw-bold shadow-sm rounded-pill" onclick="toggleUjian()">
-                    <i class="bi bi-stop-circle-fill me-2"></i> Akhiri Ujian
-                </button>
+
+                <!-- Token & Action Section -->
+                <div class="d-flex flex-column gap-2" style="min-width: 240px;">
+                    <!-- Token Box -->
+                    <div id="tokenBox"
+                        class="bg-black bg-opacity-25 rounded-4 p-3 px-3 border border-white border-opacity-25 shadow-sm text-center {{ $exam->status === 'active' ? 'active-pulse' : '' }} token-box"
+                        style="backdrop-filter: blur(10px);">
+                        <span class="small opacity-75 d-block text-uppercase fw-semibold"
+                            style="letter-spacing: 1px; font-size: 10px;">Token Ujian</span>
+
+                        @if ($exam->status === 'active' && $activeToken)
+                            <div id="tokenDisplay" class="token-display fw-bold text-white mb-0">
+                                {{ $activeToken->kode_token }}</div>
+                        @else
+                            <div id="tokenDisplay" class="token-display fw-bold text-white mb-0 opacity-50">------</div>
+                        @endif
+
+                        <!-- Countdown -->
+                        <div id="countdownSection" style="{{ $exam->status === 'active' ? '' : 'display:none;' }}">
+                            <div class="countdown-bar">
+                                <div id="countdownBar" class="countdown-bar-fill" style="width: 100%;"></div>
+                            </div>
+                            <small id="countdownText" class="d-block opacity-75 mt-1" style="font-size: 10px;">
+                                <i class="bi bi-arrow-repeat me-1"></i>Token baru dalam <span
+                                    id="countdownSeconds">60</span> detik
+                            </small>
+                        </div>
+
+                        @if ($exam->status !== 'active')
+                            <small class="d-block opacity-50 mt-1" style="font-size: 10px;">Mulai ujian untuk mengaktifkan
+                                token</small>
+                        @endif
+                    </div>
+
+                    <!-- Start / End Button -->
+                    @if ($exam->status === 'active')
+                        <button type="button" class="btn btn-danger w-100 fw-bold shadow-sm rounded-pill"
+                            data-bs-toggle="modal" data-bs-target="#endExamModal">
+                            <i class="bi bi-stop-circle-fill me-2"></i> Akhiri Ujian
+                        </button>
+                    @else
+                        <button type="button" class="btn btn-light w-100 fw-bold shadow-sm rounded-pill text-primary"
+                            data-bs-toggle="modal" data-bs-target="#startExamModal">
+                            <i class="bi bi-play-circle-fill me-2"></i> Mulai Ujian
+                        </button>
+                    @endif
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- 2 Kolom Konten -->
-    <div class="row g-4">
-        <!-- Kiri: Daftar Soal -->
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-                    <h5 class="fw-bold mb-0"><i class="bi bi-list-task text-primary me-2"></i> Daftar Soal</h5>
-                </div>
-                <div class="card-body">
-                    <div class="list-group list-group-flush">
-                        <a href="{{ route('pengawas.ujian.soal') }}" class="list-group-item list-group-item-action border-0 py-3 rounded mb-2 bg-light shadow-sm d-flex flex-column gap-1">
-                            <div class="d-flex justify-content-between align-items-start mb-1">
-                                <span class="fw-bold text-dark">1. Hello World & Basic I/O</span>
-                                <span class="badge bg-success rounded-pill">115/120</span>
-                            </div>
-                            <div class="progress bg-secondary bg-opacity-25" style="height: 6px;">
-                                <div class="progress-bar bg-success rounded-pill" role="progressbar" style="width: 95%;" aria-valuenow="95" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                            <small class="text-success fw-semibold mt-1" style="font-size: 0.75rem;"><i class="bi bi-check-circle-fill me-1"></i>Mudah (95% Selesai)</small>
-                        </a>
-                        
-                        <a href="{{ route('pengawas.ujian.soal') }}" class="list-group-item list-group-item-action border py-3 rounded mb-2 d-flex flex-column gap-1">
-                            <div class="d-flex justify-content-between align-items-start mb-1">
-                                <span class="fw-semibold text-dark">2. Deret Fibonacci</span>
-                                <span class="badge bg-primary rounded-pill">85/120</span>
-                            </div>
-                            <div class="progress bg-secondary bg-opacity-25" style="height: 6px;">
-                                <div class="progress-bar bg-primary rounded-pill" role="progressbar" style="width: 70%;" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                            <small class="text-primary fw-semibold mt-1" style="font-size: 0.75rem;"><i class="bi bi-info-circle-fill me-1"></i>Normal (70% Selesai)</small>
-                        </a>
-                        
-                        <a href="{{ route('pengawas.ujian.soal') }}" class="list-group-item list-group-item-action border py-3 rounded mb-2 d-flex flex-column gap-1">
-                            <div class="d-flex justify-content-between align-items-start mb-1">
-                                <span class="fw-semibold text-dark">3. Knapsack Problem (DP)</span>
-                                <span class="badge bg-danger rounded-pill">15/120</span>
-                            </div>
-                            <div class="progress bg-secondary bg-opacity-25" style="height: 6px;">
-                                <div class="progress-bar bg-danger rounded-pill" role="progressbar" style="width: 12%;" aria-valuenow="12" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                            <small class="text-danger fw-semibold mt-1" style="font-size: 0.75rem;"><i class="bi bi-exclamation-triangle-fill me-1"></i>Sangat Sulit (12% Selesai)</small>
-                        </a>
-                        
-                        <a href="{{ route('pengawas.ujian.soal') }}" class="list-group-item list-group-item-action border py-3 rounded mb-2 d-flex flex-column gap-1">
-                            <div class="d-flex justify-content-between align-items-start mb-1">
-                                <span class="fw-semibold text-dark">4. Binary Search Tree</span>
-                                <span class="badge bg-warning text-dark rounded-pill">40/120</span>
-                            </div>
-                            <div class="progress bg-secondary bg-opacity-25" style="height: 6px;">
-                                <div class="progress-bar bg-warning rounded-pill" role="progressbar" style="width: 33%;" aria-valuenow="33" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                            <small class="text-warning fw-bold mt-1" style="font-size: 0.75rem;"><i class="bi bi-activity me-1"></i>Sulit (33% Selesai)</small>
-                        </a>
+        <!-- 2 Kolom Konten -->
+        <div class="row g-4">
+            <!-- Kiri: Daftar Soal -->
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-list-task text-primary me-2"></i> Daftar Soal</h5>
                     </div>
-                </div>
-            </div>
-        </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            @forelse($exam->soals as $index => $soal)
+                                @php
+                                    $mockPercent = round($soal->success_percentage);
+                                    $mockCount = $soal->success_count;
 
-        <!-- Kanan: Table Monitoring Peserta -->
-        <div class="col-md-9">
-            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
-                <div class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-                    <h5 class="fw-bold mb-0"><i class="bi bi-people-fill text-primary me-2"></i> Monitoring Peserta Ujian</h5>
-                    <div class="input-group w-auto shadow-sm rounded-pill overflow-hidden">
-                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                        <input type="text" class="form-control border-start-0 shadow-none px-0" placeholder="Cari Mahasiswa...">
-                        <button class="btn btn-primary px-3 fw-semibold">Cari</button>
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
-                                <tr class="text-nowrap border-bottom border-primary border-2">
-                                    <th class="ps-4 py-3">NIM</th>
-                                    <th class="py-3">Nama Mahasiswa</th>
-                                    <th class="py-3">Status Pengerjaan</th>
-                                    <th class="py-3">Similarity Tertinggi</th>
-                                    <th class="py-3">Total Skor</th>
-                                    <th class="pe-4 py-3 text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody class="border-top-0">
-                                @forelse($participants as $p)
-                                    <tr>
-                                        <td class="ps-4">{{ $p->nim }}</td>
-                                        <td class="fw-semibold">{{ $p->name }}</td>
-            <td>{!! $p->status_badge !!}</td>
-            <td>
-                @php
-                    $pColor = $p->similarity >= 70 ? 'danger' : ($p->similarity >= 40 ? 'warning text-dark' : 'success');
-                @endphp
-                <span class="badge bg-{{ $pColor }}">{{ $p->similarity }}%</span>
-            </td>
-            <td>{{ $p->total_score ?? 0 }}</td>
-                                        <td class="pe-4 text-center">
-                                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSubmissions{{ $p->id }}" aria-expanded="false" aria-controls="collapseSubmissions{{ $p->id }}" onclick="this.querySelector('.bi-chevron-down').classList.toggle('rotate-180')">
-                                                Detail <i class="bi bi-chevron-down ms-1" style="transition: transform 0.3s ease; display: inline-block;"></i>
-                                            </button>
-                                        </td>
-        </tr>
-        <tr>
-                                        <td colspan="6" class="p-0 border-0">
-                                            <div class="collapse" id="collapseSubmissions{{ $p->id }}">
-                                                <div class="card card-body border-0 bg-light rounded-0 border-start border-4 border-primary m-3 shadow-sm">
-                        <h6 class="fw-bold mb-3">Riwayat Submission</h6>
-                        <!-- Submission table can be rendered here -->
-                        <table class="table table-sm table-bordered mb-0">
-                            <thead class="table-secondary">
-                                <tr>
-                                    <th>Waktu</th>
-                                    <th>Soal</th>
-                                    <th>Status</th>
-                                    <th>Skor Asli</th>
-                                    <th>Similarity</th>
-                                    <th>Edit Skor/Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($p->submissions as $s)
-                                    <tr>
-                                        <td>{{ $s->time }}</td>
-                                        <td>{{ $s->question }}</td>
-                                        <td>{!! $s->status_badge !!}</td>
-                                        <td>{{ $s->score }}</td>
-                                        <td>
-                                            @php
-                                                $sColor = $s->similarity >= 70 ? 'danger' : ($s->similarity >= 40 ? 'warning text-dark' : 'success');
-                                            @endphp
-                                            <span class="badge bg-{{ $sColor }}">{{ $s->similarity }}%</span>
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-sm btn-warning py-0"><i class="bi bi-pencil-square"></i> Override</button>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </td>
-        </tr>
-                                    @empty
-                                        <tr><td colspan="6" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-2 d-block mb-2"></i>Belum ada peserta yang memulai ujian ini.</td></tr>
-                                    @endforelse
-                                </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="card-footer bg-white border-top-0 py-3 rounded-bottom-4">
-                    <div class="d-flex justify-content-between align-items-center px-2">
-                        <span class="text-muted small fw-semibold">Menampilkan 1 hingga 10 dari 120 peserta</span>
-                        <div class="m-0">
-                            {{ $participants->links() }}
+                                    if ($totalParticipants == 0) {
+                                        $color = 'secondary';
+                                        $colorClass = 'secondary';
+                                        $level = 'Belum Dikerjakan';
+                                        $icon = 'dash-circle-fill';
+                                    } elseif ($mockPercent <= 25) {
+                                        $color = 'danger';
+                                        $colorClass = 'danger';
+                                        $level = 'Sangat Sulit';
+                                        $icon = 'exclamation-triangle-fill';
+                                    } elseif ($mockPercent <= 50) {
+                                        $color = 'warning text-dark';
+                                        $colorClass = 'warning';
+                                        $level = 'Sulit';
+                                        $icon = 'activity';
+                                    } elseif ($mockPercent <= 75) {
+                                        $color = 'primary';
+                                        $colorClass = 'primary';
+                                        $level = 'Normal';
+                                        $icon = 'info-circle-fill';
+                                    } else {
+                                        $color = 'success';
+                                        $colorClass = 'success';
+                                        $level = 'Gampang';
+                                        $icon = 'check-circle-fill';
+                                    }
+                                @endphp
+                                <a href="{{ route('pengawas.ujian.soal', ['examId' => $exam->ujian_id, 'soalId' => $soal->soal_id]) }}"
+                                    class="list-group-item list-group-item-action border py-3 rounded mb-2 d-flex flex-column gap-1 {{ $index % 2 == 0 ? 'bg-light shadow-sm border-0' : '' }}">
+                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                        <span
+                                            class="{{ $index % 2 == 0 ? 'fw-bold' : 'fw-semibold' }} text-dark">{{ $index + 1 }}.
+                                            {{ $soal->nama_soal }}</span>
+                                        <span
+                                            class="badge bg-{{ $colorClass }} rounded-pill">{{ $mockCount }}/{{ $totalParticipants }}</span>
+                                    </div>
+                                    <div class="progress bg-secondary bg-opacity-25" style="height: 6px;">
+                                        <div class="progress-bar bg-{{ $colorClass }} rounded-pill" role="progressbar"
+                                            style="width: {{ $mockPercent }}%;" aria-valuenow="{{ $mockPercent }}"
+                                            aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <small
+                                        class="text-{{ $color }} {{ $index % 2 == 0 ? 'fw-semibold' : 'fw-bold' }} mt-1"
+                                        style="font-size: 0.75rem;"><i
+                                            class="bi bi-{{ $icon }} me-1"></i>{{ $level }}
+                                        ({{ $mockPercent }}% Selesai)
+                                    </small>
+                                </a>
+                            @empty
+                                <div class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox fs-4 d-block mb-2"></i>
+                                    <small>Belum ada soal</small>
+                                </div>
+                            @endforelse
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Kanan: Table Monitoring Peserta -->
+            <div class="col-md-9">
+                <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                    <div
+                        class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-people-fill text-primary me-2"></i> Monitoring Peserta
+                            Ujian</h5>
+                        <form action="" method="GET" class="input-group input-group-sm shadow-sm rounded-pill overflow-hidden" style="max-width: 250px;">
+                            <span class="input-group-text bg-white border-end-0 px-2"><i class="bi bi-search text-muted small"></i></span>
+                            <input type="text" name="search" class="form-control border-start-0 shadow-none px-0" placeholder="Cari..." value="{{ request('search') }}">
+                            <button type="submit" class="btn btn-primary px-3">Cari</button>
+                        </form>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr class="text-nowrap border-bottom border-primary border-2">
+                                        <th class="ps-4 py-3">NIM</th>
+                                        <th class="py-3">Nama Mahasiswa</th>
+                                        <th class="py-3">Status</th>
+                                        <th class="py-3">Total Skor</th>
+                                        <th class="py-3">Similarity Tertinggi</th>
+                                        <th class="pe-4 py-3 text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="border-top-0">
+                                    @forelse($participants as $p)
+                                        <tr>
+                                            <td class="ps-4">{{ $p->nim_nip }}</td>
+                                            <td class="fw-semibold">{{ $p->name }}</td>
+                                            <td>
+                                                @if ($p->status == 'Lulus')
+                                                    <span
+                                                        class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25"><i
+                                                            class="bi bi-check-circle-fill me-1"></i> Lulus</span>
+                                                @else
+                                                    <span
+                                                        class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25"><i
+                                                            class="bi bi-x-circle-fill me-1"></i> Tidak Lulus</span>
+                                                @endif
+
+                                            </td>
+                                            <td><strong>{{ $p->total_skor ?? 0 }}</strong> Pts</td>
+                                            <td>
+                                                @if ($p->highest_similarity !== null)
+                                                    @php
+                                                        $pColor = $p->highest_similarity >= 70 ? 'danger' : ($p->highest_similarity >= 40 ? 'warning text-dark' : 'success');
+                                                    @endphp
+                                                    <span class="badge bg-{{ $pColor }}">{{ round($p->highest_similarity, 2) }}%</span>
+                                                @else
+                                                    <span class="text-muted small">-</span>
+                                                @endif
+                                            </td>
+                                            <td class="pe-4 text-center">
+                                                <button class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                                    type="button" data-bs-toggle="collapse"
+                                                    data-bs-target="#collapseSubmissions{{ $p->user_id }}"
+                                                    aria-expanded="false"
+                                                    aria-controls="collapseSubmissions{{ $p->user_id }}"
+                                                    onclick="this.querySelector('.bi-chevron-down').classList.toggle('rotate-180')">
+                                                    Detail <i class="bi bi-chevron-down ms-1"
+                                                        style="transition: transform 0.3s ease; display: inline-block;"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="6" class="p-0 border-0">
+                                                <div class="collapse" id="collapseSubmissions{{ $p->user_id }}">
+                                                    <div
+                                                        class="card card-body border-0 bg-light rounded-0 border-start border-4 border-primary m-3 shadow-sm">
+                                                        <h6 class="fw-bold mb-3">Riwayat Submission</h6>
+                                                        <table class="table table-sm table-bordered mb-0">
+                                                            <thead class="table-secondary">
+                                                                    <tr>
+                                                                        <th>Waktu</th>
+                                                                        <th>Soal</th>
+                                                                        <th>Status</th>
+                                                                        <th>Skor Asli</th>
+                                                                        <th>Similarity</th>
+                                                                        <th>Catatan</th>
+                                                                        <th>Aksi</th>
+                                                                    </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @forelse($p->submissions as $s)
+                                                                    <tr>
+                                                                        <td class="text-nowrap">
+                                                                            {{ \Carbon\Carbon::parse($s->created_at)->format('d M Y, H:i') }}
+                                                                        </td>
+                                                                        <td>{{ $s->nama_soal }}</td>
+                                                                        <td>
+                                                                            @if ($s->status == 'Accepted')
+                                                                                <span
+                                                                                    class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">Accepted</span>
+                                                                            @elseif($s->status == 'Wrong Answer')
+                                                                                <span
+                                                                                    class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">Wrong
+                                                                                    Answer</span>
+                                                                            @else
+                                                                                <span
+                                                                                    class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">{{ $s->status }}</span>
+                                                                            @endif
+                                                                        </td>
+                                                                        <td>{{ $s->skor }}</td>
+                                                                        <td>
+                                                                            @if ($s->similarity_index !== null)
+                                                                                @php
+                                                                                    $sColor =
+                                                                                        $s->similarity_index >= 70
+                                                                                            ? 'danger'
+                                                                                            : ($s->similarity_index >=
+                                                                                            40
+                                                                                                ? 'warning text-dark'
+                                                                                                : 'success');
+                                                                                @endphp
+                                                                                <span
+                                                                                    class="badge bg-{{ $sColor }}">{{ round($s->similarity_index, 2) }}%</span>
+                                                                            @else
+                                                                                <span class="text-muted small">-</span>
+                                                                            @endif
+                                                                        </td>
+                                                                        <td>
+                                                                            @if ($s->justification_note)
+                                                                                <span class="text-muted small" title="{{ $s->justification_note }}">
+                                                                                    {{ \Illuminate\Support\Str::limit($s->justification_note, 30) }}
+                                                                                </span>
+                                                                            @else
+                                                                                <span class="text-muted small">-</span>
+                                                                            @endif
+                                                                        </td>
+                                                                        <td>
+                                                                            <div class="d-flex gap-2">
+                                                                                <button class="btn btn-sm btn-outline-secondary py-0 d-inline-flex align-items-center justify-content-center gap-1 text-nowrap" style="width: 95px;" data-bs-toggle="modal" data-bs-target="#codeModal{{ $s->submission_id }}">
+                                                                                    <i class="bi bi-code-slash"></i> Kode
+                                                                                </button>
+                                                                                <button class="btn btn-sm btn-warning py-0 d-inline-flex align-items-center justify-content-center gap-1 text-nowrap" style="width: 95px;" data-bs-toggle="modal" data-bs-target="#overrideModal{{ $s->submission_id }}">
+                                                                                    <i class="bi bi-pencil-square"></i> Override
+                                                                                </button>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                @empty
+                                                                    <tr>
+                                                                        <td colspan="7" class="text-center text-muted">
+                                                                            Belum ada submission.</td>
+                                                                    </tr>
+                                                                @endforelse
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Modals for source code -->
+                                                @foreach ($p->submissions as $s)
+                                                    <div class="modal fade" id="codeModal{{ $s->submission_id }}"
+                                                        tabindex="-1" aria-hidden="true">
+                                                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                                                            <div class="modal-content rounded-4 border-0 shadow">
+                                                                <div class="modal-header border-0 pb-0">
+                                                                    <h5 class="modal-title fw-bold"><i
+                                                                            class="bi bi-file-earmark-code text-primary me-2"></i>Source
+                                                                        Code</h5>
+                                                                    <button type="button" class="btn-close"
+                                                                        data-bs-dismiss="modal"></button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <pre class="bg-dark text-light p-3 rounded mt-2" style="max-height: 400px; overflow-y: auto;"><code>{{ $s->source_code }}</code></pre>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Override Modal -->
+                                                    <div class="modal fade" id="overrideModal{{ $s->submission_id }}" tabindex="-1" aria-hidden="true">
+                                                        <div class="modal-dialog modal-dialog-centered">
+                                                            <div class="modal-content rounded-4 border-0 shadow">
+                                                                <div class="modal-header border-0 pb-0">
+                                                                    <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-warning me-2"></i>Override Skor</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                                </div>
+                                                                <form action="{{ route('pengawas.submission.override', $s->submission_id) }}" method="POST">
+                                                                    @csrf
+                                                                    <div class="modal-body">
+                                                                        <p class="mb-2">Soal: <strong>{{ $s->nama_soal }}</strong></p>
+                                                                        <p class="mb-3 small text-muted">Ubah skor submisi apabila Anda merasa persentase similarity wajar dan tidak mengindikasikan kecurangan.</p>
+                                                                        <div class="mb-3">
+                                                                            <label class="form-label fw-semibold">Skor Baru</label>
+                                                                            <input type="number" step="0.1" max="{{ $s->bobot_nilai }}" min="0" name="skor" class="form-control" value="{{ $s->skor }}" required>
+                                                                            <small class="text-muted">Maksimal: {{ $s->bobot_nilai }}</small>
+                                                                        </div>
+                                                                        <div class="mb-3">
+                                                                            <label class="form-label fw-semibold">Justification Note (Alasan)</label>
+                                                                            <textarea name="justification_note" class="form-control" rows="3" placeholder="Contoh: Kode mirip karena menggunakan boilerplate dari soal..." required>{{ $s->justification_note ?? '' }}</textarea>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="modal-footer border-0 pt-0">
+                                                                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                                                                        <button type="submit" class="btn btn-warning rounded-pill px-4 fw-bold">Simpan Perubahan</button>
+                                                                    </div>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="6" class="text-center py-5 text-muted">
+                                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                                Belum ada peserta yang memulai ujian ini.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top-0 py-3 rounded-bottom-4">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center px-2">
+                            <span class="text-muted small fw-semibold mb-2 mb-md-0">Menampilkan {{ $participants->firstItem() ?? 0 }} hingga {{ $participants->lastItem() ?? 0 }} dari {{ $participants->total() }} peserta</span>
+                            <div class="m-0 pagination-sm">
+                                {{ $participants->links('pagination::bootstrap-5') }}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+
+    <!-- Start Exam Modal -->
+    <div class="modal fade" id="startExamModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-play-circle-fill text-primary me-2"></i>Mulai Ujian?
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Yakin ingin memulai ujian <strong>{{ $exam->judul }}</strong>?</p>
+                    <p class="text-muted small mt-2 mb-0"><i class="bi bi-info-circle me-1"></i>Token akan dibuat otomatis
+                        dan diperbarui setiap 1 menit.</p>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">Batal</button>
+                    <form method="POST" action="{{ route('pengawas.ujian.start', $exam->ujian_id) }}">
+                        @csrf
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">
+                            <i class="bi bi-play-fill me-1"></i>Ya, Mulai Ujian
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- End Exam Modal -->
+    <div class="modal fade" id="endExamModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Akhiri
+                        Ujian?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Yakin ingin mengakhiri ujian <strong>{{ $exam->judul }}</strong>?</p>
+                    <p class="text-muted small mt-2 mb-0"><i class="bi bi-info-circle me-1"></i>Semua token akan
+                        dinonaktifkan dan mahasiswa tidak bisa lagi mengakses ujian ini.</p>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">Batal</button>
+                    <form method="POST" action="{{ route('pengawas.ujian.end', $exam->ujian_id) }}">
+                        @csrf
+                        <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">
+                            <i class="bi bi-stop-fill me-1"></i>Ya, Akhiri Ujian
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
-<script>
-    let ujianActive = true;
+    <script>
+        (function() {
+            const examId = {{ $exam->ujian_id }};
+            const isActive = {{ $exam->status === 'active' ? 'true' : 'false' }};
+            const REFRESH_INTERVAL = 60; // seconds
 
-    function toggleUjian() {
-        const btn = document.getElementById('toggleUjianBtn');
-        ujianActive = !ujianActive;
+            if (!isActive) return;
 
-        if (ujianActive) {
-            btn.className = 'btn btn-danger w-100 fw-bold shadow-sm rounded-pill';
-            btn.innerHTML = '<i class="bi bi-stop-circle-fill me-2"></i> Akhiri Ujian';
-        } else {
-            btn.className = 'btn btn-light w-100 fw-bold shadow-sm rounded-pill text-primary';
-            btn.innerHTML = '<i class="bi bi-play-circle-fill me-2"></i> Mulai Ujian';
-        }
-    }
-</script>
+            const tokenDisplay = document.getElementById('tokenDisplay');
+            const countdownSeconds = document.getElementById('countdownSeconds');
+            const countdownBar = document.getElementById('countdownBar');
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            let secondsLeft = REFRESH_INTERVAL;
+            let countdownTimer = null;
+
+            // Calculate initial seconds based on token creation time
+            @if ($activeToken)
+                (function() {
+                    const tokenCreated = new Date('{{ $activeToken->created_at->toISOString() }}');
+                    const now = new Date();
+                    const elapsed = Math.floor((now - tokenCreated) / 1000);
+                    secondsLeft = Math.max(0, REFRESH_INTERVAL - elapsed);
+                    if (secondsLeft <= 0) {
+                        refreshToken();
+                    }
+                })();
+            @endif
+
+            function updateCountdown() {
+                secondsLeft--;
+                if (secondsLeft < 0) secondsLeft = 0;
+
+                countdownSeconds.textContent = secondsLeft;
+                const percentage = (secondsLeft / REFRESH_INTERVAL) * 100;
+                countdownBar.style.width = percentage + '%';
+
+                if (secondsLeft <= 0) {
+                    refreshToken();
+                }
+            }
+
+            async function refreshToken() {
+                try {
+                    // Visual feedback
+                    tokenDisplay.classList.add('refreshing');
+
+                    const response = await fetch(`/pengawas/ujian/${examId}/token/refresh`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
+                        },
+                    });
+
+                    if (!response.ok) throw new Error('Failed to refresh');
+
+                    const data = await response.json();
+
+                    setTimeout(() => {
+                        tokenDisplay.textContent = data.token;
+                        tokenDisplay.classList.remove('refreshing');
+                    }, 300);
+
+                    // Reset countdown
+                    secondsLeft = REFRESH_INTERVAL;
+                    countdownBar.style.width = '100%';
+                } catch (err) {
+                    console.error('Token refresh failed:', err);
+                    tokenDisplay.classList.remove('refreshing');
+                    secondsLeft = 5; // retry in 5 seconds
+                }
+            }
+
+            // Start countdown
+            countdownTimer = setInterval(updateCountdown, 1000);
+
+            // Cleanup on page unload
+            window.addEventListener('beforeunload', () => {
+                if (countdownTimer) clearInterval(countdownTimer);
+            });
+        })();
+    </script>
 @endsection

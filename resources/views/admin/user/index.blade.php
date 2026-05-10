@@ -8,7 +8,7 @@
     </a>
     <a href="{{ route('admin.ujian.index') }}"
         class="list-group-item list-group-item-action bg-transparent {{ request()->routeIs('admin.ujian.*') ? 'active text-nowrap' : 'text-nowrap' }}">
-        <i class="bi bi-card-list sidebar-icon"></i> <span class="sidebar-text">Manajemen Soal</span>
+        <i class="bi bi-card-list sidebar-icon"></i> <span class="sidebar-text">Manajemen Ujian</span>
     </a>
     <a href="{{ route('admin.users') }}"
         class="list-group-item list-group-item-action bg-transparent {{ request()->routeIs('admin.users') ? 'active text-nowrap' : 'text-nowrap' }}">

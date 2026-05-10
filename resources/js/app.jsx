@@ -9,6 +9,7 @@ import Workspace from './components/Workspace';
 
 const workspaceEl = document.getElementById('workspace-root');
 if (workspaceEl) {
+    const initialData = window.INITIAL_DATA || {};
     const root = createRoot(workspaceEl);
-    root.render(<Workspace />);
+    root.render(<Workspace initialData={initialData} />);
 }

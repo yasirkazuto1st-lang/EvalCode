@@ -1,20 +1,17 @@
 import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
 
-const Workspace = () => {
+const Workspace = ({ initialData }) => {
+    const { exam, soal, soal_pdf_url } = initialData || {};
+    
     const [language, setLanguage] = useState('python');
     const [output, setOutput] = useState(null);
     const [isRunning, setIsRunning] = useState(false);
     const [examMode, setExamMode] = useState(false);
 
-    const soals = [
-        { id: 1, title: '1. Hello World' },
-        { id: 2, title: '2. Deret Fibonacci' },
-        { id: 3, title: '3. Bilangan Prima' },
-        { id: 4, title: '4. Palindrome Checker' },
-        { id: 5, title: '5. Sorting Array' }
-    ];
-    const [selectedSoal, setSelectedSoal] = useState(soals[0].id);
+    // Provide default fallback in case props are empty
+    const currentSoalTitle = soal ? `${soal.nama_soal}` : 'Soal Tidak Ditemukan';
+    const currentSoalBobot = soal ? soal.bobot_nilai : 0;
 
     const boilerplate = {
         python: '# Tulis kode Python Anda di sini\n',
@@ -36,16 +33,46 @@ const Workspace = () => {
         setIsRunning(true);
         setOutput({ status: 'Running...', message: 'Mengeksekusi di server Judge0...' });
         
-        setTimeout(() => {
+        try {
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            
+            const response = await fetch(`${window.location.href}/submit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    code: code,
+                    language: language
+                })
+            });
+
+            const data = await response.json();
+            
+            setIsRunning(false);
+            if (data.success) {
+                setOutput({
+                    status: data.status,
+                    time: data.time,
+                    memory: data.memory,
+                    testCases: data.testCases || [],
+                    similarity: data.similarity
+                });
+            } else {
+                setOutput({
+                    status: 'Error',
+                    stderr: data.message || 'Terjadi kesalahan sistem'
+                });
+            }
+        } catch (error) {
             setIsRunning(false);
             setOutput({
-                status: 'Accepted',
-                time: '0.042s',
-                memory: '12.4 MB',
-                stdout: 'Hello World!\nOutput sesuai dengan test case.',
-                stderr: null
+                status: 'Network Error',
+                stderr: 'Gagal terhubung ke server.'
             });
-        }, 1500);
+        }
     };
 
     const toggleExamMode = () => {
@@ -64,7 +91,7 @@ const Workspace = () => {
             {/* Header */}
             <div className="d-flex justify-content-between align-items-center p-3 border-bottom bg-white shadow-sm">
                 <div className="d-flex align-items-center gap-3">
-                    <h5 className="mb-0 text-unsulbar fw-bold">EvalCode Workspace</h5>
+                    <h5 className="mb-0 text-unsulbar fw-bold">{exam ? exam.judul : 'EvalCode Workspace'}</h5>
                 </div>
                 <div>
                     <button 
@@ -85,11 +112,18 @@ const Workspace = () => {
                         <div className="d-flex gap-2 flex-grow-1 me-3">
                             <select 
                                 className="form-select form-select-sm" 
-                                value={selectedSoal}
-                                onChange={(e) => setSelectedSoal(e.target.value)}
+                                style={{ maxWidth: '250px' }}
+                                value={soal ? soal.soal_id : ''}
+                                onChange={(e) => {
+                                    if (initialData.base_workspace_url) {
+                                        window.location.href = `${initialData.base_workspace_url}/${e.target.value}/workspace`;
+                                    }
+                                }}
                             >
-                                {soals.map(soal => (
-                                    <option key={soal.id} value={soal.id}>{soal.title}</option>
+                                {initialData.all_soals && initialData.all_soals.map((s, index) => (
+                                    <option key={s.soal_id} value={s.soal_id}>
+                                        {index + 1}. {s.nama_soal}
+                                    </option>
                                 ))}
                             </select>
                             <select 
@@ -139,14 +173,18 @@ const Workspace = () => {
                     <div className="h-75 p-3 overflow-auto border-bottom bg-white">
                         <div className="d-flex justify-content-between align-items-center mb-3">
                             <h5 className="fw-bold m-0"><i className="bi bi-file-earmark-pdf text-danger me-2"></i>Soal Ujian</h5>
-                            <span className="badge bg-primary">Bobot: 100</span>
+                            <span className="badge bg-primary">Bobot: {currentSoalBobot}</span>
                         </div>
                         
-                        <div className="w-100 h-100 bg-light border rounded d-flex align-items-center justify-content-center flex-column text-muted" style={{ minHeight: '400px' }}>
-                            <i className="bi bi-file-pdf fs-1 mb-2"></i>
-                            <p className="mb-0">PDF Viewer Component</p>
-                            <small>Menampilkan soal: {soals.find(s => s.id == selectedSoal)?.title}</small>
-                        </div>
+                        {soal_pdf_url ? (
+                            <iframe src={soal_pdf_url} width="100%" height="100%" style={{ minHeight: '400px', border: '1px solid #dee2e6', borderRadius: '12px' }}></iframe>
+                        ) : (
+                            <div className="w-100 h-100 bg-light border rounded d-flex align-items-center justify-content-center flex-column text-muted" style={{ minHeight: '400px' }}>
+                                <i className="bi bi-file-pdf fs-1 mb-2"></i>
+                                <p className="mb-0">Belum ada file PDF</p>
+                                <small>Menampilkan soal: {currentSoalTitle}</small>
+                            </div>
+                        )}
                     </div>
 
                     {/* Bottom Right: Console */}
@@ -173,18 +211,56 @@ const Workspace = () => {
                                             Status: {output.status}
                                         </strong>
                                     </div>
-                                    {output.time && (
-                                        <div className="text-secondary mb-2">Waktu: {output.time} | Memori: {output.memory}</div>
-                                    )}
-                                    {output.stdout && (
-                                        <div>
-                                            <strong className="text-info">Output:</strong>
-                                            <pre className="mt-1 p-2 bg-secondary bg-opacity-25 rounded text-light">{output.stdout}</pre>
+                                    {output.similarity && (
+                                        <div className="mb-2">
+                                            <strong className="text-warning">Jaccard Similarity (Plagiarism Check):</strong> {output.similarity}
                                         </div>
                                     )}
-                                    {output.stderr && (
+                                    {output.time && (
+                                        <div className="text-secondary mb-3 pb-2 border-bottom border-secondary border-opacity-50">
+                                            Waktu Eksekusi Total: {output.time} | Memori Maks: {output.memory}
+                                        </div>
+                                    )}
+                                    {output.testCases && output.testCases.map((tc, idx) => (
+                                        <div key={idx} className="mb-3 p-2 bg-black bg-opacity-25 rounded border border-secondary border-opacity-25">
+                                            <div className="d-flex justify-content-between align-items-center mb-2">
+                                                <strong className="text-light">Test Case #{tc.index}</strong>
+                                                <span className={`badge ${tc.status === 'Accepted' ? 'bg-success' : 'bg-danger'}`}>
+                                                    {tc.status}
+                                                </span>
+                                            </div>
+                                            
+                                            <div className="row g-2 mb-2">
+                                                <div className="col-md-6">
+                                                    <div className="text-secondary small mb-1">Input:</div>
+                                                    <pre className="mb-0 p-2 bg-dark rounded text-light" style={{ maxHeight: '100px', overflow: 'auto' }}>{tc.input}</pre>
+                                                </div>
+                                                <div className="col-md-6">
+                                                    <div className="text-secondary small mb-1">Expected Output:</div>
+                                                    <pre className="mb-0 p-2 bg-dark rounded text-light" style={{ maxHeight: '100px', overflow: 'auto' }}>{tc.expected_output}</pre>
+                                                </div>
+                                            </div>
+
+                                            {tc.stdout && (
+                                                <div className="mt-2">
+                                                    <div className="text-info small mb-1">Actual Output:</div>
+                                                    <pre className="mb-0 p-2 bg-dark rounded text-light" style={{ maxHeight: '100px', overflow: 'auto' }}>{tc.stdout}</pre>
+                                                </div>
+                                            )}
+
+                                            {tc.stderr && (
+                                                <div className="mt-2">
+                                                    <div className="text-danger small mb-1">Error / Peringatan:</div>
+                                                    <pre className="mb-0 p-2 bg-dark rounded text-danger" style={{ maxHeight: '100px', overflow: 'auto' }}>{tc.stderr}</pre>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+
+                                    {/* System Error fallback jika gagal eksekusi total */}
+                                    {output.stderr && !output.testCases && (
                                         <div>
-                                            <strong className="text-danger">Error:</strong>
+                                            <strong className="text-danger">Pesan System / Error:</strong>
                                             <pre className="mt-1 p-2 bg-danger bg-opacity-25 rounded text-light">{output.stderr}</pre>
                                         </div>
                                     )}
