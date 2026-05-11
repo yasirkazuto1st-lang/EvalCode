@@ -206,62 +206,57 @@ const Workspace = ({ initialData }) => {
                                 <span className="text-secondary">Menunggu submission...</span>
                             ) : (
                                 <div>
-                                    <div className="mb-2">
+                                    <div className="mb-3 d-flex justify-content-between align-items-center">
                                         <strong className={output.status === 'Accepted' ? 'text-success' : 'text-danger'}>
-                                            Status: {output.status}
+                                            Status Akhir: {output.status}
                                         </strong>
                                     </div>
-                                    {output.similarity && (
-                                        <div className="mb-2">
-                                            <strong className="text-warning">Jaccard Similarity (Plagiarism Check):</strong> {output.similarity}
-                                        </div>
-                                    )}
+                                    
                                     {output.time && (
                                         <div className="text-secondary mb-3 pb-2 border-bottom border-secondary border-opacity-50">
                                             Waktu Eksekusi Total: {output.time} | Memori Maks: {output.memory}
                                         </div>
                                     )}
-                                    {output.testCases && output.testCases.map((tc, idx) => (
-                                        <div key={idx} className="mb-3 p-2 bg-black bg-opacity-25 rounded border border-secondary border-opacity-25">
-                                            <div className="d-flex justify-content-between align-items-center mb-2">
-                                                <strong className="text-light">Test Case #{tc.index}</strong>
-                                                <span className={`badge ${tc.status === 'Accepted' ? 'bg-success' : 'bg-danger'}`}>
-                                                    {tc.status}
-                                                </span>
-                                            </div>
-                                            
-                                            <div className="row g-2 mb-2">
-                                                <div className="col-md-6">
-                                                    <div className="text-secondary small mb-1">Input:</div>
-                                                    <pre className="mb-0 p-2 bg-dark rounded text-light" style={{ maxHeight: '100px', overflow: 'auto' }}>{tc.input}</pre>
+                                    
+                                    {output.testCases && output.testCases.length > 0 && (
+                                        <div className="mb-3">
+                                            <div className="d-flex align-items-center justify-content-between mb-3 p-3 bg-black bg-opacity-50 rounded border border-secondary border-opacity-25">
+                                                <div>
+                                                    <div className="fs-6 fw-bold text-light mb-1"><i className="bi bi-shield-lock me-2 text-warning"></i>Hasil Evaluasi Test Case</div>
+                                                    <div className="text-secondary" style={{ fontSize: '0.8rem' }}>Detail input & output disembunyikan untuk menjaga kerahasiaan ujian.</div>
                                                 </div>
-                                                <div className="col-md-6">
-                                                    <div className="text-secondary small mb-1">Expected Output:</div>
-                                                    <pre className="mb-0 p-2 bg-dark rounded text-light" style={{ maxHeight: '100px', overflow: 'auto' }}>{tc.expected_output}</pre>
+                                                <div className="text-center px-3 border-start border-secondary border-opacity-50">
+                                                    <div className="fs-4 fw-bold text-success mb-0 lh-1">
+                                                        {output.testCases.filter(tc => tc.status === 'Accepted').length} <span className="text-secondary fs-5">/ {output.testCases.length}</span>
+                                                    </div>
+                                                    <div className="text-muted" style={{ fontSize: '0.75rem' }}>Test Case Benar</div>
                                                 </div>
                                             </div>
 
-                                            {tc.stdout && (
-                                                <div className="mt-2">
-                                                    <div className="text-info small mb-1">Actual Output:</div>
-                                                    <pre className="mb-0 p-2 bg-dark rounded text-light" style={{ maxHeight: '100px', overflow: 'auto' }}>{tc.stdout}</pre>
-                                                </div>
-                                            )}
-
-                                            {tc.stderr && (
-                                                <div className="mt-2">
-                                                    <div className="text-danger small mb-1">Error / Peringatan:</div>
-                                                    <pre className="mb-0 p-2 bg-dark rounded text-danger" style={{ maxHeight: '100px', overflow: 'auto' }}>{tc.stderr}</pre>
-                                                </div>
-                                            )}
+                                            <div className="row g-2">
+                                                {output.testCases.map((tc, idx) => {
+                                                    const isAccepted = tc.status === 'Accepted';
+                                                    return (
+                                                        <div key={idx} className="col-12 col-md-6 col-lg-4">
+                                                            <div className={`d-flex align-items-center p-2 rounded border border-opacity-25 ${isAccepted ? 'border-success bg-success bg-opacity-10' : 'border-danger bg-danger bg-opacity-10'}`}>
+                                                                <i className={`bi fs-5 me-2 ${isAccepted ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger'}`}></i>
+                                                                <div>
+                                                                    <div className={`fw-bold small ${isAccepted ? 'text-success' : 'text-danger'}`}>Test Case {tc.index}</div>
+                                                                    <div className="text-secondary" style={{ fontSize: '0.75rem' }}>{tc.status}</div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
-                                    ))}
+                                    )}
 
-                                    {/* System Error fallback jika gagal eksekusi total */}
+                                    {/* System Error fallback jika gagal eksekusi (Compile Error / System Error) */}
                                     {output.stderr && !output.testCases && (
-                                        <div>
-                                            <strong className="text-danger">Pesan System / Error:</strong>
-                                            <pre className="mt-1 p-2 bg-danger bg-opacity-25 rounded text-light">{output.stderr}</pre>
+                                        <div className="mt-3">
+                                            <strong className="text-danger"><i className="bi bi-exclamation-triangle-fill me-2"></i>Pesan Error / Compile Error:</strong>
+                                            <pre className="mt-2 p-3 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded text-light" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{output.stderr}</pre>
                                         </div>
                                     )}
                                 </div>

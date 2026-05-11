@@ -22,6 +22,25 @@
             <h4 class="fw-bold mb-0">Manajemen User</h4>
         </div>
 
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show rounded-4" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show rounded-4" role="alert">
+                <strong><i class="bi bi-exclamation-triangle-fill me-1"></i> Terjadi Kesalahan:</strong>
+                <ul class="mb-0 mt-1">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
         <!-- Tabs Navigation -->
         <ul class="nav nav-pills mb-4 bg-white p-2 rounded-4 shadow-sm d-inline-flex" id="userTabs" role="tablist">
             <li class="nav-item" role="presentation">
@@ -493,28 +512,24 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Get the tab parameter from URL query string
             const urlParams = new URLSearchParams(window.location.search);
-            const activeTab = urlParams.get('tab');
+            let activeTab = urlParams.get('tab');
+
+            // If no tab in URL, check if there's a validation error with old role
+            @if(old('role'))
+                if (!activeTab) {
+                    activeTab = '{{ strtolower(old('role')) }}';
+                }
+            @endif
 
             if (activeTab) {
-                // Map tab name to tab ID and pane ID
                 const tabMap = {
-                    'admin': {
-                        tabId: 'admin-tab',
-                        paneId: 'admin-pane'
-                    },
-                    'pengawas': {
-                        tabId: 'pengawas-tab',
-                        paneId: 'pengawas-pane'
-                    },
-                    'mahasiswa': {
-                        tabId: 'mahasiswa-tab',
-                        paneId: 'mahasiswa-pane'
-                    }
+                    'admin': { tabId: 'admin-tab', paneId: 'admin-pane' },
+                    'pengawas': { tabId: 'pengawas-tab', paneId: 'pengawas-pane' },
+                    'mahasiswa': { tabId: 'mahasiswa-tab', paneId: 'mahasiswa-pane' }
                 };
 
                 const tabInfo = tabMap[activeTab.toLowerCase()];
                 if (tabInfo) {
-                    // Deactivate all tabs and hide all panes
                     document.querySelectorAll('[role="tab"]').forEach(tab => {
                         tab.classList.remove('active');
                         tab.setAttribute('aria-selected', 'false');
@@ -524,7 +539,6 @@
                         pane.classList.remove('show', 'active');
                     });
 
-                    // Activate the target tab
                     const tabButton = document.getElementById(tabInfo.tabId);
                     const pane = document.getElementById(tabInfo.paneId);
 

@@ -27,6 +27,18 @@
             </div>
         @endif
 
+        @if($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show rounded-4" role="alert">
+                <strong><i class="bi bi-exclamation-triangle-fill me-1"></i> Terjadi Kesalahan:</strong>
+                <ul class="mb-0 mt-1">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
         <div class="card border-0 shadow-sm rounded-4 mb-4">
             <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
                 <h5 class="fw-bold mb-0"><i class="bi bi-card-list text-primary me-2"></i> Daftar Ujian</h5>
@@ -39,7 +51,7 @@
                     <table class="table table-hover align-top">
                         <thead class="table-light">
                             <tr class="text-nowrap">
-                                <th>#</th><th>Judul</th><th>Deskripsi</th><th>Durasi (menit)</th><th>Passing Grade (%)</th><th>Aksi</th>
+                                <th>#</th><th>Judul</th><th>Deskripsi</th><th>Durasi (menit)</th><th>Passing Grade (%)</th><th>Status</th><th>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -50,6 +62,15 @@
                                     <td>{{ Str::limit($exam->deskripsi, 50) }}</td>
                                     <td>{{ $exam->durasi }}</td>
                                     <td>{{ $exam->passing_grade }}</td>
+                                    <td>
+                                        @if ($exam->status === 'active')
+                                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill"><i class="bi bi-circle-fill small me-1"></i>Berjalan</span>
+                                        @elseif ($exam->status === 'finished')
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 rounded-pill"><i class="bi bi-check-circle-fill small me-1"></i>Selesai</span>
+                                        @else
+                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill"><i class="bi bi-pause-circle-fill small me-1"></i>Belum Dimulai</span>
+                                        @endif
+                                    </td>
                                     <td class="text-nowrap">
                                         <a href="{{ route('admin.ujian.detail', $exam->ujian_id) }}" class="btn btn-sm btn-outline-primary me-1">Detail</a>
                                         <button class="btn btn-sm btn-outline-warning me-1" data-bs-toggle="modal" data-bs-target="#editExamModal{{ $exam->ujian_id }}"><i class="bi bi-pencil"></i></button>
@@ -68,6 +89,14 @@
                                             <div class="mb-3"><label class="form-label">Deskripsi</label><textarea name="deskripsi" class="form-control" rows="3">{{ $exam->deskripsi }}</textarea></div>
                                             <div class="mb-3"><label class="form-label">Durasi (menit)</label><input type="number" name="durasi" class="form-control" value="{{ $exam->durasi }}" required min="1"></div>
                                             <div class="mb-3"><label class="form-label">Passing Grade (%)</label><input type="number" name="passing_grade" class="form-control" value="{{ $exam->passing_grade }}" required min="0" max="100"></div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Status</label>
+                                                <select name="status" class="form-select">
+                                                    <option value="closed" {{ $exam->status === 'closed' ? 'selected' : '' }}>Belum Dimulai</option>
+                                                    <option value="active" {{ $exam->status === 'active' ? 'selected' : '' }}>Berjalan</option>
+                                                    <option value="finished" {{ $exam->status === 'finished' ? 'selected' : '' }}>Selesai</option>
+                                                </select>
+                                            </div>
                                         </div>
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
@@ -92,7 +121,7 @@
                                     </div></div>
                                 </div>
                             @empty
-                                <tr><td colspan="6" class="text-start">Tidak ada ujian.</td></tr>
+                                <tr><td colspan="7" class="text-start">Tidak ada ujian.</td></tr>
                             @endforelse
                         </tbody>
                     </table>

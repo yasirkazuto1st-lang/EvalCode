@@ -15,10 +15,12 @@ class PengawasUjianController extends Controller
     {
         $activeExams = Ujian::where('status', 'active')->orderBy('updated_at', 'desc')->get();
         $closedExams = Ujian::where('status', 'closed')->orderBy('updated_at', 'desc')->get();
+        $finishedExams = Ujian::where('status', 'finished')->orderBy('updated_at', 'desc')->get();
 
         return view('pengawas.dashboard', [
             'activeExams' => $activeExams,
             'closedExams' => $closedExams,
+            'finishedExams' => $finishedExams,
         ]);
     }
 
@@ -146,6 +148,11 @@ class PengawasUjianController extends Controller
     public function startExam($id)
     {
         $exam = Ujian::findOrFail($id);
+
+        if ($exam->status === 'finished') {
+            return redirect()->back()->with('error', 'Ujian yang sudah selesai tidak bisa dimulai lagi.');
+        }
+
         $exam->update(['status' => 'active']);
 
         // Deactivate all old tokens
@@ -162,7 +169,7 @@ class PengawasUjianController extends Controller
     }
 
     /**
-     * End an exam: set status to closed & deactivate tokens
+     * Pause an exam: set status to closed & deactivate tokens
      */
     public function endExam($id)
     {
@@ -171,7 +178,20 @@ class PengawasUjianController extends Controller
 
         Token::where('ujian_id', $exam->ujian_id)->update(['status_aktif' => false]);
 
-        return redirect()->back()->with('success', 'Ujian berhasil diakhiri.');
+        return redirect()->back()->with('success', 'Ujian berhasil di-pause.');
+    }
+
+    /**
+     * Finish an exam permanently: set status to finished & deactivate tokens
+     */
+    public function finishExam($id)
+    {
+        $exam = Ujian::findOrFail($id);
+        $exam->update(['status' => 'finished']);
+
+        Token::where('ujian_id', $exam->ujian_id)->update(['status_aktif' => false]);
+
+        return redirect()->back()->with('success', 'Ujian berhasil diakhiri secara permanen.');
     }
 
     /**

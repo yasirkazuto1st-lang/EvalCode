@@ -13,9 +13,28 @@
     <div class="row justify-content-center">
         <div class="col-md-6">
             <h4 class="fw-bold mb-4">Ganti Password</h4>
+            
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show rounded-4" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+
+            @if($errors->any())
+                <div class="alert alert-danger alert-dismissible fade show rounded-4" role="alert">
+                    <ul class="mb-0">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body p-4">
-                    <form action="#" method="POST">
+                    <form action="{{ route('password.update') }}" method="POST">
                         @csrf
                         <div class="mb-3">
                             <label class="form-label text-muted small fw-semibold">Password Sekarang</label>

@@ -243,5 +243,27 @@
         });
     </script>
     @yield('scripts')
+    
+    @auth
+    <script>
+        setInterval(function() {
+            fetch('{{ route('check.session') }}', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                if (response.status === 401) {
+                    response.json().then(data => {
+                        alert(data.error || 'Akun Anda telah login di perangkat lain. Sesi ini telah diakhiri otomatis.');
+                        window.location.href = '{{ route('login') }}';
+                    });
+                }
+            })
+            .catch(err => console.error('Session check error:', err));
+        }, 5000); // Cek setiap 5 detik
+    </script>
+    @endauth
 </body>
 </html>

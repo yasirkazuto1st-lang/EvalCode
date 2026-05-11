@@ -33,6 +33,18 @@
             </div>
         @endif
 
+        @if($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show rounded-4" role="alert">
+                <strong><i class="bi bi-exclamation-triangle-fill me-1"></i> Terjadi Kesalahan:</strong>
+                <ul class="mb-0 mt-1">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
         <!-- Header Exam Info -->
         <div class="card border-0 shadow-sm rounded-4 mb-4 position-relative overflow-hidden"
             style="background: linear-gradient(135deg, var(--bs-primary) 0%, #4a0000 100%); color: white;">

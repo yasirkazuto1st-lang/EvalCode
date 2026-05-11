@@ -88,19 +88,19 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body p-4">
-            <form action="#" method="POST" onsubmit="event.preventDefault(); bootstrap.Modal.getInstance(document.getElementById('mahasiswaPasswordModal')).hide();">
+            <form action="{{ route('password.update') }}" method="POST">
                 @csrf
                 <div class="mb-3">
                     <label class="form-label text-muted small fw-semibold">Password Sekarang</label>
-                    <input type="password" class="form-control" required>
+                    <input type="password" class="form-control" name="current_password" required>
                 </div>
                 <div class="mb-3">
                     <label class="form-label text-muted small fw-semibold">Password Baru</label>
-                    <input type="password" class="form-control" required>
+                    <input type="password" class="form-control" name="new_password" required minlength="8">
                 </div>
                 <div class="mb-4">
                     <label class="form-label text-muted small fw-semibold">Ulang Password Baru</label>
-                    <input type="password" class="form-control" required>
+                    <input type="password" class="form-control" name="new_password_confirmation" required minlength="8">
                 </div>
                 <div class="d-grid">
                     <button type="submit" class="btn btn-unsulbar fw-semibold">Simpan Perubahan</button>
@@ -110,6 +110,28 @@
         </div>
       </div>
     </div>
+
+    @auth
+    <script>
+        setInterval(function() {
+            fetch('{{ route('check.session') }}', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                if (response.status === 401) {
+                    response.json().then(data => {
+                        alert(data.error || 'Akun Anda telah login di perangkat lain. Sesi ini telah diakhiri otomatis.');
+                        window.location.href = '{{ route('login') }}';
+                    });
+                }
+            })
+            .catch(err => console.error('Session check error:', err));
+        }, 5000); // Cek setiap 5 detik
+    </script>
+    @endauth
 </body>
 
 </html>

@@ -71,6 +71,7 @@ class AdminController extends Controller
             'deskripsi' => 'nullable|string',
             'durasi' => 'required|integer|min:1',
             'passing_grade' => 'required|numeric|min:0|max:100',
+            'status' => 'nullable|in:active,closed,finished',
         ]);
 
         $exam->update([
@@ -78,6 +79,7 @@ class AdminController extends Controller
             'deskripsi' => $request->deskripsi,
             'durasi' => $request->durasi,
             'passing_grade' => $request->passing_grade,
+            'status' => $request->status ?? $exam->status,
         ]);
 
         return redirect()->route('admin.ujian.index')->with('success', 'Ujian berhasil diperbarui.');
@@ -389,7 +391,8 @@ class AdminController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return redirect()->route('admin.users')->with('success', 'User berhasil ditambahkan.');
+        $tab = strtolower($request->role);
+        return redirect()->route('admin.users', ['tab' => $tab])->with('success', 'User berhasil ditambahkan.');
     }
 
     public function updateUser(Request $request, $id)
@@ -425,14 +428,16 @@ class AdminController extends Controller
         }
         $user->save();
 
-        return redirect()->route('admin.users')->with('success', 'User berhasil diperbarui.');
+        $tab = strtolower($request->role);
+        return redirect()->route('admin.users', ['tab' => $tab])->with('success', 'User berhasil diperbarui.');
     }
 
     public function destroyUser($id)
     {
         $user = User::findOrFail($id);
+        $tab = strtolower($user->role);
         $user->delete();
         
-        return redirect()->route('admin.users')->with('success', 'User berhasil dihapus.');
+        return redirect()->route('admin.users', ['tab' => $tab])->with('success', 'User berhasil dihapus.');
     }
 }

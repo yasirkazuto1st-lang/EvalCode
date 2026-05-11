@@ -25,6 +25,11 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::post('/password/update', [AuthController::class, 'updatePassword'])->name('password.update');
+
+    Route::get('/check-session', function () {
+        return response()->json(['status' => 'valid']);
+    })->name('check.session');
 
     // ------------------------------------------
     // MAHASISWA ROUTES
@@ -45,6 +50,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/ujian/{id}', [PengawasUjianController::class, 'detail'])->name('pengawas.ujian.detail');
         Route::post('/ujian/{id}/start', [PengawasUjianController::class, 'startExam'])->name('pengawas.ujian.start');
         Route::post('/ujian/{id}/end', [PengawasUjianController::class, 'endExam'])->name('pengawas.ujian.end');
+        Route::post('/ujian/{id}/finish', [PengawasUjianController::class, 'finishExam'])->name('pengawas.ujian.finish');
         Route::get('/ujian/{examId}/soal/{soalId}', [PengawasUjianController::class, 'soal'])->name('pengawas.ujian.soal');
         Route::get('/ujian/{examId}/peserta/{userId}/riwayat', [PengawasUjianController::class, 'pesertaRiwayat'])->name('pengawas.ujian.peserta.riwayat');
         Route::post('/submission/{id}/override', [PengawasUjianController::class, 'overrideScore'])->name('pengawas.submission.override');

@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 
 class AuthController extends Controller
 {
@@ -22,9 +24,20 @@ class AuthController extends Controller
         ]);
 
         if (Auth::attempt(['nim_nip' => $credentials['nim_nip'], 'password' => $credentials['password']], $request->boolean('remember'))) {
+            $user = Auth::user();
+
+            // Invalidate previous session if exists (single session enforcement)
+            if ($user->last_session_id && $user->last_session_id !== session()->getId()) {
+                // Delete the old session from the sessions table (if using database driver)
+                DB::table('sessions')->where('id', $user->last_session_id)->delete();
+            }
+
             $request->session()->regenerate();
-            
-            $role = Auth::user()->role;
+
+            // Store current session ID
+            $user->update(['last_session_id' => session()->getId()]);
+
+            $role = $user->role;
             if ($role === 'Admin') {
                 return redirect()->route('admin.dashboard');
             } elseif ($role === 'Pengawas') {
@@ -66,11 +79,43 @@ class AuthController extends Controller
 
         Auth::login($user);
 
+        // Store session ID for single-session enforcement
+        $user->update(['last_session_id' => session()->getId()]);
+
         return redirect()->route('dashboard');
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|string|min:8|confirmed',
+        ], [
+            'new_password.confirmed' => 'Konfirmasi password baru tidak cocok.',
+            'new_password.min' => 'Password baru minimal 8 karakter.'
+        ]);
+
+        $user = Auth::user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return back()->withErrors(['current_password' => 'Password saat ini salah.']);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->new_password)
+        ]);
+
+        return back()->with('success', 'Password berhasil diubah.');
     }
 
     public function logout(Request $request)
     {
+        // Clear session ID from user record
+        $user = Auth::user();
+        if ($user) {
+            $user->update(['last_session_id' => null]);
+        }
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

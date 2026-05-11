@@ -57,5 +57,34 @@
             </div>
         @endforelse
     </div>
+
+    {{-- Ujian Selesai --}}
+    @if($finishedExams->count() > 0)
+        <h4 class="fw-bold mb-3"><i class="bi bi-check-circle-fill text-secondary me-2"></i>Ujian Selesai</h4>
+        <div class="row g-4 mb-5">
+            @foreach($finishedExams as $exam)
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 opacity-75">
+                        <div class="card-body p-4 d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <span class="badge bg-secondary rounded-pill"><i class="bi bi-check-circle-fill me-1"></i> Selesai</span>
+                                <span class="text-muted small"><i class="bi bi-clock"></i> {{ $exam->durasi }} Menit</span>
+                            </div>
+                            <h5 class="fw-bold mb-2">{{ $exam->judul }}</h5>
+                            <p class="text-muted small mb-2">{{ Str::limit($exam->deskripsi, 80) }}</p>
+                            <div class="d-flex gap-2 text-muted small mb-4">
+                                <span><i class="bi bi-file-text me-1"></i>{{ $exam->soals()->count() }} Soal</span>
+                                <span><i class="bi bi-check2-square me-1"></i>PG: {{ $exam->passing_grade }}%</span>
+                            </div>
+                            <a href="{{ route('pengawas.ujian.detail', $exam->ujian_id) }}"
+                               class="btn btn-outline-secondary w-100 fw-semibold mt-auto">
+                                Lihat Hasil
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @endif
 </div>
 @endsection

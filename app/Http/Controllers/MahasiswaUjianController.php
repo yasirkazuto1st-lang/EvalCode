@@ -10,9 +10,10 @@ class MahasiswaUjianController extends Controller
 {
     public function dashboard()
     {
-        // Get all active exams for the mahasiswa to see
         $activeExams = Ujian::where('status', 'active')->orderBy('updated_at', 'desc')->get();
-        return view('mahasiswa.dashboard', compact('activeExams'));
+        $closedExams = Ujian::where('status', 'closed')->orderBy('updated_at', 'desc')->get();
+        $finishedExams = Ujian::where('status', 'finished')->orderBy('updated_at', 'desc')->get();
+        return view('mahasiswa.dashboard', compact('activeExams', 'closedExams', 'finishedExams'));
     }
 
     public function detail($id)

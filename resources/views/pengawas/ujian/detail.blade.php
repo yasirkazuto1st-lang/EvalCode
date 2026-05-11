@@ -71,6 +71,25 @@
             </div>
         @endif
 
+        @if (session('error'))
+            <div class="alert alert-danger alert-dismissible fade show rounded-4" role="alert">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show rounded-4" role="alert">
+                <strong><i class="bi bi-exclamation-triangle-fill me-1"></i> Terjadi Kesalahan:</strong>
+                <ul class="mb-0 mt-1">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
         <!-- Header Informasi Ujian -->
         <div class="card border-0 shadow-sm rounded-4 mb-4 position-relative overflow-hidden"
             style="background: linear-gradient(135deg, var(--bs-primary) 0%, #4a0000 100%); color: white;">
@@ -83,6 +102,10 @@
                     @if ($exam->status === 'active')
                         <span class="badge bg-white text-primary mb-2 px-2 py-1 rounded-pill shadow-sm fw-bold">
                             <i class="bi bi-circle-fill text-success small me-1"></i> Sedang Berlangsung
+                        </span>
+                    @elseif ($exam->status === 'finished')
+                        <span class="badge bg-white text-dark mb-2 px-2 py-1 rounded-pill shadow-sm fw-bold">
+                            <i class="bi bi-check-circle-fill text-secondary small me-1"></i> Selesai
                         </span>
                     @else
                         <span class="badge bg-warning text-dark mb-2 px-2 py-1 rounded-pill shadow-sm fw-bold">
@@ -131,17 +154,33 @@
                         @endif
                     </div>
 
-                    <!-- Start / End Button -->
-                    @if ($exam->status === 'active')
-                        <button type="button" class="btn btn-danger w-100 fw-bold shadow-sm rounded-pill"
-                            data-bs-toggle="modal" data-bs-target="#endExamModal">
-                            <i class="bi bi-stop-circle-fill me-2"></i> Akhiri Ujian
-                        </button>
+                    <!-- Start / Pause / Finish Buttons -->
+                    @if ($exam->status === 'finished')
+                        <div class="btn btn-secondary w-100 fw-bold shadow-sm rounded-pill disabled">
+                            <i class="bi bi-check-circle-fill me-2"></i> Ujian Telah Selesai
+                        </div>
+                    @elseif ($exam->status === 'active')
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-warning flex-fill fw-bold shadow-sm rounded-pill"
+                                data-bs-toggle="modal" data-bs-target="#endExamModal">
+                                <i class="bi bi-pause-circle-fill me-1"></i> Pause
+                            </button>
+                            <button type="button" class="btn btn-danger flex-fill fw-bold shadow-sm rounded-pill"
+                                data-bs-toggle="modal" data-bs-target="#finishExamModal">
+                                <i class="bi bi-stop-circle-fill me-1"></i> Akhiri
+                            </button>
+                        </div>
                     @else
-                        <button type="button" class="btn btn-light w-100 fw-bold shadow-sm rounded-pill text-primary"
-                            data-bs-toggle="modal" data-bs-target="#startExamModal">
-                            <i class="bi bi-play-circle-fill me-2"></i> Mulai Ujian
-                        </button>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-light flex-fill fw-bold shadow-sm rounded-pill text-primary"
+                                data-bs-toggle="modal" data-bs-target="#startExamModal">
+                                <i class="bi bi-play-circle-fill me-1"></i> Mulai
+                            </button>
+                            <button type="button" class="btn btn-danger flex-fill fw-bold shadow-sm rounded-pill"
+                                data-bs-toggle="modal" data-bs-target="#finishExamModal">
+                                <i class="bi bi-stop-circle-fill me-1"></i> Akhiri
+                            </button>
+                        </div>
                     @endif
                 </div>
             </div>
@@ -481,27 +520,54 @@
         </div>
     </div>
 
-    <!-- End Exam Modal -->
+    <!-- Pause Exam Modal -->
     <div class="modal fade" id="endExamModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-4 border-0 shadow">
                 <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Akhiri
+                    <h5 class="modal-title fw-bold"><i class="bi bi-pause-circle-fill text-warning me-2"></i>Pause
                         Ujian?</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="mb-0">Yakin ingin mengakhiri ujian <strong>{{ $exam->judul }}</strong>?</p>
-                    <p class="text-muted small mt-2 mb-0"><i class="bi bi-info-circle me-1"></i>Semua token akan
-                        dinonaktifkan dan mahasiswa tidak bisa lagi mengakses ujian ini.</p>
+                    <p class="mb-0">Yakin ingin mem-pause ujian <strong>{{ $exam->judul }}</strong>?</p>
+                    <p class="text-muted small mt-2 mb-0"><i class="bi bi-info-circle me-1"></i>Token akan dinonaktifkan sementara. Anda bisa memulai ujian kembali nanti.</p>
                 </div>
                 <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-secondary rounded-pill px-4"
                         data-bs-dismiss="modal">Batal</button>
                     <form method="POST" action="{{ route('pengawas.ujian.end', $exam->ujian_id) }}">
                         @csrf
+                        <button type="submit" class="btn btn-warning rounded-pill px-4 fw-bold">
+                            <i class="bi bi-pause-fill me-1"></i>Ya, Pause Ujian
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Finish Exam Modal (Permanent) -->
+    <div class="modal fade" id="finishExamModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Akhiri Ujian Permanen?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Yakin ingin <strong>mengakhiri</strong> ujian <strong>{{ $exam->judul }}</strong> secara permanen?</p>
+                    <div class="alert alert-danger small mt-3 mb-0">
+                        <i class="bi bi-exclamation-diamond-fill me-1"></i> <strong>Perhatian:</strong> Setelah diakhiri, ujian ini tidak bisa dimulai kembali. Pastikan semua peserta sudah selesai mengerjakan.
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">Batal</button>
+                    <form method="POST" action="{{ route('pengawas.ujian.finish', $exam->ujian_id) }}">
+                        @csrf
                         <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">
-                            <i class="bi bi-stop-fill me-1"></i>Ya, Akhiri Ujian
+                            <i class="bi bi-stop-fill me-1"></i>Ya, Akhiri Permanen
                         </button>
                     </form>
                 </div>
