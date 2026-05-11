@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 
 const Workspace = ({ initialData }) => {
@@ -21,6 +21,56 @@ const Workspace = ({ initialData }) => {
     };
 
     const [code, setCode] = useState(boilerplate.python);
+    const [codeCache, setCodeCache] = useState({ ...boilerplate });
+
+    const editorRef = useRef(null);
+    const monacoRef = useRef(null);
+
+    const handleEditorDidMount = (editor, monaco) => {
+        editorRef.current = editor;
+        monacoRef.current = monaco;
+    };
+
+    // Helper: Clear Markers
+    const clearMarkers = () => {
+        if (editorRef.current && monacoRef.current) {
+            const model = editorRef.current.getModel();
+            monacoRef.current.editor.setModelMarkers(model, "evalcode", []);
+        }
+    };
+
+    // Helper: Parse Error and Highlight
+    const highlightError = (stderr, lang) => {
+        clearMarkers();
+        if (!stderr) return;
+
+        let match = null;
+        // Regex to match common error formats
+        if (lang === 'python') {
+            match = stderr.match(/line\s+(\d+)/i);
+        } else if (lang === 'cpp' || lang === 'java' || lang === 'dart') {
+            match = stderr.match(/:(\d+):/);
+        }
+
+        if (match && match[1]) {
+            const lineNumber = parseInt(match[1], 10);
+            const shortMsg = stderr.split('\n').slice(0, 3).join('\n');
+            
+            if (editorRef.current && monacoRef.current) {
+                const model = editorRef.current.getModel();
+                monacoRef.current.editor.setModelMarkers(model, "evalcode", [
+                    {
+                        startLineNumber: lineNumber,
+                        endLineNumber: lineNumber,
+                        startColumn: 1,
+                        endColumn: 1000,
+                        message: shortMsg,
+                        severity: monacoRef.current.MarkerSeverity.Error
+                    }
+                ]);
+            }
+        }
+    };
 
     const languages = [
         { id: 'python', name: 'Python' },
@@ -31,6 +81,7 @@ const Workspace = ({ initialData }) => {
 
     const handleRunCode = async () => {
         setIsRunning(true);
+        clearMarkers();
         setOutput({ status: 'Running...', message: 'Mengeksekusi di server Judge0...' });
         
         try {
@@ -60,11 +111,22 @@ const Workspace = ({ initialData }) => {
                     testCases: data.testCases || [],
                     similarity: data.similarity
                 });
+                
+                // Jika error kompilasi/runtime, cari stderr di testcase pertama yg gagal
+                if ((data.status === 'Compile Error' || data.status === 'Runtime Error') && data.testCases) {
+                    const failedTc = data.testCases.find(tc => tc.stderr);
+                    if (failedTc && failedTc.stderr) {
+                        highlightError(failedTc.stderr, language);
+                    }
+                }
             } else {
                 setOutput({
                     status: 'Error',
                     stderr: data.message || 'Terjadi kesalahan sistem'
                 });
+                if (data.message) {
+                    highlightError(data.message, language);
+                }
             }
         } catch (error) {
             setIsRunning(false);
@@ -132,8 +194,12 @@ const Workspace = ({ initialData }) => {
                                 value={language}
                                 onChange={(e) => {
                                     const newLang = e.target.value;
+                                    // Save current code to cache
+                                    setCodeCache(prev => ({ ...prev, [language]: code }));
                                     setLanguage(newLang);
-                                    setCode(boilerplate[newLang]);
+                                    // Restore code from cache
+                                    setCode(codeCache[newLang] !== undefined ? codeCache[newLang] : boilerplate[newLang]);
+                                    clearMarkers();
                                 }}
                             >
                                 {languages.map(lang => (
@@ -157,7 +223,11 @@ const Workspace = ({ initialData }) => {
                             language={language}
                             theme="vs-dark"
                             value={code}
-                            onChange={(value) => setCode(value)}
+                            onMount={handleEditorDidMount}
+                            onChange={(value) => {
+                                setCode(value);
+                                clearMarkers();
+                            }}
                             options={{
                                 minimap: { enabled: false },
                                 fontSize: 14,

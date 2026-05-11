@@ -242,7 +242,7 @@
                                                     <div
                                                         class="card card-body border-0 bg-light rounded-0 border-start border-4 border-primary m-3 shadow-sm">
                                                         <h6 class="fw-bold mb-3">Riwayat Submission</h6>
-                                                        <table class="table table-sm table-bordered mb-0">
+                                                        <table id="table-sub-{{ $p->user_id }}" class="table table-sm table-bordered mb-0 submission-table">
                                                             <thead class="table-secondary">
                                                                 <tr>
                                                                     <th>Waktu</th>
@@ -375,4 +375,83 @@
             </div>
         </div>
     </div>
+@endsection
+
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        function paginateTable(tableId, rowsPerPage) {
+            const table = document.getElementById(tableId);
+            if (!table) return;
+            const tbody = table.querySelector('tbody');
+            if (!tbody) return;
+            const rows = Array.from(tbody.querySelectorAll('tr:not(.no-pagination)'));
+            const totalRows = rows.length;
+            if (totalRows <= rowsPerPage) return;
+
+            const totalPages = Math.ceil(totalRows / rowsPerPage);
+            let currentPage = 1;
+
+            const paginationContainer = document.createElement('div');
+            paginationContainer.className = 'd-flex justify-content-end mt-2';
+            paginationContainer.id = tableId + '-pagination';
+            table.parentNode.insertBefore(paginationContainer, table.nextSibling);
+
+            function renderTable() {
+                const start = (currentPage - 1) * rowsPerPage;
+                const end = start + rowsPerPage;
+                rows.forEach((row, index) => {
+                    row.style.display = (index >= start && index < end) ? '' : 'none';
+                });
+                renderPagination();
+            }
+
+            function renderPagination() {
+                paginationContainer.innerHTML = '';
+                const nav = document.createElement('nav');
+                const ul = document.createElement('ul');
+                ul.className = 'pagination pagination-sm mb-0';
+
+                const prevLi = document.createElement('li');
+                prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+                prevLi.innerHTML = `<a class="page-link" href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>`;
+                prevLi.onclick = (e) => {
+                    e.preventDefault();
+                    if (currentPage > 1) { currentPage--; renderTable(); }
+                };
+                ul.appendChild(prevLi);
+
+                for (let i = 1; i <= totalPages; i++) {
+                    const pageLi = document.createElement('li');
+                    pageLi.className = `page-item ${currentPage === i ? 'active' : ''}`;
+                    pageLi.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                    pageLi.onclick = (e) => {
+                        e.preventDefault();
+                        currentPage = i;
+                        renderTable();
+                    };
+                    ul.appendChild(pageLi);
+                }
+
+                const nextLi = document.createElement('li');
+                nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+                nextLi.innerHTML = `<a class="page-link" href="#" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>`;
+                nextLi.onclick = (e) => {
+                    e.preventDefault();
+                    if (currentPage < totalPages) { currentPage++; renderTable(); }
+                };
+                ul.appendChild(nextLi);
+
+                nav.appendChild(ul);
+                paginationContainer.appendChild(nav);
+            }
+
+            renderTable();
+        }
+
+        document.querySelectorAll('.submission-table').forEach(table => {
+            paginateTable(table.id, 5);
+        });
+    });
+</script>
 @endsection
