@@ -22,18 +22,18 @@
             <h4 class="fw-bold mb-0">Manajemen User</h4>
         </div>
 
-        @if(session('success'))
+        @if (session('success'))
             <div class="alert alert-success alert-dismissible fade show rounded-4" role="alert">
                 {{ session('success') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
 
-        @if($errors->any())
+        @if ($errors->any())
             <div class="alert alert-danger alert-dismissible fade show rounded-4" role="alert">
                 <strong><i class="bi bi-exclamation-triangle-fill me-1"></i> Terjadi Kesalahan:</strong>
                 <ul class="mb-0 mt-1">
-                    @foreach($errors->all() as $error)
+                    @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
                 </ul>
@@ -78,7 +78,8 @@
                         class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold mb-0"><i class="bi bi-person-badge text-primary me-2"></i> Admin</h5>
                         <div class="d-flex gap-2">
-                            <input type="text" class="form-control form-control-sm" placeholder="Cari Admin...">
+                            <input type="text" id="searchAdminInput" class="form-control form-control-sm search-input"
+                                placeholder="Cari Admin (NIP/Nama)...">
                             <button class="btn btn-sm btn-primary text-nowrap" data-bs-toggle="modal"
                                 data-bs-target="#addAdminModal">
                                 <i class="bi bi-plus-circle me-1"></i> Tambah Admin
@@ -95,9 +96,10 @@
                                         <th style="width: 20%;">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="adminTableBody">
                                     @forelse($admins as $u)
-                                        <tr>
+                                        <tr class="admin-row" data-nim="{{ $u->nim_nip }}"
+                                            data-nama="{{ $u->name }}">
                                             <td>{{ $u->nim_nip }}</td>
                                             <td class="fw-semibold">{{ $u->name }}</td>
                                             <td class="text-nowrap">
@@ -196,7 +198,9 @@
                         class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold mb-0"><i class="bi bi-person-video2 text-warning me-2"></i> Pengawas</h5>
                         <div class="d-flex gap-2">
-                            <input type="text" class="form-control form-control-sm" placeholder="Cari Pengawas...">
+                            <input type="text" id="searchPengawasInput"
+                                class="form-control form-control-sm search-input"
+                                placeholder="Cari Pengawas (NIP/Nama)...">
                             <button class="btn btn-sm btn-primary text-nowrap" data-bs-toggle="modal"
                                 data-bs-target="#addPengawasModal">
                                 <i class="bi bi-plus-circle me-1"></i> Tambah Pengawas
@@ -213,9 +217,10 @@
                                         <th style="width: 20%;">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="pengawasTableBody">
                                     @forelse($pengawas as $u)
-                                        <tr>
+                                        <tr class="pengawas-row" data-nim="{{ $u->nim_nip }}"
+                                            data-nama="{{ $u->name }}">
                                             <td>{{ $u->nim_nip }}</td>
                                             <td class="fw-semibold">{{ $u->name }}</td>
                                             <td class="text-nowrap">
@@ -314,7 +319,9 @@
                         class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold mb-0"><i class="bi bi-mortarboard text-success me-2"></i> Mahasiswa</h5>
                         <div class="d-flex gap-2">
-                            <input type="text" class="form-control form-control-sm" placeholder="Cari Mahasiswa...">
+                            <input type="text" id="searchMahasiswaInput"
+                                class="form-control form-control-sm search-input"
+                                placeholder="Cari Mahasiswa (NIM/Nama)...">
                             <button class="btn btn-sm btn-primary text-nowrap" data-bs-toggle="modal"
                                 data-bs-target="#addMahasiswaModal">
                                 <i class="bi bi-plus-circle me-1"></i> Tambah Mahasiswa
@@ -331,9 +338,10 @@
                                         <th style="width: 20%;">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="mahasiswaTableBody">
                                     @forelse($mahasiswa as $u)
-                                        <tr>
+                                        <tr class="mahasiswa-row" data-nim="{{ $u->nim_nip }}"
+                                            data-nama="{{ $u->name }}">
                                             <td>{{ $u->nim_nip }}</td>
                                             <td class="fw-semibold">{{ $u->name }}</td>
                                             <td class="text-nowrap">
@@ -510,12 +518,14 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Get the tab parameter from URL query string
+            // ========================
+            // TAB ACTIVATION LOGIC
+            // ========================
             const urlParams = new URLSearchParams(window.location.search);
             let activeTab = urlParams.get('tab');
 
             // If no tab in URL, check if there's a validation error with old role
-            @if(old('role'))
+            @if (old('role'))
                 if (!activeTab) {
                     activeTab = '{{ strtolower(old('role')) }}';
                 }
@@ -523,9 +533,18 @@
 
             if (activeTab) {
                 const tabMap = {
-                    'admin': { tabId: 'admin-tab', paneId: 'admin-pane' },
-                    'pengawas': { tabId: 'pengawas-tab', paneId: 'pengawas-pane' },
-                    'mahasiswa': { tabId: 'mahasiswa-tab', paneId: 'mahasiswa-pane' }
+                    'admin': {
+                        tabId: 'admin-tab',
+                        paneId: 'admin-pane'
+                    },
+                    'pengawas': {
+                        tabId: 'pengawas-tab',
+                        paneId: 'pengawas-pane'
+                    },
+                    'mahasiswa': {
+                        tabId: 'mahasiswa-tab',
+                        paneId: 'mahasiswa-pane'
+                    }
                 };
 
                 const tabInfo = tabMap[activeTab.toLowerCase()];
@@ -549,6 +568,49 @@
                     }
                 }
             }
+
+            // ========================
+            // SEARCH/FILTER LOGIC
+            // ========================
+            const searchConfigs = [{
+                    inputId: 'searchAdminInput',
+                    tableBodyId: 'adminTableBody',
+                    rowClass: 'admin-row'
+                },
+                {
+                    inputId: 'searchPengawasInput',
+                    tableBodyId: 'pengawasTableBody',
+                    rowClass: 'pengawas-row'
+                },
+                {
+                    inputId: 'searchMahasiswaInput',
+                    tableBodyId: 'mahasiswaTableBody',
+                    rowClass: 'mahasiswa-row'
+                }
+            ];
+
+            searchConfigs.forEach(config => {
+                const searchInput = document.getElementById(config.inputId);
+                const tableBody = document.getElementById(config.tableBodyId);
+
+                if (searchInput && tableBody) {
+                    searchInput.addEventListener('keyup', function() {
+                        const searchTerm = this.value.toLowerCase();
+                        const rows = tableBody.querySelectorAll('.' + config.rowClass);
+
+                        rows.forEach(row => {
+                            const nim = row.getAttribute('data-nim').toLowerCase();
+                            const nama = row.getAttribute('data-nama').toLowerCase();
+
+                            if (nim.includes(searchTerm) || nama.includes(searchTerm)) {
+                                row.style.display = '';
+                            } else {
+                                row.style.display = 'none';
+                            }
+                        });
+                    });
+                }
+            });
         });
     </script>
 @endsection

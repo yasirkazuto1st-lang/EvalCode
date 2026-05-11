@@ -133,6 +133,11 @@ class MahasiswaUjianController extends Controller
         ];
         $languageId = $langMap[$request->language] ?? 71;
 
+        // Get timeout from config based on language
+        $judgeConfig = config('judge');
+        $languageSettings = $judgeConfig['language_settings'][$request->language] ?? [];
+        $executionTimeout = $languageSettings['timeout'] ?? $judgeConfig['execution_time_limit'];
+
         $judge0Url = 'https://judge0-ce.p.rapidapi.com';
         $rapidApiKey = env('RAPIDAPI_JUDGE0_KEY', '050f745abemsh17cd274a2c49738p1b2dc6jsn51f733269ced');
         
@@ -148,6 +153,7 @@ class MahasiswaUjianController extends Controller
                 'language_id' => $languageId,
                 'stdin' => base64_encode($tc->input),
                 'expected_output' => base64_encode($tc->expected_output),
+                'cpu_time_limit' => $executionTimeout,  // Set timeout from config
             ];
 
             $tcStatus = 'Accepted';
