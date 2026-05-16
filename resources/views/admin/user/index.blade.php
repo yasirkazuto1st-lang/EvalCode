@@ -17,6 +17,62 @@
 @endsection
 
 @section('content')
+    <style>
+        /* Animasi Slide & Fade Direction-Aware untuk Konten Tabel User */
+        #userTabsContent {
+            overflow-x: hidden;
+        }
+        /* Default / Slide Right (Navigasi slide ke Kanan -> Tabel juga slide ke Kanan) */
+        #userTabsContent.slide-right .tab-pane.fade {
+            transition: opacity 0.05s ease; /* Transisi keluar super cepat agar tidak ada delay/gap di Bootstrap */
+            transform: translateX(-30px); /* Mulai dari kiri agar gerakannya meluncur ke kanan */
+            opacity: 0;
+        }
+        #userTabsContent.slide-right .tab-pane.fade.show {
+            transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        /* Slide Left (Navigasi slide ke Kiri -> Tabel juga slide ke Kiri) */
+        #userTabsContent.slide-left .tab-pane.fade {
+            transition: opacity 0.05s ease; /* Transisi keluar super cepat */
+            transform: translateX(30px); /* Mulai dari kanan agar gerakannya meluncur ke kiri */
+            opacity: 0;
+        }
+        #userTabsContent.slide-left .tab-pane.fade.show {
+            transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        /* Animasi Sliding Pill Indicator untuk Navigasi Tab */
+        #userTabs {
+            position: relative;
+            z-index: 1;
+        }
+        #userTabs .nav-link {
+            transition: color 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+            color: var(--bs-dark);
+            background-color: transparent !important; /* Mencegah background bawaan bootstrap muncul mendadak */
+            position: relative;
+            z-index: 2;
+        }
+        #userTabs .nav-link.active {
+            color: #ffffff !important;
+        }
+        #tabIndicator {
+            position: absolute;
+            top: 0.5rem;
+            bottom: 0.5rem;
+            left: 0.5rem; /* Posisi awal default */
+            width: 0;
+            background-color: var(--bs-primary);
+            border-radius: 50rem;
+            transition: left 0.28s cubic-bezier(0.16, 1, 0.3, 1), width 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 1;
+        }
+    </style>
     <div class="container-fluid py-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h4 class="fw-bold mb-0">Manajemen User</h4>
@@ -42,7 +98,8 @@
         @endif
 
         <!-- Tabs Navigation -->
-        <ul class="nav nav-pills mb-4 bg-white p-2 rounded-4 shadow-sm d-inline-flex" id="userTabs" role="tablist">
+        <ul class="nav nav-pills mb-4 bg-white p-2 rounded-4 shadow-sm d-inline-flex position-relative" id="userTabs" role="tablist">
+            <div id="tabIndicator"></div>
             <li class="nav-item" role="presentation">
                 <button class="nav-link active rounded-pill px-4" id="admin-tab" data-bs-toggle="tab"
                     data-bs-target="#admin-pane" type="button" role="tab" aria-controls="admin-pane"
@@ -67,7 +124,7 @@
         </ul>
 
         <!-- Tabs Content -->
-        <div class="tab-content" id="userTabsContent">
+        <div class="tab-content slide-right" id="userTabsContent">
 
             <!-- Admin Pane -->
             <div class="tab-pane fade show active" id="admin-pane" role="tabpanel" aria-labelledby="admin-tab"
@@ -107,10 +164,12 @@
                                                     data-bs-target="#editUserModal{{ $u->user_id }}">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
-                                                <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
-                                                    data-bs-target="#deleteUserModal{{ $u->user_id }}">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
+                                                @if ($u->user_id != Auth::id())
+                                                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+                                                        data-bs-target="#deleteUserModal{{ $u->user_id }}">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                @endif
                                             </td>
                                         </tr>
 
@@ -610,6 +669,69 @@
                         });
                     });
                 }
+            });
+
+            // ========================
+            // SLIDING PILL INDICATOR LOGIC
+            // ========================
+            const tabsContainer = document.getElementById('userTabs');
+            const indicator = document.getElementById('tabIndicator');
+
+            function updateTabIndicator() {
+                const activeTab = document.querySelector('#userTabs .nav-link.active');
+                if (activeTab && indicator && tabsContainer) {
+                    const containerRect = tabsContainer.getBoundingClientRect();
+                    const activeRect = activeTab.getBoundingClientRect();
+
+                    const leftPos = activeRect.left - containerRect.left;
+                    const width = activeRect.width;
+
+                    indicator.style.left = leftPos + 'px';
+                    indicator.style.width = width + 'px';
+                }
+            }
+
+            if (tabsContainer && indicator) {
+                // Jalankan saat load pertama dan resize
+                setTimeout(updateTabIndicator, 50);
+                window.addEventListener('resize', updateTabIndicator);
+
+                // Tambahkan listener untuk setiap perubahan tab
+                document.querySelectorAll('#userTabs .nav-link').forEach(button => {
+                    button.addEventListener('shown.bs.tab', updateTabIndicator);
+                    button.addEventListener('click', function() {
+                        setTimeout(updateTabIndicator, 10);
+                    });
+                });
+            }
+
+            // ========================
+            // DIRECTION-AWARE TABLE SLIDE LOGIC
+            // ========================
+            const tabButtons = document.querySelectorAll('#userTabs .nav-link');
+            const tabsContentContainer = document.getElementById('userTabsContent');
+            let currentTabIndex = 0;
+
+            // Cari index tab yang aktif saat pertama kali load
+            tabButtons.forEach((btn, idx) => {
+                if (btn.classList.contains('active')) {
+                    currentTabIndex = idx;
+                }
+            });
+
+            tabButtons.forEach((button, index) => {
+                button.addEventListener('click', function() {
+                    if (index > currentTabIndex) {
+                        // Navigasi ke kanan -> Tabel masuk dari kanan
+                        tabsContentContainer.classList.remove('slide-left');
+                        tabsContentContainer.classList.add('slide-right');
+                    } else if (index < currentTabIndex) {
+                        // Navigasi ke kiri -> Tabel masuk dari kiri
+                        tabsContentContainer.classList.remove('slide-right');
+                        tabsContentContainer.classList.add('slide-left');
+                    }
+                    currentTabIndex = index;
+                });
             });
         });
     </script>

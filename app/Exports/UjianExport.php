@@ -3,15 +3,14 @@
 namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 
-class UjianExport implements FromArray, WithStyles, ShouldAutoSize
+class UjianExport implements FromArray, WithStyles, WithColumnWidths
 {
     protected $data;
     protected $examInfo;
@@ -38,8 +37,23 @@ class UjianExport implements FromArray, WithStyles, ShouldAutoSize
         return array_merge($header, $this->data);
     }
 
+    public function columnWidths(): array
+    {
+        return [
+            'A' => 20, // NIM
+            'B' => 35, // Nama Mahasiswa (dikurangi lebarnya agar pas saat diprint)
+            'C' => 22, // Status Kelulusan
+            'D' => 15, // Skor Akhir
+        ];
+    }
+
     public function styles(Worksheet $sheet)
     {
+        // Mengatur agar saat di-print otomatis muat dalam 1 halaman lebar (Fit to 1 page wide)
+        $sheet->getPageSetup()->setFitToWidth(1);
+        $sheet->getPageSetup()->setFitToHeight(0);
+        $sheet->getPageSetup()->setFitToPage(true);
+
         // Title Styling
         $sheet->mergeCells('A1:D1');
         $sheet->getStyle('A1')->applyFromArray([

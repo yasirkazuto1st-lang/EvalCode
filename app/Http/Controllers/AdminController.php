@@ -441,6 +441,10 @@ class AdminController extends Controller
 
     public function destroyUser($id)
     {
+        if ($id == \Illuminate\Support\Facades\Auth::id()) {
+            return back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
+        }
+
         $user = User::findOrFail($id);
         $tab = strtolower($user->role);
         $user->delete();
