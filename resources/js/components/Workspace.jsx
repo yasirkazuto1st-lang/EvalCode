@@ -25,6 +25,58 @@ const Workspace = ({ initialData }) => {
 
     const editorRef = useRef(null);
     const monacoRef = useRef(null);
+    const splitContainerRef = useRef(null);
+
+    // State untuk ukuran panel (dalam persentase)
+    const [editorWidth, setEditorWidth] = useState(50); // Lebar kolom kiri (20% - 80%)
+    const [viewerTopHeight, setViewerTopHeight] = useState(70); // Tinggi panel atas kanan (Soal PDF) (20% - 80%)
+
+    const [isDraggingCol, setIsDraggingCol] = useState(false);
+    const [isDraggingRow, setIsDraggingRow] = useState(false);
+
+    const handleMouseDownCol = (e) => {
+        e.preventDefault();
+        setIsDraggingCol(true);
+    };
+
+    const handleMouseDownRow = (e) => {
+        e.preventDefault();
+        setIsDraggingRow(true);
+    };
+
+    React.useEffect(() => {
+        const handleMouseMove = (e) => {
+            if (isDraggingCol && splitContainerRef.current) {
+                const rect = splitContainerRef.current.getBoundingClientRect();
+                let newWidth = ((e.clientX - rect.left) / rect.width) * 100;
+                if (newWidth < 20) newWidth = 20;
+                if (newWidth > 80) newWidth = 80;
+                setEditorWidth(newWidth);
+            }
+            if (isDraggingRow && splitContainerRef.current) {
+                const rect = splitContainerRef.current.getBoundingClientRect();
+                let newHeight = ((e.clientY - rect.top) / rect.height) * 100;
+                if (newHeight < 20) newHeight = 20;
+                if (newHeight > 80) newHeight = 80;
+                setViewerTopHeight(newHeight);
+            }
+        };
+
+        const handleMouseUp = () => {
+            if (isDraggingCol) setIsDraggingCol(false);
+            if (isDraggingRow) setIsDraggingRow(false);
+        };
+
+        if (isDraggingCol || isDraggingRow) {
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('mouseup', handleMouseUp);
+        }
+
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [isDraggingCol, isDraggingRow]);
 
     const handleEditorDidMount = (editor, monaco) => {
         editorRef.current = editor;
@@ -113,7 +165,7 @@ const Workspace = ({ initialData }) => {
                 });
                 
                 // Jika error kompilasi/runtime, cari stderr di testcase pertama yg gagal
-                if ((data.status === 'Compile Error' || data.status === 'Runtime Error') && data.testCases) {
+                if ((data.status === 'Compilation Error' || data.status === 'Runtime Error') && data.testCases) {
                     const failedTc = data.testCases.find(tc => tc.stderr);
                     if (failedTc && failedTc.stderr) {
                         highlightError(failedTc.stderr, language);
@@ -166,10 +218,10 @@ const Workspace = ({ initialData }) => {
             </div>
 
             {/* Main Area */}
-            <div className="d-flex flex-grow-1 overflow-hidden workspace-split">
+            <div ref={splitContainerRef} className="d-flex flex-grow-1 overflow-hidden workspace-split position-relative">
                 
                 {/* Left Side: Language, Editor, Submit */}
-                <div className="w-50 d-flex flex-column border-end workspace-editor-col">
+                <div className="d-flex flex-column border-end workspace-editor-col" style={{ width: `${editorWidth}%` }}>
                     <div className="p-2 bg-light border-bottom d-flex justify-content-between align-items-center">
                         <div className="d-flex gap-2 flex-grow-1 me-3">
                             <select 
@@ -231,23 +283,39 @@ const Workspace = ({ initialData }) => {
                             options={{
                                 minimap: { enabled: false },
                                 fontSize: 14,
-                                padding: { top: 16 }
+                                padding: { top: 16 },
+                                automaticLayout: true
                             }}
                         />
                     </div>
                 </div>
 
+                {/* Column Resizer (Kiri - Kanan) */}
+                <div 
+                    className="workspace-resizer-col"
+                    onMouseDown={handleMouseDownCol}
+                    style={{
+                        width: '6px',
+                        backgroundColor: isDraggingCol ? '#0d6efd' : '#dee2e6',
+                        cursor: 'col-resize',
+                        transition: 'background-color 0.2s',
+                        zIndex: 10,
+                        position: 'relative'
+                    }}
+                    title="Geser untuk mengubah lebar editor"
+                />
+
                 {/* Right Side: Soal PDF & Console */}
-                <div className="w-50 d-flex flex-column bg-light workspace-viewer-col">
-                    {/* Top Right: PDF Viewer (Mockup) */}
-                    <div className="h-75 p-3 overflow-auto border-bottom bg-white">
+                <div className="d-flex flex-column bg-light workspace-viewer-col" style={{ width: `calc(${100 - editorWidth}% - 6px)` }}>
+                    {/* Top Right: PDF Viewer */}
+                    <div className="p-3 overflow-auto border-bottom bg-white" style={{ height: `${viewerTopHeight}%`, position: 'relative' }}>
                         <div className="d-flex justify-content-between align-items-center mb-3">
                             <h5 className="fw-bold m-0"><i className="bi bi-file-earmark-pdf text-danger me-2"></i>Soal Ujian</h5>
                             <span className="badge bg-primary">Bobot: {currentSoalBobot}</span>
                         </div>
                         
                         {soal_pdf_url ? (
-                            <iframe src={soal_pdf_url} width="100%" height="100%" style={{ minHeight: '400px', border: '1px solid #dee2e6', borderRadius: '12px' }}></iframe>
+                            <iframe src={soal_pdf_url} width="100%" height="100%" style={{ minHeight: '400px', border: '1px solid #dee2e6', borderRadius: '12px', pointerEvents: (isDraggingCol || isDraggingRow) ? 'none' : 'auto' }}></iframe>
                         ) : (
                             <div className="w-100 h-100 bg-light border rounded d-flex align-items-center justify-content-center flex-column text-muted" style={{ minHeight: '400px' }}>
                                 <i className="bi bi-file-pdf fs-1 mb-2"></i>
@@ -257,8 +325,23 @@ const Workspace = ({ initialData }) => {
                         )}
                     </div>
 
+                    {/* Row Resizer (Atas - Bawah) */}
+                    <div 
+                        className="workspace-resizer-row"
+                        onMouseDown={handleMouseDownRow}
+                        style={{
+                            height: '6px',
+                            backgroundColor: isDraggingRow ? '#0d6efd' : '#dee2e6',
+                            cursor: 'row-resize',
+                            transition: 'background-color 0.2s',
+                            zIndex: 10,
+                            position: 'relative'
+                        }}
+                        title="Geser untuk mengubah tinggi terminal"
+                    />
+
                     {/* Bottom Right: Console */}
-                    <div className="h-25 d-flex flex-column bg-white workspace-console">
+                    <div className="d-flex flex-column bg-white workspace-console" style={{ height: `calc(${100 - viewerTopHeight}% - 6px)` }}>
                         <div className="bg-light px-3 py-2 border-bottom d-flex justify-content-between align-items-center">
                             <span className="fw-semibold small text-muted"><i className="bi bi-terminal me-2"></i>Konsol Eksekusi (Judge0)</span>
                             {output && output.status === 'Accepted' && (
@@ -269,6 +352,12 @@ const Workspace = ({ initialData }) => {
                             )}
                             {output && output.status === 'Time Limit Exceeded' && (
                                 <span className="badge bg-warning text-dark">Time Limit Exceeded (TLE)</span>
+                            )}
+                            {output && output.status === 'Compilation Error' && (
+                                <span className="badge bg-info text-dark">Compilation Error (CE)</span>
+                            )}
+                            {output && output.status === 'Runtime Error' && (
+                                <span className="badge bg-secondary">Runtime Error (RTE)</span>
                             )}
                         </div>
                         <div className="p-3 overflow-auto flex-grow-1 font-monospace small bg-dark text-light">
@@ -322,10 +411,24 @@ const Workspace = ({ initialData }) => {
                                         </div>
                                     )}
 
-                                    {/* System Error fallback jika gagal eksekusi (Compile Error / System Error) */}
+                                    {/* Tampilkan stderr dari test case pertama yang gagal (CE / RTE) */}
+                                    {(output.status === 'Compilation Error' || output.status === 'Runtime Error') && output.testCases && (() => {
+                                        const failedTc = output.testCases.find(tc => tc.stderr);
+                                        if (!failedTc || !failedTc.stderr) return null;
+                                        return (
+                                            <div className="mt-3">
+                                                <strong className="text-danger"><i className="bi bi-exclamation-triangle-fill me-2"></i>
+                                                    {output.status === 'Compilation Error' ? 'Compilation Error:' : 'Runtime Error:'}
+                                                </strong>
+                                                <pre className="mt-2 p-3 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded text-light" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{failedTc.stderr}</pre>
+                                            </div>
+                                        );
+                                    })()}
+
+                                    {/* System Error fallback jika gagal eksekusi tanpa testCases */}
                                     {output.stderr && !output.testCases && (
                                         <div className="mt-3">
-                                            <strong className="text-danger"><i className="bi bi-exclamation-triangle-fill me-2"></i>Pesan Error / Compile Error:</strong>
+                                            <strong className="text-danger"><i className="bi bi-exclamation-triangle-fill me-2"></i>Pesan Error:</strong>
                                             <pre className="mt-2 p-3 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded text-light" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{output.stderr}</pre>
                                         </div>
                                     )}

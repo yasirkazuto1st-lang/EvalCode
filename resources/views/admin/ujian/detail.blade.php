@@ -33,11 +33,11 @@
             </div>
         @endif
 
-        @if($errors->any())
+        @if ($errors->any())
             <div class="alert alert-danger alert-dismissible fade show rounded-4" role="alert">
                 <strong><i class="bi bi-exclamation-triangle-fill me-1"></i> Terjadi Kesalahan:</strong>
                 <ul class="mb-0 mt-1">
-                    @foreach($errors->all() as $error)
+                    @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
                 </ul>
@@ -83,7 +83,7 @@
                             <table class="table table-hover align-middle mb-0">
                                 <thead class="table-light">
                                     <tr class="text-nowrap border-bottom border-primary border-2">
-                                        <th class="ps-4 py-3">#</th>
+                                        <th class="ps-4 py-3">No</th>
                                         <th class="py-3">Nama Soal</th>
                                         <th class="py-3">Bobot</th>
                                         <th class="pe-4 py-3 text-end">Aksi</th>
@@ -183,15 +183,22 @@
             <!-- Right: Table Peserta -->
             <div class="col-lg-7">
                 <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
-                    <div class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                    <div
+                        class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                         <h5 class="fw-bold mb-0"><i class="bi bi-people-fill text-warning me-2"></i> Peserta Ujian</h5>
                         <div class="d-flex flex-column flex-md-row gap-2">
-                            <form action="" method="GET" class="input-group input-group-sm shadow-sm rounded-pill overflow-hidden" style="max-width: 250px;">
-                                <span class="input-group-text bg-white border-end-0 px-2"><i class="bi bi-search text-muted small"></i></span>
-                                <input type="text" name="search" class="form-control border-start-0 shadow-none px-0" placeholder="Cari..." value="{{ request('search') }}">
+                            <form action="" method="GET"
+                                class="input-group input-group-sm shadow-sm rounded-pill overflow-hidden"
+                                style="max-width: 250px;">
+                                <span class="input-group-text bg-white border-end-0 px-2"><i
+                                        class="bi bi-search text-muted small"></i></span>
+                                <input type="text" name="search" class="form-control border-start-0 shadow-none px-0"
+                                    placeholder="Cari..." value="{{ request('search') }}">
                                 <button type="submit" class="btn btn-primary px-3">Cari</button>
                             </form>
-                            <a href="{{ route('admin.ujian.export', $exam->ujian_id) }}" class="btn btn-sm btn-success rounded-pill shadow-sm px-3" title="Generate Laporan"><i class="bi bi-printer-fill"></i></a>
+                            <a href="{{ route('admin.ujian.export', $exam->ujian_id) }}"
+                                class="btn btn-sm btn-success rounded-pill shadow-sm px-3" title="Generate Laporan"><i
+                                    class="bi bi-printer-fill"></i></a>
                         </div>
                     </div>
                     <div class="card-body p-0">
@@ -242,7 +249,8 @@
                                                     <div
                                                         class="card card-body border-0 bg-light rounded-0 border-start border-4 border-primary m-3 shadow-sm">
                                                         <h6 class="fw-bold mb-3">Riwayat Submission</h6>
-                                                        <table id="table-sub-{{ $p->user_id }}" class="table table-sm table-bordered mb-0 submission-table">
+                                                        <table id="table-sub-{{ $p->user_id }}"
+                                                            class="table table-sm table-bordered mb-0 submission-table">
                                                             <thead class="table-secondary">
                                                                 <tr>
                                                                     <th>Waktu</th>
@@ -276,7 +284,8 @@
                                                                         <td>{{ $s->skor }}</td>
                                                                         <td>
                                                                             @if ($s->justification_note)
-                                                                                <span class="text-muted small" title="{{ $s->justification_note }}">
+                                                                                <span class="text-muted small"
+                                                                                    title="{{ $s->justification_note }}">
                                                                                     {{ \Illuminate\Support\Str::limit($s->justification_note, 30) }}
                                                                                 </span>
                                                                             @else
@@ -284,7 +293,11 @@
                                                                             @endif
                                                                         </td>
                                                                         <td>
-                                                                            <button class="btn btn-sm btn-outline-secondary py-0 d-inline-flex align-items-center justify-content-center gap-1 text-nowrap" style="width: 95px;" data-bs-toggle="modal" data-bs-target="#codeModal{{ $s->submission_id }}">
+                                                                            <button
+                                                                                class="btn btn-sm btn-outline-secondary py-0 d-inline-flex align-items-center justify-content-center gap-1 text-nowrap"
+                                                                                style="width: 95px;"
+                                                                                data-bs-toggle="modal"
+                                                                                data-bs-target="#codeModal{{ $s->submission_id }}">
                                                                                 <i class="bi bi-code-slash"></i> Kode
                                                                             </button>
                                                                         </td>
@@ -336,7 +349,9 @@
                     </div>
                     <div class="card-footer bg-white border-top-0 py-3 rounded-bottom-4">
                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-center px-2">
-                            <span class="text-muted small fw-semibold mb-2 mb-md-0">Menampilkan {{ $participants->firstItem() ?? 0 }} hingga {{ $participants->lastItem() ?? 0 }} dari {{ $participants->total() }} peserta</span>
+                            <span class="text-muted small fw-semibold mb-2 mb-md-0">Menampilkan
+                                {{ $participants->firstItem() ?? 0 }} hingga {{ $participants->lastItem() ?? 0 }} dari
+                                {{ $participants->total() }} peserta</span>
                             <div class="m-0 pagination-sm">
                                 {{ $participants->links('pagination::bootstrap-5') }}
                             </div>
@@ -378,80 +393,88 @@
 @endsection
 
 @section('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        function paginateTable(tableId, rowsPerPage) {
-            const table = document.getElementById(tableId);
-            if (!table) return;
-            const tbody = table.querySelector('tbody');
-            if (!tbody) return;
-            const rows = Array.from(tbody.querySelectorAll('tr:not(.no-pagination)'));
-            const totalRows = rows.length;
-            if (totalRows <= rowsPerPage) return;
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            function paginateTable(tableId, rowsPerPage) {
+                const table = document.getElementById(tableId);
+                if (!table) return;
+                const tbody = table.querySelector('tbody');
+                if (!tbody) return;
+                const rows = Array.from(tbody.querySelectorAll('tr:not(.no-pagination)'));
+                const totalRows = rows.length;
+                if (totalRows <= rowsPerPage) return;
 
-            const totalPages = Math.ceil(totalRows / rowsPerPage);
-            let currentPage = 1;
+                const totalPages = Math.ceil(totalRows / rowsPerPage);
+                let currentPage = 1;
 
-            const paginationContainer = document.createElement('div');
-            paginationContainer.className = 'd-flex justify-content-end mt-2';
-            paginationContainer.id = tableId + '-pagination';
-            table.parentNode.insertBefore(paginationContainer, table.nextSibling);
+                const paginationContainer = document.createElement('div');
+                paginationContainer.className = 'd-flex justify-content-end mt-2';
+                paginationContainer.id = tableId + '-pagination';
+                table.parentNode.insertBefore(paginationContainer, table.nextSibling);
 
-            function renderTable() {
-                const start = (currentPage - 1) * rowsPerPage;
-                const end = start + rowsPerPage;
-                rows.forEach((row, index) => {
-                    row.style.display = (index >= start && index < end) ? '' : 'none';
-                });
-                renderPagination();
-            }
-
-            function renderPagination() {
-                paginationContainer.innerHTML = '';
-                const nav = document.createElement('nav');
-                const ul = document.createElement('ul');
-                ul.className = 'pagination pagination-sm mb-0';
-
-                const prevLi = document.createElement('li');
-                prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
-                prevLi.innerHTML = `<a class="page-link" href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>`;
-                prevLi.onclick = (e) => {
-                    e.preventDefault();
-                    if (currentPage > 1) { currentPage--; renderTable(); }
-                };
-                ul.appendChild(prevLi);
-
-                for (let i = 1; i <= totalPages; i++) {
-                    const pageLi = document.createElement('li');
-                    pageLi.className = `page-item ${currentPage === i ? 'active' : ''}`;
-                    pageLi.innerHTML = `<a class="page-link" href="#">${i}</a>`;
-                    pageLi.onclick = (e) => {
-                        e.preventDefault();
-                        currentPage = i;
-                        renderTable();
-                    };
-                    ul.appendChild(pageLi);
+                function renderTable() {
+                    const start = (currentPage - 1) * rowsPerPage;
+                    const end = start + rowsPerPage;
+                    rows.forEach((row, index) => {
+                        row.style.display = (index >= start && index < end) ? '' : 'none';
+                    });
+                    renderPagination();
                 }
 
-                const nextLi = document.createElement('li');
-                nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
-                nextLi.innerHTML = `<a class="page-link" href="#" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>`;
-                nextLi.onclick = (e) => {
-                    e.preventDefault();
-                    if (currentPage < totalPages) { currentPage++; renderTable(); }
-                };
-                ul.appendChild(nextLi);
+                function renderPagination() {
+                    paginationContainer.innerHTML = '';
+                    const nav = document.createElement('nav');
+                    const ul = document.createElement('ul');
+                    ul.className = 'pagination pagination-sm mb-0';
 
-                nav.appendChild(ul);
-                paginationContainer.appendChild(nav);
+                    const prevLi = document.createElement('li');
+                    prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+                    prevLi.innerHTML =
+                        `<a class="page-link" href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>`;
+                    prevLi.onclick = (e) => {
+                        e.preventDefault();
+                        if (currentPage > 1) {
+                            currentPage--;
+                            renderTable();
+                        }
+                    };
+                    ul.appendChild(prevLi);
+
+                    for (let i = 1; i <= totalPages; i++) {
+                        const pageLi = document.createElement('li');
+                        pageLi.className = `page-item ${currentPage === i ? 'active' : ''}`;
+                        pageLi.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                        pageLi.onclick = (e) => {
+                            e.preventDefault();
+                            currentPage = i;
+                            renderTable();
+                        };
+                        ul.appendChild(pageLi);
+                    }
+
+                    const nextLi = document.createElement('li');
+                    nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+                    nextLi.innerHTML =
+                        `<a class="page-link" href="#" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>`;
+                    nextLi.onclick = (e) => {
+                        e.preventDefault();
+                        if (currentPage < totalPages) {
+                            currentPage++;
+                            renderTable();
+                        }
+                    };
+                    ul.appendChild(nextLi);
+
+                    nav.appendChild(ul);
+                    paginationContainer.appendChild(nav);
+                }
+
+                renderTable();
             }
 
-            renderTable();
-        }
-
-        document.querySelectorAll('.submission-table').forEach(table => {
-            paginateTable(table.id, 5);
+            document.querySelectorAll('.submission-table').forEach(table => {
+                paginateTable(table.id, 5);
+            });
         });
-    });
-</script>
+    </script>
 @endsection

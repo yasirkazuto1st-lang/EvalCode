@@ -206,9 +206,16 @@ class AdminController extends Controller
             ];
         }
 
+        $examInfo = [
+            'judul' => $exam->judul,
+            'durasi' => $exam->durasi . " Menit",
+            'passing_grade' => $exam->passing_grade . " Pts",
+            'tanggal' => date('d-m-Y H:i')
+        ];
+
         $filename = "Laporan_Ujian_{$exam->ujian_id}_" . date('Ymd_His') . ".xlsx";
 
-        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\UjianExport($exportData), $filename);
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\UjianExport($exportData, $examInfo), $filename);
     }
 
     public function overrideScore(Request $request, $submissionId)

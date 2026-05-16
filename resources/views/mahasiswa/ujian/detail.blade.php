@@ -45,50 +45,171 @@
                     <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
                         <h5 class="fw-bold mb-0"><i class="bi bi-trophy text-warning me-2"></i> Leaderboard</h5>
                     </div>
-                    <div class="card-body p-0 mt-3">
-                        <ul class="list-group list-group-flush">
-                            @forelse($leaderboard as $idx => $lb)
-                                @php
-                                    $bgClass = 'bg-light';
-                                    $textClass = 'text-secondary';
-                                    $badgeClass = 'bg-secondary';
-
-                                    if ($idx == 0) {
-                                        $bgClass = 'bg-warning bg-opacity-10';
-                                        $textClass = 'text-warning';
-                                        $badgeClass = 'bg-warning text-dark';
-                                    } elseif ($idx == 1) {
+                    <div class="card-body p-3 mt-2 position-relative d-flex flex-column">
+                        <!-- Scrollable Leaderboard List (Max 5 items view) -->
+                        <div id="leaderboardScrollContainer" class="leaderboard-scroll pe-2 mb-1" style="max-height: 340px; overflow-y: auto;">
+                            <ul class="list-group list-group-flush pb-2">
+                                @forelse($leaderboard as $idx => $lb)
+                                    @php
+                                        $bgClass = 'bg-light';
                                         $textClass = 'text-secondary';
-                                        $badgeClass = 'bg-secondary';
-                                    } elseif ($idx == 2) {
-                                        $badgeClass = 'bg-danger';
-                                        $textClass = 'text-muted';
-                                    }
+                                        $badgeClass = 'bg-dark bg-opacity-25 text-dark';
+                                        $icon = '';
+                                        $borderClass = 'border-0';
 
-                                    if ($lb->user_id == Auth::id()) {
-                                        $bgClass = 'bg-primary bg-opacity-10 border border-primary';
-                                        $textClass = 'text-primary';
-                                        $badgeClass = 'bg-primary text-white';
-                                    }
-                                @endphp
-                                <li
-                                    class="list-group-item d-flex justify-content-between align-items-center py-3 border-0 {{ $bgClass }} rounded mb-2">
-                                    <div>
-                                        <span class="badge {{ $badgeClass }} rounded-pill me-2 shadow-sm">
-                                            @if ($idx == 0)
-                                                <i class="bi bi-trophy-fill"></i>
-                                            @endif {{ $idx + 1 }}
+                                        // Juara 1: Emas (Gold)
+                                        if ($idx == 0) {
+                                            $bgClass = 'bg-warning bg-opacity-10';
+                                            $textClass = 'text-warning';
+                                            $badgeClass = 'bg-warning text-dark shadow-sm';
+                                            $icon = '<i class="bi bi-trophy-fill me-1"></i>';
+                                            $borderClass = 'border border-warning border-opacity-50';
+                                        } 
+                                        // Juara 2: Perak (Silver)
+                                        elseif ($idx == 1) {
+                                            $bgClass = 'bg-secondary bg-opacity-10';
+                                            $textClass = 'text-secondary';
+                                            $badgeClass = 'bg-secondary text-white shadow-sm';
+                                            $icon = '<i class="bi bi-award-fill me-1"></i>';
+                                            $borderClass = 'border border-secondary border-opacity-50';
+                                        } 
+                                        // Juara 3: Perunggu (Bronze)
+                                        elseif ($idx == 2) {
+                                            $bgClass = 'bg-danger bg-opacity-10';
+                                            $textClass = 'text-danger';
+                                            $badgeClass = 'bg-danger text-white shadow-sm';
+                                            $icon = '<i class="bi bi-award-fill me-1"></i>';
+                                            $borderClass = 'border border-danger border-opacity-50';
+                                        }
+
+                                        $isMe = ($lb->user_id == Auth::id());
+                                        if ($isMe) {
+                                            $borderClass = 'border border-2 border-primary';
+                                            if ($idx > 2) {
+                                                $bgClass = 'bg-primary bg-opacity-10';
+                                                $textClass = 'text-primary';
+                                                $badgeClass = 'bg-primary text-white';
+                                            }
+                                        }
+                                    @endphp
+                                    <li @if($isMe) id="myLeaderboardListItem" @endif class="list-group-item d-flex justify-content-between align-items-center py-3 {{ $borderClass }} {{ $bgClass }} rounded mb-2 shadow-sm">
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge {{ $badgeClass }} rounded-pill me-2 px-2 py-1 fs-6">
+                                                {!! $icon !!}{{ $idx + 1 }}
+                                            </span>
+                                            <span class="fw-semibold me-1">{{ $lb->name }}</span>
+                                            @if ($isMe)
+                                                <span class="badge bg-primary ms-1 small">Anda</span>
+                                            @endif
+                                        </div>
+                                        <span class="fw-bold {{ $textClass }}">{{ $lb->total_skor }} Pts</span>
+                                    </li>
+                                @empty
+                                    <li class="list-group-item text-center text-muted py-4 border-0">
+                                        Belum ada data leaderboard.
+                                    </li>
+                                @endforelse
+                            </ul>
+                        </div>
+
+                        <!-- Floating Pinned Bottom Section: Indikator "Anda" (Muncul jika item asli di luar viewport) -->
+                        @php
+                            $myRankIndex = null;
+                            $myLeaderboardItem = null;
+                            foreach($leaderboard as $idx => $lb) {
+                                if ($lb->user_id == Auth::id()) {
+                                    $myRankIndex = $idx;
+                                    $myLeaderboardItem = $lb;
+                                    break;
+                                }
+                            }
+                        @endphp
+
+                        @if($myLeaderboardItem)
+                            @php
+                                $myBgClass = 'bg-light';
+                                $myTextClass = 'text-secondary';
+                                $myBadgeClass = 'bg-dark bg-opacity-25 text-dark';
+                                $myIcon = '';
+                                $myBorderClass = 'border-0';
+
+                                if ($myRankIndex == 0) {
+                                    $myBgClass = 'bg-warning bg-opacity-10';
+                                    $myTextClass = 'text-warning';
+                                    $myBadgeClass = 'bg-warning text-dark shadow-sm';
+                                    $myIcon = '<i class="bi bi-trophy-fill me-1"></i>';
+                                    $myBorderClass = 'border border-warning border-opacity-50';
+                                } elseif ($myRankIndex == 1) {
+                                    $myBgClass = 'bg-secondary bg-opacity-10';
+                                    $myTextClass = 'text-secondary';
+                                    $myBadgeClass = 'bg-secondary text-white shadow-sm';
+                                    $myIcon = '<i class="bi bi-award-fill me-1"></i>';
+                                    $myBorderClass = 'border border-secondary border-opacity-50';
+                                } elseif ($myRankIndex == 2) {
+                                    $myBgClass = 'bg-danger bg-opacity-10';
+                                    $myTextClass = 'text-danger';
+                                    $myBadgeClass = 'bg-danger text-white shadow-sm';
+                                    $myIcon = '<i class="bi bi-award-fill me-1"></i>';
+                                    $myBorderClass = 'border border-danger border-opacity-50';
+                                }
+
+                                // Tetap berikan border tebal primary karena ini kita
+                                $myBorderClass = 'border border-2 border-primary';
+                                if ($myRankIndex > 2) {
+                                    $myBgClass = 'bg-primary bg-opacity-10';
+                                    $myTextClass = 'text-primary';
+                                    $myBadgeClass = 'bg-primary text-white';
+                                }
+                            @endphp
+                            <div id="floatingMyRankBar" class="position-absolute" style="left: 1rem; right: 1.5rem; bottom: 1rem; z-index: 10; transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; transform: translateY(15px); pointer-events: none;" title="Klik untuk melihat posisi Anda">
+                                <div class="list-group-item d-flex justify-content-between align-items-center py-3 px-3 {{ $myBorderClass }} {{ $myBgClass }} rounded mb-0 shadow-lg" style="cursor: pointer; backdrop-filter: blur(8px); background-color: rgba(255,255,255,0.92);">
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge {{ $myBadgeClass }} rounded-pill me-2 px-2 py-1 fs-6">
+                                            {!! $myIcon !!}{{ $myRankIndex + 1 }}
                                         </span>
-                                        <span class="fw-semibold">{{ $lb->name }}</span>
+                                        <span class="fw-semibold me-1">{{ $myLeaderboardItem->name }}</span>
+                                        <span class="badge bg-primary ms-1 small">Anda</span>
                                     </div>
-                                    <span class="fw-bold {{ $textClass }}">{{ $lb->total_skor }} Pts</span>
-                                </li>
-                            @empty
-                                <li class="list-group-item text-center text-muted py-4 border-0">
-                                    Belum ada data leaderboard.
-                                </li>
-                            @endforelse
-                        </ul>
+                                    <span class="fw-bold {{ $myTextClass }}">{{ $myLeaderboardItem->total_skor }} Pts</span>
+                                </div>
+                            </div>
+
+                            <script>
+                            document.addEventListener('DOMContentLoaded', function () {
+                                const listItem = document.getElementById('myLeaderboardListItem');
+                                const floatingBar = document.getElementById('floatingMyRankBar');
+                                const scrollContainer = document.getElementById('leaderboardScrollContainer');
+
+                                if (listItem && floatingBar && scrollContainer) {
+                                    const checkVisibility = () => {
+                                        const containerRect = scrollContainer.getBoundingClientRect();
+                                        const itemRect = listItem.getBoundingClientRect();
+
+                                        // Toleransi 5px
+                                        const isVisible = (itemRect.top >= containerRect.top - 5) && (itemRect.bottom <= containerRect.bottom + 5);
+
+                                        if (isVisible) {
+                                            floatingBar.style.opacity = '0';
+                                            floatingBar.style.transform = 'translateY(15px)';
+                                            floatingBar.style.pointerEvents = 'none';
+                                        } else {
+                                            floatingBar.style.opacity = '1';
+                                            floatingBar.style.transform = 'translateY(0)';
+                                            floatingBar.style.pointerEvents = 'auto';
+                                        }
+                                    };
+
+                                    scrollContainer.addEventListener('scroll', checkVisibility);
+                                    window.addEventListener('resize', checkVisibility);
+                                    setTimeout(checkVisibility, 150);
+
+                                    floatingBar.addEventListener('click', function() {
+                                        listItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    });
+                                }
+                            });
+                            </script>
+                        @endif
                     </div>
                 </div>
             </div>

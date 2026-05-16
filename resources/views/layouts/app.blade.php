@@ -8,6 +8,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ config('app.name', 'Autograder Unsulbar') }}</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
 
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -57,7 +59,8 @@
                                     {{ Auth::check() ? Auth::user()->name : 'Ahmad Fauzi' }}
                                 </div>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#mahasiswaPasswordModal">
+                                <a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                    data-bs-target="#mahasiswaPasswordModal">
                                     <i class="bi bi-key me-2"></i> Ganti Password
                                 </a>
                                 <a class="dropdown-item text-danger" href="{{ route('logout') }}"
@@ -80,57 +83,62 @@
     </div>
 
     <!-- Modal Ganti Password Mahasiswa -->
-    <div class="modal fade" id="mahasiswaPasswordModal" tabindex="-1" aria-labelledby="mahasiswaPasswordModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow rounded-4">
-          <div class="modal-header border-bottom-0 pb-0">
-            <h5 class="modal-title fw-bold" id="mahasiswaPasswordModalLabel"><i class="bi bi-key text-unsulbar me-2"></i>Ganti Password</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body p-4">
-            <form action="{{ route('password.update') }}" method="POST">
-                @csrf
-                <div class="mb-3">
-                    <label class="form-label text-muted small fw-semibold">Password Sekarang</label>
-                    <input type="password" class="form-control" name="current_password" required>
+    <div class="modal fade" id="mahasiswaPasswordModal" tabindex="-1" aria-labelledby="mahasiswaPasswordModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow rounded-4">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="mahasiswaPasswordModalLabel"><i
+                            class="bi bi-key text-unsulbar me-2"></i>Ganti Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label text-muted small fw-semibold">Password Baru</label>
-                    <input type="password" class="form-control" name="new_password" required minlength="8">
+                <div class="modal-body p-4">
+                    <form action="{{ route('password.update') }}" method="POST">
+                        @csrf
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-semibold">Password Sekarang</label>
+                            <input type="password" class="form-control" name="current_password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-semibold">Password Baru</label>
+                            <input type="password" class="form-control" name="new_password" required minlength="8">
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label text-muted small fw-semibold">Ulang Password Baru</label>
+                            <input type="password" class="form-control" name="new_password_confirmation" required
+                                minlength="8">
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-unsulbar fw-semibold">Simpan Perubahan</button>
+                        </div>
+                    </form>
                 </div>
-                <div class="mb-4">
-                    <label class="form-label text-muted small fw-semibold">Ulang Password Baru</label>
-                    <input type="password" class="form-control" name="new_password_confirmation" required minlength="8">
-                </div>
-                <div class="d-grid">
-                    <button type="submit" class="btn btn-unsulbar fw-semibold">Simpan Perubahan</button>
-                </div>
-            </form>
-          </div>
+            </div>
         </div>
-      </div>
     </div>
 
     @auth
-    <script>
-        setInterval(function() {
-            fetch('{{ route('check.session') }}', {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => {
-                if (response.status === 401) {
-                    response.json().then(data => {
-                        alert(data.error || 'Akun Anda telah login di perangkat lain. Sesi ini telah diakhiri otomatis.');
-                        window.location.href = '{{ route('login') }}';
-                    });
-                }
-            })
-            .catch(err => console.error('Session check error:', err));
-        }, 5000); // Cek setiap 5 detik
-    </script>
+        <script>
+            setInterval(function() {
+                fetch('{{ route('check.session') }}', {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (response.status === 401) {
+                            response.json().then(data => {
+                                alert(data.error ||
+                                    'Akun Anda telah login di perangkat lain. Sesi ini telah diakhiri otomatis.'
+                                );
+                                window.location.href = '{{ route('login') }}';
+                            });
+                        }
+                    })
+                    .catch(err => console.error('Session check error:', err));
+            }, 5000); // Cek setiap 5 detik
+        </script>
     @endauth
 </body>
 
