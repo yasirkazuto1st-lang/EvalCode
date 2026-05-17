@@ -23,7 +23,7 @@
         <div class="card-body p-4 d-flex justify-content-between align-items-center">
             <div>
                 <h4 class="fw-bold mb-1">Riwayat Submisi: {{ $user->name }}</h4>
-                <p class="mb-0 opacity-75 fs-6">{{ $user->nim_nip }} | Ujian: {{ $exam->judul }}</p>
+                <p class="mb-0 opacity-75 fs-6">{{ $user->nim_username }} | Ujian: {{ $exam->judul }}</p>
             </div>
             <i class="bi bi-journal-code opacity-25" style="font-size: 3rem;"></i>
         </div>

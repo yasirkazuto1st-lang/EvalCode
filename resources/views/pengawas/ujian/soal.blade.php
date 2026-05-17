@@ -74,7 +74,10 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="3" class="text-center text-muted py-3">Belum ada test case.</td>
+                                            <td colspan="3" class="text-center py-5 text-muted">
+                                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                                Belum ada test case untuk soal ini.
+                                            </td>
                                         </tr>
                                     @endforelse
                                 </tbody>

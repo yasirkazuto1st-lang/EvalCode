@@ -165,13 +165,13 @@ class AdminController extends Controller
             ->join('users', 'sub.user_id', '=', 'users.user_id')
             ->select(
                 'users.name', 
-                'users.nim_nip', 
+                'users.nim_username', 
                 'users.user_id', 
                 \Illuminate\Support\Facades\DB::raw('SUM(sub.max_skor) as total_skor'), 
                 \Illuminate\Support\Facades\DB::raw('SUM(sub.is_accepted) as accepted_count')
             );
 
-        $participants = $query->groupBy('users.name', 'users.nim_nip', 'users.user_id')
+        $participants = $query->groupBy('users.name', 'users.nim_username', 'users.user_id')
             ->orderByDesc('total_skor')
             ->get();
 
@@ -248,9 +248,9 @@ class AdminController extends Controller
         $participants = \Illuminate\Support\Facades\DB::table(\Illuminate\Support\Facades\DB::raw("({$subQuery->toSql()}) as sub"))
             ->mergeBindings($subQuery)
             ->join('users', 'sub.user_id', '=', 'users.user_id')
-            ->select('users.name', 'users.nim_nip', \Illuminate\Support\Facades\DB::raw('SUM(sub.max_skor) as total_skor'))
+            ->select('users.name', 'users.nim_username', \Illuminate\Support\Facades\DB::raw('SUM(sub.max_skor) as total_skor'))
             ->where('users.role', 'mahasiswa')
-            ->groupBy('users.name', 'users.nim_nip', 'users.user_id')
+            ->groupBy('users.name', 'users.nim_username', 'users.user_id')
             ->orderByDesc('total_skor')
             ->get();
 
@@ -263,7 +263,7 @@ class AdminController extends Controller
             $status = ($p->total_skor ?? 0) >= $passingGrade ? 'Lulus' : 'Tidak Lulus';
             
             $exportData[] = [
-                'NIM' => $p->nim_nip,
+                'NIM' => $p->nim_username,
                 'Nama Mahasiswa' => $p->name,
                 'Status' => $status,
                 'Skor' => $p->total_skor ?? 0
@@ -405,6 +405,12 @@ class AdminController extends Controller
         }
 
         $soal->save();
+
+        // Perbarui skor pada seluruh submisi masa lalu yang berstatus 'Accepted' untuk soal ini
+        \Illuminate\Support\Facades\DB::table('submissions')
+            ->where('soal_id', $soalId)
+            ->where('status', 'Accepted')
+            ->update(['skor' => $request->bobot_nilai]);
 
         return redirect()->route('admin.ujian.detail', $examId)->with('success', 'Soal berhasil diperbarui.');
     }
@@ -554,20 +560,20 @@ class AdminController extends Controller
         ];
 
         if ($request->role === 'Mahasiswa') {
-            $rules['nim_nip'] = ['required', 'string', 'size:8', 'regex:/^[A-Za-z]/', 'unique:users,nim_nip'];
+            $rules['nim_username'] = ['required', 'string', 'size:8', 'regex:/^[A-Za-z]/', 'unique:users,nim_username'];
         } else {
-            $rules['nim_nip'] = 'required|string|unique:users,nim_nip';
+            $rules['nim_username'] = 'required|string|unique:users,nim_username';
         }
 
         $request->validate($rules, [
-            'nim_nip.size' => 'NIM harus tepat 8 karakter.',
-            'nim_nip.regex' => 'Karakter pertama NIM harus berupa huruf.',
-            'nim_nip.unique' => 'NIM/NIP sudah terdaftar.',
+            'nim_username.size' => 'NIM harus tepat 8 karakter.',
+            'nim_username.regex' => 'Karakter pertama NIM harus berupa huruf.',
+            'nim_username.unique' => $request->role === 'Mahasiswa' ? 'NIM sudah terdaftar.' : 'Username sudah terdaftar.',
         ]);
 
         User::create([
             'name' => $request->name,
-            'nim_nip' => $request->nim_nip,
+            'nim_username' => $request->nim_username,
             'role' => $request->role,
             'password' => Hash::make($request->password),
         ]);
@@ -593,9 +599,9 @@ class AdminController extends Controller
         ];
 
         if ($request->role === 'Mahasiswa') {
-            $rules['nim_nip'] = ['required', 'string', 'size:8', 'regex:/^[A-Za-z]/', 'unique:users,nim_nip,'.$id.',user_id'];
+            $rules['nim_username'] = ['required', 'string', 'size:8', 'regex:/^[A-Za-z]/', 'unique:users,nim_username,'.$id.',user_id'];
         } else {
-            $rules['nim_nip'] = 'required|string|unique:users,nim_nip,'.$id.',user_id';
+            $rules['nim_username'] = 'required|string|unique:users,nim_username,'.$id.',user_id';
         }
 
         if ($request->filled('password')) {
@@ -603,13 +609,13 @@ class AdminController extends Controller
         }
 
         $request->validate($rules, [
-            'nim_nip.size' => 'NIM harus tepat 8 karakter.',
-            'nim_nip.regex' => 'Karakter pertama NIM harus berupa huruf.',
-            'nim_nip.unique' => 'NIM/NIP sudah terdaftar.',
+            'nim_username.size' => 'NIM harus tepat 8 karakter.',
+            'nim_username.regex' => 'Karakter pertama NIM harus berupa huruf.',
+            'nim_username.unique' => $request->role === 'Mahasiswa' ? 'NIM sudah terdaftar.' : 'Username sudah terdaftar.',
         ]);
 
         $user->name = $request->name;
-        $user->nim_nip = $request->nim_nip;
+        $user->nim_username = $request->nim_username;
         $user->role = $request->role;
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);

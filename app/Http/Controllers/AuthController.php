@@ -30,11 +30,11 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'nim_nip' => 'required',
+            'nim_username' => 'required',
             'password' => 'required'
         ]);
 
-        if (Auth::attempt(['nim_nip' => $credentials['nim_nip'], 'password' => $credentials['password']], $request->boolean('remember'))) {
+        if (Auth::attempt(['nim_username' => $credentials['nim_username'], 'password' => $credentials['password']], $request->boolean('remember'))) {
             $user = Auth::user();
 
             // Invalidate previous session if exists (single session enforcement)
@@ -59,8 +59,8 @@ class AuthController extends Controller
         }
 
         return back()->withErrors([
-            'nim_nip' => 'Kredensial yang diberikan tidak cocok dengan data kami.',
-        ])->onlyInput('nim_nip');
+            'nim_username' => 'Kredensial yang diberikan tidak cocok dengan data kami.',
+        ])->onlyInput('nim_username');
     }
 
     /**
@@ -83,18 +83,18 @@ class AuthController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'nim_nip' => ['required', 'string', 'size:8', 'regex:/^[A-Za-z]/', 'unique:users,nim_nip'],
+            'nim_username' => ['required', 'string', 'size:8', 'regex:/^[A-Za-z]/', 'unique:users,nim_username'],
             'password' => 'required|string|min:8|confirmed',
         ], [
-            'nim_nip.size' => 'NIM harus tepat 8 karakter.',
-            'nim_nip.regex' => 'Karakter pertama NIM harus berupa huruf.',
-            'nim_nip.unique' => 'NIM sudah terdaftar.',
+            'nim_username.size' => 'NIM harus tepat 8 karakter.',
+            'nim_username.regex' => 'Karakter pertama NIM harus berupa huruf.',
+            'nim_username.unique' => 'NIM sudah terdaftar.',
             'password.confirmed' => 'Konfirmasi password tidak cocok.'
         ]);
 
         $user = User::create([
             'name' => $request->name,
-            'nim_nip' => $request->nim_nip,
+            'nim_username' => $request->nim_username,
             'role' => 'Mahasiswa',
             'password' => Hash::make($request->password),
         ]);

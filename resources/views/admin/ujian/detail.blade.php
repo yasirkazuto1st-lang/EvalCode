@@ -224,8 +224,8 @@
                                             $latestSub = $p->submissions->sortByDesc('created_at')->first();
                                             $latestTime = $latestSub ? \Carbon\Carbon::parse($latestSub->created_at)->timestamp : 0;
                                         @endphp
-                                        <tr class="participant-row" data-nim="{{ $p->nim_nip }}" data-nama="{{ $p->name }}" data-skor="{{ $p->total_skor ?? 0 }}" data-waktu="{{ $latestTime }}">
-                                            <td class="ps-4">{{ $p->nim_nip }}</td>
+                                        <tr class="participant-row" data-nim="{{ $p->nim_username }}" data-nama="{{ $p->name }}" data-skor="{{ $p->total_skor ?? 0 }}" data-waktu="{{ $latestTime }}">
+                                            <td class="ps-4">{{ $p->nim_username }}</td>
                                             <td class="fw-semibold">{{ $p->name }}</td>
                                             <td>
                                                 @if ($p->status == 'Lulus')

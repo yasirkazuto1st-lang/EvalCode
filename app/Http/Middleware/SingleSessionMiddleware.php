@@ -29,7 +29,7 @@ class SingleSessionMiddleware
                 }
 
                 return redirect()->route('login')->withErrors([
-                    'nim_nip' => 'Akun Anda telah login di perangkat lain. Silakan login kembali.',
+                    'nim_username' => 'Akun Anda telah login di perangkat lain. Silakan login kembali.',
                 ]);
             }
         }

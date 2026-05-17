@@ -28,12 +28,12 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="nim_nip" class="form-label text-muted small fw-semibold">NIM</label>
-                                <input id="nim_nip" type="text"
-                                    class="form-control @error('nim_nip') is-invalid @enderror" name="nim_nip"
-                                    value="{{ old('nim_nip') }}" required autocomplete="nim_nip"
+                                <label for="nim_username" class="form-label text-muted small fw-semibold">NIM</label>
+                                <input id="nim_username" type="text"
+                                    class="form-control @error('nim_username') is-invalid @enderror" name="nim_username"
+                                    value="{{ old('nim_username') }}" required autocomplete="nim_username"
                                     placeholder="Contoh: D0221001">
-                                @error('nim_nip')
+                                @error('nim_username')
                                     <span class="invalid-feedback" role="alert">
                                         <strong>{{ $message }}</strong>
                                     </span>

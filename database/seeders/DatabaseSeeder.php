@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
     {
         User::create([
             'name' => 'Administrator',
-            'nim_nip' => 'Admin',
+            'nim_username' => 'Admin',
             'role' => 'Admin',
             'password' => \Illuminate\Support\Facades\Hash::make('Admin123'),
         ]);

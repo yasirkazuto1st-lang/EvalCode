@@ -136,7 +136,7 @@
                         <h5 class="fw-bold mb-0"><i class="bi bi-person-badge text-primary me-2"></i> Admin</h5>
                         <div class="d-flex gap-2">
                             <input type="text" id="searchAdminInput" class="form-control form-control-sm search-input rounded-pill"
-                                placeholder="Cari Admin (NIP/Nama)...">
+                                placeholder="Cari Admin (Username/Nama)...">
                             <button class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm text-nowrap" data-bs-toggle="modal"
                                 data-bs-target="#addAdminModal">
                                 <i class="bi bi-plus-circle me-1"></i> Tambah Admin
@@ -148,16 +148,16 @@
                             <table class="table table-hover align-top">
                                 <thead class="table-light">
                                     <tr class="text-nowrap">
-                                        <th style="width: 25%;">NIP</th>
+                                        <th style="width: 25%;">Username</th>
                                         <th style="width: 55%;">Nama</th>
                                         <th style="width: 20%;">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody id="adminTableBody">
                                     @forelse($admins as $u)
-                                        <tr class="admin-row" data-nim="{{ $u->nim_nip }}"
+                                        <tr class="admin-row" data-nim="{{ $u->nim_username }}"
                                             data-nama="{{ $u->name }}">
-                                            <td>{{ $u->nim_nip }}</td>
+                                            <td>{{ $u->nim_username }}</td>
                                             <td class="fw-semibold">{{ $u->name }}</td>
                                             <td class="text-nowrap">
                                                 <button class="btn btn-sm btn-outline-warning me-1" data-bs-toggle="modal"
@@ -198,7 +198,7 @@
                         <div class="d-flex gap-2">
                             <input type="text" id="searchPengawasInput"
                                 class="form-control form-control-sm search-input rounded-pill"
-                                placeholder="Cari Pengawas (NIP/Nama)...">
+                                placeholder="Cari Pengawas (Username/Nama)...">
                             <button class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm text-nowrap" data-bs-toggle="modal"
                                 data-bs-target="#addPengawasModal">
                                 <i class="bi bi-plus-circle me-1"></i> Tambah Pengawas
@@ -210,16 +210,16 @@
                             <table class="table table-hover align-top">
                                 <thead class="table-light">
                                     <tr class="text-nowrap">
-                                        <th style="width: 25%;">NIP</th>
+                                        <th style="width: 25%;">Username</th>
                                         <th style="width: 55%;">Nama</th>
                                         <th style="width: 20%;">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody id="pengawasTableBody">
                                     @forelse($pengawas as $u)
-                                        <tr class="pengawas-row" data-nim="{{ $u->nim_nip }}"
+                                        <tr class="pengawas-row" data-nim="{{ $u->nim_username }}"
                                             data-nama="{{ $u->name }}">
-                                            <td>{{ $u->nim_nip }}</td>
+                                            <td>{{ $u->nim_username }}</td>
                                             <td class="fw-semibold">{{ $u->name }}</td>
                                             <td class="text-nowrap">
                                                 <button class="btn btn-sm btn-outline-warning me-1" data-bs-toggle="modal"
@@ -275,9 +275,9 @@
                                 </thead>
                                 <tbody id="mahasiswaTableBody">
                                     @forelse($mahasiswa as $u)
-                                        <tr class="mahasiswa-row" data-nim="{{ $u->nim_nip }}"
+                                        <tr class="mahasiswa-row" data-nim="{{ $u->nim_username }}"
                                             data-nama="{{ $u->name }}">
-                                            <td>{{ $u->nim_nip }}</td>
+                                            <td>{{ $u->nim_username }}</td>
                                             <td class="fw-semibold">{{ $u->name }}</td>
                                             <td class="text-nowrap">
                                                 <button class="btn btn-sm btn-outline-warning me-1" data-bs-toggle="modal"
@@ -322,9 +322,9 @@
                         <div class="modal-body">
                             <input type="hidden" name="role" value="Admin">
                             <div class="mb-3"><label
-                                    class="form-label">NIP</label><input type="text"
-                                    name="nim_nip" class="form-control"
-                                    value="{{ $u->nim_nip }}" required></div>
+                                    class="form-label">Username</label><input type="text"
+                                    name="nim_username" class="form-control"
+                                    value="{{ $u->nim_username }}" required></div>
                             <div class="mb-3"><label
                                     class="form-label">Nama</label><input type="text"
                                     name="name" class="form-control"
@@ -389,9 +389,9 @@
                         <div class="modal-body">
                             <input type="hidden" name="role" value="Pengawas">
                             <div class="mb-3"><label
-                                    class="form-label">NIP</label><input type="text"
-                                    name="nim_nip" class="form-control"
-                                    value="{{ $u->nim_nip }}" required></div>
+                                    class="form-label">Username</label><input type="text"
+                                    name="nim_username" class="form-control"
+                                    value="{{ $u->nim_username }}" required></div>
                             <div class="mb-3"><label
                                     class="form-label">Nama</label><input type="text"
                                     name="name" class="form-control"
@@ -458,8 +458,8 @@
                             <input type="hidden" name="role" value="Mahasiswa">
                             <div class="mb-3"><label
                                     class="form-label">NIM</label><input type="text"
-                                    name="nim_nip" class="form-control"
-                                    value="{{ $u->nim_nip }}" required></div>
+                                    name="nim_username" class="form-control"
+                                    value="{{ $u->nim_username }}" required></div>
                             <div class="mb-3"><label
                                     class="form-label">Nama</label><input type="text"
                                     name="name" class="form-control"
@@ -518,7 +518,7 @@
                     @csrf
                     <div class="modal-body">
                         <input type="hidden" name="role" value="Admin">
-                        <div class="mb-3"><label class="form-label">NIP</label><input type="text" name="nim_nip"
+                        <div class="mb-3"><label class="form-label">Username</label><input type="text" name="nim_username"
                                 class="form-control" required></div>
                         <div class="mb-3"><label class="form-label">Nama</label><input type="text" name="name"
                                 class="form-control" required></div>
@@ -546,7 +546,7 @@
                     @csrf
                     <div class="modal-body">
                         <input type="hidden" name="role" value="Pengawas">
-                        <div class="mb-3"><label class="form-label">NIP</label><input type="text" name="nim_nip"
+                        <div class="mb-3"><label class="form-label">Username</label><input type="text" name="nim_username"
                                 class="form-control" required></div>
                         <div class="mb-3"><label class="form-label">Nama</label><input type="text" name="name"
                                 class="form-control" required></div>
@@ -574,7 +574,7 @@
                     @csrf
                     <div class="modal-body">
                         <input type="hidden" name="role" value="Mahasiswa">
-                        <div class="mb-3"><label class="form-label">NIM</label><input type="text" name="nim_nip"
+                        <div class="mb-3"><label class="form-label">NIM</label><input type="text" name="nim_username"
                                 class="form-control" placeholder="Contoh: D0221001" required></div>
                         <div class="mb-3"><label class="form-label">Nama</label><input type="text" name="name"
                                 class="form-control" required></div>

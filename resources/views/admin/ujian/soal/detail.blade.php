@@ -141,7 +141,10 @@
                                         </div>
                                     @empty
                                         <tr>
-                                            <td colspan="4" class="text-start">Tidak ada test case.</td>
+                                            <td colspan="4" class="text-center py-5 text-muted">
+                                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                                Belum ada test case untuk soal ini.
+                                            </td>
                                         </tr>
                                     @endforelse
                                 </tbody>

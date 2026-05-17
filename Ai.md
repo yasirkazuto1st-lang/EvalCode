@@ -51,7 +51,7 @@ Dokumen ini berfungsi sebagai panduan referensi sentral untuk memudahkan para _d
 
 Sistem menggunakan tipe penilaian berbasis **integer murni**.
 
-- `users`: Tabel akun (`user_id`, `name`, `nim_nip`, `role`, `password`, `last_session_id`).
+- `users`: Tabel akun (`user_id`, `name`, `nim_username`, `role`, `password`, `last_session_id`).
 - `ujians`: Tabel ujian (`ujian_id`, `judul`, `durasi`, `status`, `passing_grade` (integer)).
 - `soals`: Tabel soal (`soal_id`, `ujian_id`, `nama_soal`, `soal_pdf`, `bobot_nilai` (integer)).
 - `test_cases`: Tabel skenario tes (`test_case_id`, `soal_id`, `input`, `expected_output`).

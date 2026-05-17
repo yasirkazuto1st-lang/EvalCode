@@ -60,9 +60,9 @@ class PengawasUjianController extends Controller
         $query = \Illuminate\Support\Facades\DB::table(\Illuminate\Support\Facades\DB::raw("({$subQuery->toSql()}) as sub"))
             ->mergeBindings($subQuery)
             ->join('users', 'sub.user_id', '=', 'users.user_id')
-            ->select('users.name', 'users.nim_nip', 'users.user_id', \Illuminate\Support\Facades\DB::raw('SUM(sub.max_skor) as total_skor'), \Illuminate\Support\Facades\DB::raw('SUM(sub.is_accepted) as accepted_count'), \Illuminate\Support\Facades\DB::raw('MAX(sub.max_similarity_soal) as highest_similarity'));
+            ->select('users.name', 'users.nim_username', 'users.user_id', \Illuminate\Support\Facades\DB::raw('SUM(sub.max_skor) as total_skor'), \Illuminate\Support\Facades\DB::raw('SUM(sub.is_accepted) as accepted_count'), \Illuminate\Support\Facades\DB::raw('MAX(sub.max_similarity_soal) as highest_similarity'));
 
-        $participants = $query->groupBy('users.name', 'users.nim_nip', 'users.user_id')
+        $participants = $query->groupBy('users.name', 'users.nim_username', 'users.user_id')
             ->orderByDesc('total_skor')
             ->get();
 
