@@ -8,6 +8,11 @@ use App\Models\Token;
 
 class MahasiswaUjianController extends Controller
 {
+    /**
+     * Tampilkan dashboard Mahasiswa dengan daftar ujian yang tersedia.
+     * 
+     * @return \Illuminate\View\View
+     */
     public function dashboard()
     {
         $activeExams = Ujian::where('status', 'active')->orderBy('updated_at', 'desc')->get();
@@ -16,6 +21,12 @@ class MahasiswaUjianController extends Controller
         return view('mahasiswa.dashboard', compact('activeExams', 'closedExams', 'finishedExams'));
     }
 
+    /**
+     * Tampilkan detail ujian yang akan diikuti Mahasiswa (termasuk leaderboard dan status pengerjaan soal).
+     * 
+     * @param int $id ID Ujian
+     * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
+     */
     public function detail($id)
     {
         $exam = Ujian::with('soals')->findOrFail($id);
@@ -69,6 +80,13 @@ class MahasiswaUjianController extends Controller
         return view('mahasiswa.ujian.detail', compact('exam', 'leaderboard', 'acceptedCount', 'myTotalScore'));
     }
 
+    /**
+     * Proses mahasiswa untuk bergabung ke dalam ujian menggunakan token ujian.
+     * 
+     * @param Request $request
+     * @param int $id ID Ujian
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function joinExam(Request $request, $id)
     {
         $request->validate([
@@ -96,6 +114,13 @@ class MahasiswaUjianController extends Controller
         return redirect()->route('ujian.detail', $exam->ujian_id)->with('success', 'Berhasil masuk ke ujian!');
     }
 
+    /**
+     * Tampilkan ruang kerja (workspace) coding bagi Mahasiswa untuk mengerjakan soal tertentu.
+     * 
+     * @param int $examId ID Ujian
+     * @param int $soalId ID Soal
+     * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
+     */
     public function workspace($examId, $soalId)
     {
         $exam = Ujian::with('soals')->findOrFail($examId);
@@ -216,6 +241,14 @@ class MahasiswaUjianController extends Controller
         return 'Runtime Error';
     }
 
+    /**
+     * Proses submisi kode Mahasiswa ke Judge0, periksa plagiarisme, hitung skor, dan simpan hasilnya.
+     * 
+     * @param Request $request
+     * @param int $examId ID Ujian
+     * @param int $soalId ID Soal
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function submitCode(Request $request, $examId, $soalId)
     {
         $request->validate([

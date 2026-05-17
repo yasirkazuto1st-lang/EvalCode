@@ -5,6 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
+/**
+ * Model Token
+ * Digunakan untuk merepresentasikan kode token ujian yang dinamis (diperbarui secara berkala oleh Pengawas).
+ */
 class Token extends Model
 {
     protected $table = 'tokens';
@@ -20,6 +24,10 @@ class Token extends Model
         'status_aktif' => 'boolean',
     ];
 
+    /**
+     * Relasi ke model Ujian.
+     * Satu token hanya dimiliki oleh satu sesi ujian tertentu.
+     */
     public function ujian()
     {
         return $this->belongsTo(Ujian::class, 'ujian_id', 'ujian_id');

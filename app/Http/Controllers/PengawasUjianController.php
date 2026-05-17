@@ -9,7 +9,9 @@ use App\Models\Token;
 class PengawasUjianController extends Controller
 {
     /**
-     * Dashboard: show all ujians grouped by status
+     * Dashboard: Tampilkan daftar seluruh ujian yang dikelompokkan berdasarkan statusnya.
+     * 
+     * @return \Illuminate\View\View
      */
     public function dashboard()
     {
@@ -25,7 +27,12 @@ class PengawasUjianController extends Controller
     }
 
     /**
-     * Detail monitoring for a specific exam
+     * Halaman detail monitoring pengawas untuk sebuah ujian tertentu.
+     * Mengambil data token aktif, peserta, status kelulusan, dan statistik soal.
+     * 
+     * @param Request $request
+     * @param int $id ID Ujian
+     * @return \Illuminate\View\View
      */
     public function detail(Request $request, $id)
     {
@@ -103,6 +110,14 @@ class PengawasUjianController extends Controller
         ]);
     }
 
+    /**
+     * Tampilkan riwayat submisi seorang peserta ujian secara lengkap (terbaru di atas).
+     * 
+     * @param Request $request
+     * @param int $examId ID Ujian
+     * @param int $userId ID User (Mahasiswa)
+     * @return \Illuminate\View\View
+     */
     public function pesertaRiwayat(Request $request, $examId, $userId)
     {
         $exam = Ujian::with('soals')->findOrFail($examId);
@@ -119,6 +134,13 @@ class PengawasUjianController extends Controller
         return view('pengawas.ujian.riwayat_peserta', compact('exam', 'user', 'submissions'));
     }
 
+    /**
+     * Pengawas dapat menimpa (override) skor otomatis dengan skor manual beserta catatannya.
+     * 
+     * @param Request $request
+     * @param int $submissionId ID Submisi
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function overrideScore(Request $request, $submissionId)
     {
         $request->validate([
@@ -135,7 +157,10 @@ class PengawasUjianController extends Controller
     }
 
     /**
-     * Start an exam: set status to active & generate first token
+     * Mulai ujian: ubah status ujian menjadi aktif dan hasilkan token pertama.
+     * 
+     * @param int $id ID Ujian
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function startExam($id)
     {
@@ -161,7 +186,10 @@ class PengawasUjianController extends Controller
     }
 
     /**
-     * Pause an exam: set status to closed & deactivate tokens
+     * Hentikan sementara ujian: ubah status menjadi closed & nonaktifkan token.
+     * 
+     * @param int $id ID Ujian
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function endExam($id)
     {
@@ -174,7 +202,10 @@ class PengawasUjianController extends Controller
     }
 
     /**
-     * Finish an exam permanently: set status to finished & deactivate tokens
+     * Selesaikan ujian permanen: ubah status menjadi finished & nonaktifkan token.
+     * 
+     * @param int $id ID Ujian
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function finishExam($id)
     {
@@ -187,8 +218,10 @@ class PengawasUjianController extends Controller
     }
 
     /**
-     * API endpoint: refresh token (called by JS every 60 seconds)
-     * Returns JSON with new token and timestamp
+     * Endpoint API: Menghasilkan token baru untuk ujian (dipanggil melalui AJAX setiap 60 detik).
+     * 
+     * @param int $id ID Ujian
+     * @return \Illuminate\Http\JsonResponse
      */
     public function refreshToken($id)
     {
@@ -216,7 +249,10 @@ class PengawasUjianController extends Controller
     }
 
     /**
-     * API endpoint: get current active token (for polling)
+     * Endpoint API: Mengambil token yang saat ini sedang aktif (digunakan untuk sinkronisasi antarmuka).
+     * 
+     * @param int $id ID Ujian
+     * @return \Illuminate\Http\JsonResponse
      */
     public function currentToken($id)
     {
@@ -237,6 +273,13 @@ class PengawasUjianController extends Controller
         ]);
     }
 
+    /**
+     * Tampilkan halaman deskripsi soal beserta test case input/output.
+     * 
+     * @param int $examId ID Ujian
+     * @param int $soalId ID Soal
+     * @return \Illuminate\View\View
+     */
     public function soal($examId, $soalId)
     {
         $exam = Ujian::findOrFail($examId);
@@ -248,6 +291,11 @@ class PengawasUjianController extends Controller
         ]);
     }
 
+    /**
+     * Tampilkan halaman form ganti password untuk Pengawas.
+     * 
+     * @return \Illuminate\View\View
+     */
     public function password()
     {
         return view('pengawas.password');

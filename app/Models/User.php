@@ -10,6 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+/**
+ * Model User
+ * Merepresentasikan akun pengguna aplikasi, meliputi Admin, Pengawas, dan Mahasiswa.
+ * Menggunakan fitur otentikasi bawaan Laravel.
+ */
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;

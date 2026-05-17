@@ -11,11 +11,22 @@ use Illuminate\Support\Facades\Session;
 
 class AuthController extends Controller
 {
+    /**
+     * Tampilkan form login.
+     * 
+     * @return \Illuminate\View\View
+     */
     public function showLogin()
     {
         return view('auth.login');
     }
 
+    /**
+     * Proses autentikasi login (mendukung single-session per akun).
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -52,11 +63,22 @@ class AuthController extends Controller
         ])->onlyInput('nim_nip');
     }
 
+    /**
+     * Tampilkan form registrasi akun Mahasiswa baru.
+     * 
+     * @return \Illuminate\View\View
+     */
     public function showRegister()
     {
         return view('auth.register');
     }
 
+    /**
+     * Proses registrasi akun Mahasiswa baru dan langsung login.
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function register(Request $request)
     {
         $request->validate([
@@ -85,6 +107,12 @@ class AuthController extends Controller
         return redirect()->route('dashboard');
     }
 
+    /**
+     * Proses penggantian password oleh user yang sedang login.
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function updatePassword(Request $request)
     {
         $request->validate([
@@ -108,6 +136,12 @@ class AuthController extends Controller
         return back()->with('success', 'Password berhasil diubah.');
     }
 
+    /**
+     * Proses logout, invalidate session, dan bersihkan `last_session_id`.
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function logout(Request $request)
     {
         // Clear session ID from user record

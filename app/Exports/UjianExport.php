@@ -10,6 +10,11 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 
+/**
+ * Class UjianExport
+ * Menangani pembuatan format laporan Excel (XLSX) yang berisi daftar rekapitulasi peserta
+ * ujian beserta statistik kelulusan soal secara bersusun (stacked).
+ */
 class UjianExport implements FromArray, WithStyles, WithColumnWidths
 {
     protected $data;
@@ -23,6 +28,13 @@ class UjianExport implements FromArray, WithStyles, WithColumnWidths
         $this->soalData = $soalData;
     }
 
+    /**
+     * Membangun struktur baris Excel secara berurutan.
+     * Mulai dari Info Ujian, Header Peserta, Data Peserta, Spacer Baris Kosong,
+     * Header Statistik Soal, hingga Data Statistik Soal.
+     * 
+     * @return array
+     */
     public function array(): array
     {
         // 1. Header & Info Section
@@ -60,6 +72,11 @@ class UjianExport implements FromArray, WithStyles, WithColumnWidths
         return $rows;
     }
 
+    /**
+     * Mengatur lebar kolom agar rapi saat dilihat maupun di-print.
+     * 
+     * @return array
+     */
     public function columnWidths(): array
     {
         return [
@@ -70,6 +87,14 @@ class UjianExport implements FromArray, WithStyles, WithColumnWidths
         ];
     }
 
+    /**
+     * Menerapkan gaya visual, border, warna header, dan pengaturan print area pada sheet Excel.
+     * Menghitung posisi baris secara dinamis bergantung pada jumlah peserta untuk melukis 
+     * tabel statistik soal di bawahnya.
+     * 
+     * @param Worksheet $sheet
+     * @return array
+     */
     public function styles(Worksheet $sheet)
     {
         // Mengatur agar saat di-print otomatis muat dalam 1 halaman lebar (Fit to 1 page wide)

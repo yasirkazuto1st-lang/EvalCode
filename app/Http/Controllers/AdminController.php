@@ -16,6 +16,11 @@ class AdminController extends Controller
     // ==========================================
     // DASHBOARD
     // ==========================================
+    /**
+     * Tampilkan halaman dashboard Admin beserta statistik ringkas.
+     * 
+     * @return \Illuminate\View\View
+     */
     public function dashboard()
     {
         $stats = (object) [
@@ -28,6 +33,11 @@ class AdminController extends Controller
         return view('admin.dashboard', compact('stats'));
     }
 
+    /**
+     * Tampilkan halaman ganti password untuk Admin.
+     * 
+     * @return \Illuminate\View\View
+     */
     public function password()
     {
         return view('admin.password');
@@ -36,12 +46,23 @@ class AdminController extends Controller
     // ==========================================
     // UJIAN CRUD
     // ==========================================
+    /**
+     * Tampilkan daftar seluruh Ujian yang dikelola.
+     * 
+     * @return \Illuminate\View\View
+     */
     public function exams()
     {
         $exams = Ujian::orderBy('created_at', 'desc')->get();
         return view('admin.ujian.index', ['exams' => $exams]);
     }
 
+    /**
+     * Proses penyimpanan data Ujian baru ke database.
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function storeExam(Request $request)
     {
         $request->validate([
@@ -62,6 +83,13 @@ class AdminController extends Controller
         return redirect()->route('admin.ujian.index')->with('success', 'Ujian berhasil ditambahkan.');
     }
 
+    /**
+     * Proses pembaruan data Ujian yang sudah ada.
+     * 
+     * @param Request $request
+     * @param int $id ID Ujian
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function updateExam(Request $request, $id)
     {
         $exam = Ujian::findOrFail($id);
@@ -85,6 +113,12 @@ class AdminController extends Controller
         return redirect()->route('admin.ujian.index')->with('success', 'Ujian berhasil diperbarui.');
     }
 
+    /**
+     * Hapus data Ujian secara permanen beserta file PDF soal yang terlampir.
+     * 
+     * @param int $id ID Ujian
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function destroyExam($id)
     {
         $exam = Ujian::findOrFail($id);
@@ -98,23 +132,44 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Ujian berhasil dihapus.');
     }
 
-    // Detail of a specific exam
+    /**
+     * Tampilkan detail Ujian, daftar soal, serta rekapitulasi nilai peserta (Mahasiswa).
+     * Melakukan kalkulasi nilai akhir secara dinamis berdasarkan skor tertinggi tiap soal.
+     * 
+     * @param int $id ID Ujian
+     * @return \Illuminate\View\View
+     */
     public function examDetail($id)
     {
         $exam = Ujian::with('soals')->findOrFail($id);
         $questions = $exam->soals;
 
-        // Calculate Real Participants Data
+        // ==========================================
+        // KALKULASI REKAPITULASI PESERTA
+        // ==========================================
+        // 1. Ambil skor maksimal untuk setiap soal yang dikerjakan oleh tiap peserta.
         $subQuery = \Illuminate\Support\Facades\DB::table('submissions')
             ->join('soals', 'submissions.soal_id', '=', 'soals.soal_id')
             ->where('soals.ujian_id', $exam->ujian_id)
-            ->select('submissions.user_id', 'submissions.soal_id', \Illuminate\Support\Facades\DB::raw('MAX(submissions.skor) as max_skor'), \Illuminate\Support\Facades\DB::raw("MAX(CASE WHEN submissions.status = 'Accepted' THEN 1 ELSE 0 END) as is_accepted"))
+            ->select(
+                'submissions.user_id', 
+                'submissions.soal_id', 
+                \Illuminate\Support\Facades\DB::raw('MAX(submissions.skor) as max_skor'), 
+                \Illuminate\Support\Facades\DB::raw("MAX(CASE WHEN submissions.status = 'Accepted' THEN 1 ELSE 0 END) as is_accepted")
+            )
             ->groupBy('submissions.user_id', 'submissions.soal_id');
 
+        // 2. Gabungkan skor maksimal tiap soal menjadi total skor per peserta.
         $query = \Illuminate\Support\Facades\DB::table(\Illuminate\Support\Facades\DB::raw("({$subQuery->toSql()}) as sub"))
             ->mergeBindings($subQuery)
             ->join('users', 'sub.user_id', '=', 'users.user_id')
-            ->select('users.name', 'users.nim_nip', 'users.user_id', \Illuminate\Support\Facades\DB::raw('SUM(sub.max_skor) as total_skor'), \Illuminate\Support\Facades\DB::raw('SUM(sub.is_accepted) as accepted_count'));
+            ->select(
+                'users.name', 
+                'users.nim_nip', 
+                'users.user_id', 
+                \Illuminate\Support\Facades\DB::raw('SUM(sub.max_skor) as total_skor'), 
+                \Illuminate\Support\Facades\DB::raw('SUM(sub.is_accepted) as accepted_count')
+            );
 
         $participants = $query->groupBy('users.name', 'users.nim_nip', 'users.user_id')
             ->orderByDesc('total_skor')
@@ -124,6 +179,7 @@ class AdminController extends Controller
         $maxScore = $exam->soals->sum('bobot_nilai');
         $passingGrade = $exam->passing_grade;
 
+        // Ambil seluruh riwayat submission untuk ditampilkan di tabel dropdown riwayat
         $allSubmissions = \Illuminate\Support\Facades\DB::table('submissions')
             ->join('soals', 'submissions.soal_id', '=', 'soals.soal_id')
             ->where('soals.ujian_id', $exam->ujian_id)
@@ -132,7 +188,7 @@ class AdminController extends Controller
             ->get()
             ->groupBy('user_id');
 
-        // Add progress percentage to participants
+        // Tambahkan atribut persentase progres dan status kelulusan pada tiap peserta
         foreach ($participants as $p) {
             $p->progress_percentage = $totalSoal > 0 ? ($p->accepted_count / $totalSoal) * 100 : 0;
             $scorePercentage = $maxScore > 0 ? ($p->total_skor / $maxScore) * 100 : 0;
@@ -147,6 +203,13 @@ class AdminController extends Controller
         ]);
     }
 
+    /**
+     * Tampilkan riwayat lengkap submisi seorang peserta pada suatu ujian.
+     * 
+     * @param int $examId ID Ujian
+     * @param int $userId ID User (Mahasiswa)
+     * @return \Illuminate\View\View
+     */
     public function pesertaRiwayat($examId, $userId)
     {
         $exam = Ujian::with('soals')->findOrFail($examId);
@@ -163,10 +226,19 @@ class AdminController extends Controller
         return view('admin.ujian.riwayat_peserta', compact('exam', 'user', 'submissions'));
     }
 
+    /**
+     * Ekspor laporan hasil ujian (peserta dan statistik soal) ke file Excel (.xlsx).
+     * 
+     * @param int $id ID Ujian
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
     public function exportExcel($id)
     {
         $exam = Ujian::findOrFail($id);
 
+        // ==========================================
+        // 1. DATA PESERTA (Tabel Kiri)
+        // ==========================================
         $subQuery = \Illuminate\Support\Facades\DB::table('submissions')
             ->join('soals', 'submissions.soal_id', '=', 'soals.soal_id')
             ->where('soals.ujian_id', $exam->ujian_id)
@@ -198,7 +270,9 @@ class AdminController extends Controller
             ];
         }
 
-        // Calculate Soal Statistics for Excel Export
+        // ==========================================
+        // 2. DATA STATISTIK SOAL (Tabel Kanan)
+        // ==========================================
         $soalStats = \Illuminate\Support\Facades\DB::table('submissions')
             ->where('status', 'Accepted')
             ->select('soal_id', \Illuminate\Support\Facades\DB::raw('COUNT(DISTINCT user_id) as success_count'))
@@ -247,6 +321,13 @@ class AdminController extends Controller
         return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\UjianExport($exportData, $examInfo, $soalExportData), $filename);
     }
 
+    /**
+     * Override skor pada sebuah submisi peserta oleh Admin.
+     * 
+     * @param Request $request
+     * @param int $submissionId ID Submisi
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function overrideScore(Request $request, $submissionId)
     {
         $request->validate([
@@ -265,6 +346,13 @@ class AdminController extends Controller
     // ==========================================
     // SOAL CRUD
     // ==========================================
+    /**
+     * Tambah soal baru beserta file PDF deskripsi soal ke dalam ujian.
+     * 
+     * @param Request $request
+     * @param int $examId ID Ujian
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function storeSoal(Request $request, $examId)
     {
         $exam = Ujian::findOrFail($examId);
@@ -287,6 +375,14 @@ class AdminController extends Controller
         return redirect()->route('admin.ujian.detail', $examId)->with('success', 'Soal berhasil ditambahkan.');
     }
 
+    /**
+     * Perbarui data soal yang ada, termasuk menangani pergantian file PDF jika ada.
+     * 
+     * @param Request $request
+     * @param int $examId ID Ujian
+     * @param int $soalId ID Soal
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function updateSoal(Request $request, $examId, $soalId)
     {
         $soal = Soal::findOrFail($soalId);
@@ -313,6 +409,13 @@ class AdminController extends Controller
         return redirect()->route('admin.ujian.detail', $examId)->with('success', 'Soal berhasil diperbarui.');
     }
 
+    /**
+     * Hapus soal secara permanen, sekaligus menghapus file PDF fisiknya dari storage.
+     * 
+     * @param int $examId ID Ujian
+     * @param int $soalId ID Soal
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function destroySoal($examId, $soalId)
     {
         $soal = Soal::findOrFail($soalId);
@@ -324,7 +427,13 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Soal berhasil dihapus.');
     }
 
-    // Detail soal & test cases
+    /**
+     * Tampilkan detail sebuah soal beserta seluruh test case (input/output) miliknya.
+     * 
+     * @param int $examId ID Ujian
+     * @param int $soalId ID Soal
+     * @return \Illuminate\View\View
+     */
     public function soalDetail($examId, $soalId)
     {
         $exam = Ujian::findOrFail($examId);
@@ -341,6 +450,14 @@ class AdminController extends Controller
     // ==========================================
     // TEST CASE CRUD
     // ==========================================
+    /**
+     * Tambahkan sebuah Test Case (input dan expected output) pada soal.
+     * 
+     * @param Request $request
+     * @param int $examId ID Ujian
+     * @param int $soalId ID Soal
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function storeTestCase(Request $request, $examId, $soalId)
     {
         $soal = Soal::findOrFail($soalId);
@@ -359,6 +476,15 @@ class AdminController extends Controller
         return redirect()->route('admin.ujian.soal.detail', [$examId, $soalId])->with('success', 'Test case berhasil ditambahkan.');
     }
 
+    /**
+     * Perbarui Test Case yang sudah ada.
+     * 
+     * @param Request $request
+     * @param int $examId ID Ujian
+     * @param int $soalId ID Soal
+     * @param int $tcId ID Test Case
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function updateTestCase(Request $request, $examId, $soalId, $tcId)
     {
         $tc = TestCase::findOrFail($tcId);
@@ -376,6 +502,14 @@ class AdminController extends Controller
         return redirect()->route('admin.ujian.soal.detail', [$examId, $soalId])->with('success', 'Test case berhasil diperbarui.');
     }
 
+    /**
+     * Hapus sebuah Test Case secara permanen.
+     * 
+     * @param int $examId ID Ujian
+     * @param int $soalId ID Soal
+     * @param int $tcId ID Test Case
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function destroyTestCase($examId, $soalId, $tcId)
     {
         $tc = TestCase::findOrFail($tcId);
@@ -387,6 +521,11 @@ class AdminController extends Controller
     // ==========================================
     // USER MANAGEMENT
     // ==========================================
+    /**
+     * Tampilkan halaman manajemen master data User (Mahasiswa, Pengawas, Admin).
+     * 
+     * @return \Illuminate\View\View
+     */
     public function users()
     {
         $admins = User::where('role', 'Admin')->get();
@@ -400,6 +539,12 @@ class AdminController extends Controller
         ]);
     }
 
+    /**
+     * Buat User baru (dengan pengecekan format NIM khusus untuk Mahasiswa).
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function storeUser(Request $request)
     {
         $rules = [
@@ -431,6 +576,13 @@ class AdminController extends Controller
         return redirect()->route('admin.users', ['tab' => $tab])->with('success', 'User berhasil ditambahkan.');
     }
 
+    /**
+     * Perbarui data User yang sudah ada (termasuk ganti password opsional).
+     * 
+     * @param Request $request
+     * @param int $id ID User
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function updateUser(Request $request, $id)
     {
         $user = User::findOrFail($id);
@@ -468,6 +620,12 @@ class AdminController extends Controller
         return redirect()->route('admin.users', ['tab' => $tab])->with('success', 'User berhasil diperbarui.');
     }
 
+    /**
+     * Hapus akun User secara permanen (Admin tidak bisa menghapus akunnya sendiri).
+     * 
+     * @param int $id ID User
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function destroyUser($id)
     {
         if ($id == \Illuminate\Support\Facades\Auth::id()) {
