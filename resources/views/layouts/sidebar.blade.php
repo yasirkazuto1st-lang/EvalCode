@@ -19,6 +19,14 @@
     @viteReactRefresh
     @vite(['resources/sass/app.scss', 'resources/js/app.jsx'])
 
+    <!-- Global Theme Initialization -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('global_theme') || 'light';
+            document.documentElement.setAttribute('data-bs-theme', savedTheme);
+        })();
+    </script>
+
     <style>
         body {
             background-color: #f8f9fa;
@@ -226,6 +234,15 @@
                 <div class="w-100 d-flex justify-content-end align-items-center">
                     <!-- User Info di Kanan -->
                     <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center me-2">
+                            <label class="theme-switch" title="Ganti Mode Terang / Gelap">
+                                <input type="checkbox" id="themeToggleCheckbox" onchange="toggleGlobalTheme()">
+                                <span class="slider round">
+                                    <i class="bi bi-sun-fill sun-icon"></i>
+                                    <i class="bi bi-moon-stars-fill moon-icon"></i>
+                                </span>
+                            </label>
+                        </div>
                         <div class="text-end d-none d-sm-block">
                             <div class="fw-bold text-dark" style="font-size: 0.9rem; line-height: 1.2;">
                                 {{ Auth::user()->name ?? 'Administrator' }}</div>
@@ -316,6 +333,31 @@
                     btn.dataset.originalText = btn.innerHTML;
                 }
                 btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Menyimpan...`;
+            });
+        });
+    </script>
+
+    <!-- Global Theme JS Logic -->
+    <script>
+        function toggleGlobalTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+            const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-bs-theme', nextTheme);
+            localStorage.setItem('global_theme', nextTheme);
+
+            document.querySelectorAll('#themeToggleCheckbox').forEach(cb => {
+                cb.checked = (nextTheme === 'dark');
+            });
+
+            if (window.monaco && window.monaco.editor) {
+                window.monaco.editor.setTheme(nextTheme === 'dark' ? 'vs-dark' : 'vs');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+            document.querySelectorAll('#themeToggleCheckbox').forEach(cb => {
+                cb.checked = (currentTheme === 'dark');
             });
         });
     </script>

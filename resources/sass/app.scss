@@ -202,3 +202,221 @@ a, .btn, .badge, .form-control, .list-group-item {
 .modal.show .modal-dialog {
     transform: scale(1) translateY(0);
 }
+
+// ==========================================
+// PREMIUM ANIMATED THEME SWITCH
+// ==========================================
+.theme-switch {
+    position: relative;
+    display: inline-block;
+    width: 54px;
+    height: 28px;
+    margin: 0;
+}
+
+.theme-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.theme-switch .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #cbd5e1; /* light grey/blue */
+    transition: .4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.theme-switch .slider .sun-icon {
+    color: #f59e0b; /* warm amber */
+    font-size: 13px;
+    z-index: 1;
+    transition: opacity 0.3s ease;
+}
+
+.theme-switch .slider .moon-icon {
+    color: #f1f5f9;
+    font-size: 12px;
+    z-index: 1;
+    transition: opacity 0.3s ease;
+}
+
+.theme-switch .slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 2;
+}
+
+input:checked + .slider {
+    background-color: #334155; /* dark slate */
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+    background-color: #fbbf24; /* gold moon accent */
+}
+
+// ==========================================
+// GLOBAL DARK MODE SYSTEM (BOOTSTRAP 5)
+// ==========================================
+
+[data-bs-theme="dark"] {
+    // 1. Body background (Deep pitch black/dark grey for premium OLED/Dark feel)
+    body {
+        background-color: #101010 !important;
+        color: #e0e0e0 !important;
+    }
+
+    // 2. Elevated Elements (Cards, Modals, Dropdowns, Pill Containers) - Distinct from body!
+    .card, .modal-content, .dropdown-menu, .bg-white, .bg-light {
+        background-color: #1a1a1a !important;
+        color: #e0e0e0 !important;
+        border-color: #2e2e2e !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    // 3. Card & Modal Headers/Footers - Crisp distinction from card body
+    .card-header, .modal-header, .card-footer, .modal-footer {
+        background-color: #222222 !important;
+        border-color: #2e2e2e !important;
+    }
+
+    // 4. Tables - Clear distinction between Header (thead) and Body (tbody)
+    .table {
+        --bs-table-bg: #1a1a1a;
+        --bs-table-color: #e0e0e0;
+        --bs-table-border-color: #2e2e2e;
+    }
+
+    .table-light, .table-secondary, td {
+        background-color: #1a1a1a !important;
+        color: #e0e0e0 !important;
+        border-color: #2e2e2e !important;
+    }
+
+    thead, thead.table-light, thead.table-secondary, th {
+        background-color: #2a2a2a !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        border-bottom: 2px solid #444444 !important;
+        border-color: #2e2e2e !important;
+    }
+
+    // 5. Navigation Tabs & Pills (e.g. User Management Tabs) - Clear inactive tab visibility
+    .nav-pills, .nav-tabs {
+        background-color: #1a1a1a !important;
+        border-color: #2e2e2e !important;
+
+        .nav-link {
+            color: #a0a0a0 !important; // Inactive tab text clearly visible
+            font-weight: 500;
+            &:hover {
+                color: #ffffff !important;
+                background-color: rgba(255, 255, 255, 0.05) !important;
+            }
+            &.active {
+                color: #ffffff !important;
+                background-color: transparent !important; // Let the sliding indicator show
+            }
+        }
+    }
+
+    // Explicit override for #userTabs to ensure specificity
+    #userTabs {
+        background-color: #1a1a1a !important;
+        border: 1px solid #2e2e2e !important;
+        .nav-link {
+            color: #a0a0a0 !important;
+            &:hover {
+                color: #ffffff !important;
+            }
+            &.active {
+                color: #ffffff !important;
+            }
+        }
+    }
+
+    // 6. Form inputs
+    .form-control, .form-select {
+        background-color: #222222 !important;
+        color: #e0e0e0 !important;
+        border-color: #383838 !important;
+        &:focus {
+            border-color: #0d6efd !important;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+        }
+    }
+
+    // 7. Mahasiswa Soal Cards
+    .soal-card-default {
+        background-color: #1a1a1a !important;
+        border-color: #2e2e2e !important;
+        color: #e0e0e0 !important;
+        h6, p, span {
+            color: #e0e0e0 !important;
+        }
+    }
+
+    // 8. Top Navbar & Sidebar Wrapper
+    .navbar-unsulbar, #sidebar-wrapper, .top-navbar, .sidebar {
+        background: #181818 !important;
+        border-color: #2e2e2e !important;
+    }
+
+    .text-dark, .text-muted, .text-secondary {
+        color: #b0b0b0 !important; // Make muted text more readable on dark backgrounds
+    }
+
+    // Ensure solid yellow warning badges with .text-dark have pitch black text
+    .bg-warning.text-dark, .badge.bg-warning.text-dark {
+        color: #000000 !important;
+        font-weight: 700 !important;
+    }
+
+    // Ensure yellow summary cards with .text-dark keep pitch black text
+    .card.text-dark {
+        color: #000000 !important;
+        h6, h2, p, span {
+            color: #000000 !important;
+        }
+    }
+
+    // Ensure maroon text (.text-unsulbar) is bright and legible in dark mode
+    .text-unsulbar {
+        color: #ff6b6b !important;
+    }
+
+    .btn-outline-unsulbar {
+        color: #ffc107;
+        border-color: #ffc107;
+        &:hover {
+            color: #121212;
+            background-color: #ffc107;
+        }
+    }
+
+    // 9. Sidebar Logout Button - Deep Dark Maroon
+    .sidebar .list-group-item.btn-logout {
+        background-color: #580000 !important; // Deep dark maroon
+        color: #ffffff !important;
+        border-top: 1px solid #2e2e2e !important;
+        &:hover {
+            background-color: #3a0000 !important; // Even darker maroon on hover
+        }
+    }
+}

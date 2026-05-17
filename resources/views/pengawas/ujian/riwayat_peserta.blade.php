@@ -69,7 +69,12 @@
                                 <td><strong>{{ $s->skor }}</strong> / {{ $s->bobot_nilai }}</td>
                                 <td>
                                     @if($s->similarity_index !== null)
-                                        <span class="badge bg-warning text-dark">{{ round($s->similarity_index, 2) }}%</span>
+                                        @php
+                                            $threshold = config('judge.plagiarism_threshold', 0.75) * 100;
+                                            $warnThreshold = $threshold / 2;
+                                            $simColor = $s->similarity_index >= $threshold ? 'danger' : ($s->similarity_index >= $warnThreshold ? 'warning text-dark' : 'success');
+                                        @endphp
+                                        <span class="badge bg-{{ $simColor }}">{{ round($s->similarity_index, 2) }}%</span>
                                     @else
                                         <span class="text-muted small">-</span>
                                     @endif

@@ -115,6 +115,33 @@ Diukur berdasarkan persentase _user_ yang berhasil menyelesaikan soal tersebut (
 - **Compilation Error** (Abu-abu / _Secondary_): Kode gagal di-compile (terjadi _syntax error_ pada C++/Java, dll).
 - **Runtime Error** (Ungu / _Purple_): Terjadi _crash_ atau _exception_ saat eksekusi berjalan (misal: _divide by zero_, _index out of bounds_).
 
+### E. Sistem Dark Mode Universal (System-Wide Dark Mode)
+
+Sistem EvalCode dilengkapi dengan fitur tema Terang/Gelap universal yang diatur melalui atribut `[data-bs-theme="dark"]` pada elemen `<html>`.
+
+1. **Penyimpanan Sesi**: Preferensi tema disimpan di dalam `localStorage` (`global_theme`), sehingga tetap aktif antar halaman dan sesi pengguna.
+2. **Pencegahan FOUC**: Skrip inisialisasi tema diletakkan pada bagian `<head>` di layout utama (`app.blade.php` dan `sidebar.blade.php`) agar halaman langsung beradaptasi sebelum DOM selesai dirender.
+3. **Komponen UI & Monaco Editor**:
+   - **Hierarki Visual & Elevasi**: Untuk menghindari tampilan datar dan menyatu dengan latar belakang, `body` menggunakan abu-abu sangat gelap/hitam (`#101010`), sedangkan elemen terangkat seperti `.card`, `.modal-content`, `.dropdown-menu`, dan kontainer tab menggunakan `#1a1a1a` dengan bayangan lembut.
+   - **Header Tabel**: Bagian `thead` dan `th` menggunakan latar belakang `#2a2a2a` dengan garis bawah `#444444` agar terpisah secara jelas dari baris data (`#1a1a1a`).
+   - **Navigasi Tab/Pills**: Teks tab yang tidak aktif diatur secara eksplisit menggunakan warna `#a0a0a0` agar tetap kontras dan mudah dibaca di atas latar belakang gelap.
+   - **Tombol Logout Sidebar**: Diubah secara khusus dari merah terang (`#dc3545`) menjadi merah marun pekat (`#580000`) saat Dark Mode aktif untuk memberikan nuansa gelap yang konsisten dan elegan.
+   - **Daftar Soal Pengawas**: Menghapus pembedaan gaya genap/ganjil pada kartu soal di halaman detail ujian pengawas agar semua kartu seragam, memiliki efek *hover* yang responsif, dan konsisten di mode terang maupun gelap.
+   - **Badge Peringatan (Kuning)**: Menambahkan aturan khusus pada `app.scss` yang menargetkan `.bg-warning.text-dark` dan `.badge.bg-warning.text-dark` agar teks di dalamnya dipaksa menjadi hitam pekat (`#000000`) dan tebal (seperti pada *badge Similarity*), namun tetap mempertahankan warna teks kuning asli (`text-warning`) pada *badge* transparan seperti status "Belum Dimulai".
+   - **Kartu Ringkasan (Kuning)**: Menambahkan aturan khusus untuk `.card.text-dark` agar kartu berlatar belakang kuning terang (seperti "Total Pengawas" di Dashboard Admin) tetap menggunakan teks hitam pekat (`#000000`), mengatasi masalah teks abu-abu yang sulit dibaca di mode gelap.
+   - **Teks Identitas Maroon (`.text-unsulbar`)**: Menambahkan *override* warna pada mode gelap menjadi merah koral cerah (`#ff6b6b`). Hal ini mengatasi masalah sulitnya membaca teks maroon gelap pada latar belakang hitam di judul ujian (Workspace Mahasiswa), judul soal (Detail Soal Pengawas), serta ikon daftar ujian.
+   - Monaco Editor di halaman Workspace terintegrasi secara dua arah. Perubahan tema global otomatis memicu `window.monaco.editor.setTheme()` untuk transisi instan tanpa _re-render_.
+4. **Panduan Pengembangan UI Baru**:
+   - Jika menambahkan elemen atau kartu baru, pastikan tidak menggunakan warna latar belakang _hardcoded_ seperti `#ffffff` di CSS inline.
+   - Manfaatkan kelas bawaan Bootstrap (seperti `.bg-white`, `.card`, `.table`) yang otomatis dikonversi oleh aturan `[data-bs-theme="dark"]` di `app.scss`.
+   - Untuk elemen kustom, tambahkan pemilih spesifik di bawah blok `[data-bs-theme="dark"]` pada `app.scss`.
+
+## 5. Keamanan & Konfigurasi API (Judge0 Autograder)
+
+Untuk mencegah penyalahgunaan kuota API dan menjaga keamanan kredensial, kunci API Judge0 tidak lagi di-*hardcode* di dalam *source code*.
+- **Wajib Konfigurasi `.env`**: Setiap *developer* atau instansi yang melakukan *clone* repositori wajib mendaftar di [RapidAPI Judge0 CE](https://rapidapi.com/judge0-official/api/judge0-ce) dan memasukkan kunci API mereka ke variabel `RAPIDAPI_JUDGE0_KEY` di dalam file `.env`.
+- **Penanganan Error**: Jika variabel `RAPIDAPI_JUDGE0_KEY` kosong saat mahasiswa melakukan *submit* kode, sistem secara otomatis membatalkan eksekusi dan mengembalikan pesan error JSON yang informatif agar mahasiswa/pengawas segera melengkapi konfigurasi di `.env`.
+
 ---
 
-_Dokumen ini diperbarui secara otomatis pada: 2026-05-17. Harap perbarui dokumen ini apabila ada perubahan arsitektur mayor pada masa mendatang._
+_Dokumen ini diperbarui secara otomatis pada: 2026-05-18. Harap perbarui dokumen ini apabila ada perubahan arsitektur mayor pada masa mendatang._

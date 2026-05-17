@@ -297,7 +297,14 @@ class MahasiswaUjianController extends Controller
         $memoryLimitKB = max(32768, (int) ($rawMemoryMB * 1024)); // Minimal 32 MB = 32768 KB
 
         $judge0Url = 'https://judge0-ce.p.rapidapi.com';
-        $rapidApiKey = env('RAPIDAPI_JUDGE0_KEY', '050f745abemsh17cd274a2c49738p1b2dc6jsn51f733269ced');
+        $rapidApiKey = env('RAPIDAPI_JUDGE0_KEY');
+
+        if (empty($rapidApiKey)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Konfigurasi API Judge0 belum diatur. Silakan masukkan RAPIDAPI_JUDGE0_KEY Anda di file .env.'
+            ]);
+        }
         
         $allPassed = true;
         $finalStatus = 'Accepted';
@@ -460,7 +467,7 @@ class MahasiswaUjianController extends Controller
         $skor = $allPassed ? $soal->bobot_nilai : 0;
         $similarityIndex = null;
 
-        if ($allPassed) {
+        if ($allPassed && config('judge.enable_plagiarism_detection', true)) {
             $similarityIndex = $this->calculatePlagiarism($request->code, $soalId);
         }
 

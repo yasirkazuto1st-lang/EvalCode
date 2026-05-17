@@ -19,6 +19,14 @@
     <!-- Scripts and Styles -->
     @viteReactRefresh
     @vite(['resources/sass/app.scss', 'resources/js/app.jsx'])
+
+    <!-- Global Theme Initialization -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('global_theme') || 'light';
+            document.documentElement.setAttribute('data-bs-theme', savedTheme);
+        })();
+    </script>
 </head>
 
 <body class="bg-light" style="height: 100vh; overflow: hidden;">
@@ -41,6 +49,15 @@
 
                     <!-- Right Side Of Navbar -->
                     <ul class="navbar-nav ms-auto align-items-center">
+                        <li class="nav-item me-3 d-flex align-items-center">
+                            <label class="theme-switch" title="Ganti Mode Terang / Gelap">
+                                <input type="checkbox" id="themeToggleCheckbox" onchange="toggleGlobalTheme()">
+                                <span class="slider round">
+                                    <i class="bi bi-sun-fill sun-icon"></i>
+                                    <i class="bi bi-moon-stars-fill moon-icon"></i>
+                                </span>
+                            </label>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link fw-semibold px-3 text-white" href="{{ route('dashboard') }}">Ujian</a>
                         </li>
@@ -140,6 +157,31 @@
             }, 5000); // Cek setiap 5 detik
         </script>
     @endauth
+
+    <!-- Global Theme JS Logic -->
+    <script>
+        function toggleGlobalTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+            const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-bs-theme', nextTheme);
+            localStorage.setItem('global_theme', nextTheme);
+
+            document.querySelectorAll('#themeToggleCheckbox').forEach(cb => {
+                cb.checked = (nextTheme === 'dark');
+            });
+
+            if (window.monaco && window.monaco.editor) {
+                window.monaco.editor.setTheme(nextTheme === 'dark' ? 'vs-dark' : 'vs');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+            document.querySelectorAll('#themeToggleCheckbox').forEach(cb => {
+                cb.checked = (currentTheme === 'dark');
+            });
+        });
+    </script>
 </body>
 
 </html>

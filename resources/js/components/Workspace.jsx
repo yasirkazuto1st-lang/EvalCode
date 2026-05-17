@@ -8,6 +8,7 @@ const Workspace = ({ initialData }) => {
     const [output, setOutput] = useState(null);
     const [isRunning, setIsRunning] = useState(false);
     const [examMode, setExamMode] = useState(false);
+    // Theme is managed globally via window.toggleGlobalTheme and synced in handleEditorDidMount
 
     // Provide default fallback in case props are empty
     const currentSoalTitle = soal ? `${soal.nama_soal}` : 'Soal Tidak Ditemukan';
@@ -81,6 +82,13 @@ const Workspace = ({ initialData }) => {
     const handleEditorDidMount = (editor, monaco) => {
         editorRef.current = editor;
         monacoRef.current = monaco;
+        window.monaco = monaco;
+        const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+        if (currentTheme === 'light') {
+            monaco.editor.setTheme('vs');
+        } else {
+            monaco.editor.setTheme('vs-dark');
+        }
     };
 
     // Helper: Clear Markers

@@ -229,24 +229,18 @@
                                     }
                                 @endphp
                                 <a href="{{ route('pengawas.ujian.soal', ['examId' => $exam->ujian_id, 'soalId' => $soal->soal_id]) }}"
-                                    class="list-group-item list-group-item-action border py-3 rounded mb-2 d-flex flex-column gap-1 {{ $index % 2 == 0 ? 'bg-light shadow-sm border-0' : '' }}">
+                                    class="list-group-item list-group-item-action border py-3 rounded mb-2 d-flex flex-column gap-1 shadow-sm">
                                     <div class="d-flex justify-content-between align-items-start mb-1">
-                                        <span
-                                            class="{{ $index % 2 == 0 ? 'fw-bold' : 'fw-semibold' }} text-dark">{{ $index + 1 }}.
-                                            {{ $soal->nama_soal }}</span>
-                                        <span
-                                            class="badge bg-{{ $colorClass }} rounded-pill">{{ $mockCount }}/{{ $totalParticipants }}</span>
+                                        <span class="fw-semibold text-dark">{{ $index + 1 }}. {{ $soal->nama_soal }}</span>
+                                        <span class="badge bg-{{ $colorClass }} rounded-pill">{{ $mockCount }}/{{ $totalParticipants }}</span>
                                     </div>
                                     <div class="progress bg-secondary bg-opacity-25" style="height: 6px;">
                                         <div class="progress-bar bg-{{ $colorClass }} rounded-pill" role="progressbar"
                                             style="width: {{ $mockPercent }}%;" aria-valuenow="{{ $mockPercent }}"
                                             aria-valuemin="0" aria-valuemax="100"></div>
                                     </div>
-                                    <small
-                                        class="text-{{ $color }} {{ $index % 2 == 0 ? 'fw-semibold' : 'fw-bold' }} mt-1"
-                                        style="font-size: 0.75rem;"><i
-                                            class="bi bi-{{ $icon }} me-1"></i>{{ $level }}
-                                        ({{ $mockPercent }}% Selesai)
+                                    <small class="text-{{ $color }} fw-bold mt-1" style="font-size: 0.75rem;">
+                                        <i class="bi bi-{{ $icon }} me-1"></i>{{ $level }} ({{ $mockPercent }}% Selesai)
                                     </small>
                                 </a>
                             @empty
@@ -317,7 +311,9 @@
                                             <td>
                                                 @if ($p->highest_similarity !== null)
                                                     @php
-                                                        $pColor = $p->highest_similarity >= 70 ? 'danger' : ($p->highest_similarity >= 40 ? 'warning text-dark' : 'success');
+                                                        $threshold = config('judge.plagiarism_threshold', 0.75) * 100;
+                                                        $warnThreshold = $threshold / 2;
+                                                        $pColor = $p->highest_similarity >= $threshold ? 'danger' : ($p->highest_similarity >= $warnThreshold ? 'warning text-dark' : 'success');
                                                     @endphp
                                                     <span class="badge bg-{{ $pColor }}">{{ round($p->highest_similarity, 2) }}%</span>
                                                 @else
