@@ -122,7 +122,7 @@ class PengawasUjianController extends Controller
     public function overrideScore(Request $request, $submissionId)
     {
         $request->validate([
-            'skor' => 'required|numeric|min:0',
+            'skor' => 'required|integer|min:0',
             'justification_note' => 'required|string|max:500',
         ]);
 

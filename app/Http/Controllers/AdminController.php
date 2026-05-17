@@ -48,7 +48,7 @@ class AdminController extends Controller
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'durasi' => 'required|integer|min:1',
-            'passing_grade' => 'required|numeric|min:0',
+            'passing_grade' => 'required|integer|min:0',
         ]);
 
         Ujian::create([
@@ -70,7 +70,7 @@ class AdminController extends Controller
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'durasi' => 'required|integer|min:1',
-            'passing_grade' => 'required|numeric|min:0',
+            'passing_grade' => 'required|integer|min:0',
             'status' => 'nullable|in:active,closed,finished',
         ]);
 
@@ -198,6 +198,43 @@ class AdminController extends Controller
             ];
         }
 
+        // Calculate Soal Statistics for Excel Export
+        $soalStats = \Illuminate\Support\Facades\DB::table('submissions')
+            ->where('status', 'Accepted')
+            ->select('soal_id', \Illuminate\Support\Facades\DB::raw('COUNT(DISTINCT user_id) as success_count'))
+            ->groupBy('soal_id')
+            ->get()
+            ->keyBy('soal_id');
+
+        $totalParticipants = $participants->count();
+        $soalExportData = [];
+
+        foreach ($exam->soals as $index => $soal) {
+            $stat = $soalStats->get($soal->soal_id);
+            $successCount = $stat ? $stat->success_count : 0;
+            $successPercentage = $totalParticipants > 0 ? ($successCount / $totalParticipants) * 100 : 0;
+            $mockPercent = round($successPercentage);
+
+            if ($totalParticipants == 0) {
+                $level = 'Belum Dikerjakan';
+            } elseif ($mockPercent <= 25) {
+                $level = 'Sangat Sulit';
+            } elseif ($mockPercent <= 50) {
+                $level = 'Sulit';
+            } elseif ($mockPercent <= 75) {
+                $level = 'Normal';
+            } else {
+                $level = 'Gampang';
+            }
+
+            $soalExportData[] = [
+                'no_soal' => $index + 1,
+                'nama_soal' => $soal->nama_soal,
+                'selesai' => $successCount . ' Orang',
+                'kategori' => $level,
+            ];
+        }
+
         $examInfo = [
             'judul' => $exam->judul,
             'durasi' => $exam->durasi . " Menit",
@@ -207,7 +244,7 @@ class AdminController extends Controller
 
         $filename = "Laporan_Ujian_{$exam->ujian_id}_" . date('Ymd_His') . ".xlsx";
 
-        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\UjianExport($exportData, $examInfo), $filename);
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\UjianExport($exportData, $examInfo, $soalExportData), $filename);
     }
 
     public function overrideScore(Request $request, $submissionId)
@@ -235,7 +272,7 @@ class AdminController extends Controller
         $request->validate([
             'nama_soal' => 'required|string|max:255',
             'soal_pdf' => 'required|file|mimes:pdf|max:10240',
-            'bobot_nilai' => 'required|numeric|min:0',
+            'bobot_nilai' => 'required|integer|min:0',
         ]);
 
         $path = $request->file('soal_pdf')->store('soal_pdfs', 'public');
@@ -257,7 +294,7 @@ class AdminController extends Controller
         $request->validate([
             'nama_soal' => 'required|string|max:255',
             'soal_pdf' => 'nullable|file|mimes:pdf|max:10240',
-            'bobot_nilai' => 'required|numeric|min:0',
+            'bobot_nilai' => 'required|integer|min:0',
         ]);
 
         $soal->nama_soal = $request->nama_soal;

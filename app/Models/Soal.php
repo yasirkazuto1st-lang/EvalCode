@@ -16,6 +16,10 @@ class Soal extends Model
         'bobot_nilai',
     ];
 
+    protected $casts = [
+        'bobot_nilai' => 'integer',
+    ];
+
     public function ujian()
     {
         return $this->belongsTo(Ujian::class, 'ujian_id', 'ujian_id');

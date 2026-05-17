@@ -348,7 +348,7 @@
                                                                         <th>Waktu</th>
                                                                         <th>Soal</th>
                                                                         <th>Status</th>
-                                                                        <th>Skor Asli</th>
+                                                                        <th>Skor</th>
                                                                         <th>Similarity</th>
                                                                         <th>Catatan</th>
                                                                         <th>Aksi</th>
@@ -460,7 +460,7 @@
                                                                         <p class="mb-3 small text-muted">Ubah skor submisi apabila Anda merasa persentase similarity wajar dan tidak mengindikasikan kecurangan.</p>
                                                                         <div class="mb-3">
                                                                             <label class="form-label fw-semibold">Skor Baru</label>
-                                                                            <input type="number" step="0.1" max="{{ $s->bobot_nilai }}" min="0" name="skor" class="form-control" value="{{ $s->skor }}" required>
+                                                                            <input type="number" step="1" max="{{ $s->bobot_nilai }}" min="0" name="skor" class="form-control" value="{{ $s->skor }}" required>
                                                                             <small class="text-muted">Maksimal: {{ $s->bobot_nilai }}</small>
                                                                         </div>
                                                                         <div class="mb-3">

@@ -18,6 +18,10 @@ class Ujian extends Model
         'passing_grade',
     ];
 
+    protected $casts = [
+        'passing_grade' => 'integer',
+    ];
+
     public function soals()
     {
         return $this->hasMany(Soal::class, 'ujian_id', 'ujian_id');

@@ -265,7 +265,7 @@
                                                                     <th>Waktu</th>
                                                                     <th>Soal</th>
                                                                     <th>Status</th>
-                                                                    <th>Skor Asli</th>
+                                                                    <th>Skor</th>
                                                                     <th>Catatan</th>
                                                                     <th>Aksi</th>
                                                                 </tr>
