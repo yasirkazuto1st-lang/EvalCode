@@ -55,17 +55,9 @@ class PengawasUjianController extends Controller
             ->join('users', 'sub.user_id', '=', 'users.user_id')
             ->select('users.name', 'users.nim_nip', 'users.user_id', \Illuminate\Support\Facades\DB::raw('SUM(sub.max_skor) as total_skor'), \Illuminate\Support\Facades\DB::raw('SUM(sub.is_accepted) as accepted_count'), \Illuminate\Support\Facades\DB::raw('MAX(sub.max_similarity_soal) as highest_similarity'));
 
-        if (request('search')) {
-            $search = request('search');
-            $query->where(function($q) use ($search) {
-                $q->where('users.name', 'like', "%{$search}%")
-                  ->orWhere('users.nim_nip', 'like', "%{$search}%");
-            });
-        }
-
         $participants = $query->groupBy('users.name', 'users.nim_nip', 'users.user_id')
             ->orderByDesc('total_skor')
-            ->paginate(10)->withQueryString();
+            ->get();
 
         $totalSoal = $exam->soals->count();
         $maxScore = $exam->soals->sum('bobot_nilai');
@@ -95,7 +87,7 @@ class PengawasUjianController extends Controller
             ->get()
             ->keyBy('soal_id');
 
-        $totalParticipants = $participants->total();
+        $totalParticipants = $participants->count();
 
         foreach ($exam->soals as $soal) {
             $stat = $soalStats->get($soal->soal_id);

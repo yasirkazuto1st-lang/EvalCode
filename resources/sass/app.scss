@@ -171,21 +171,27 @@ a, .btn, .badge, .form-control, .list-group-item {
     transition: height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
 }
 
-// 6. Dropdown Menu (Slide Down & Fade In)
-.dropdown-menu.show {
-    animation: dropdownSlideFade 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    transform-origin: top;
+// 6. Dropdown Menu (Smooth Slide & Scale Transition for Opening & Closing)
+.dropdown-menu {
+    display: block !important; // Override Bootstrap's display: none to allow closing transition
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-10px) scale(0.96);
+    transform-origin: top center;
+    pointer-events: none;
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), 
+                transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                visibility 0.25s;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12) !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    padding: 0.5rem !important;
 }
 
-@keyframes dropdownSlideFade {
-    0% {
-        opacity: 0;
-        transform: translateY(-10px) scaleY(0.95);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0) scaleY(1);
-    }
+.dropdown-menu.show {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
 }
 
 // 7. Modal Animations (Scale Up)

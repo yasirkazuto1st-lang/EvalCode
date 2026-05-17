@@ -69,7 +69,7 @@
         <div class="row g-4">
             <!-- Left: Table Soal -->
             <div class="col-lg-5 mb-4 mb-lg-0">
-                <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card border-0 shadow-sm rounded-4">
                     <div
                         class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold mb-0"><i class="bi bi-list-task text-primary me-2"></i> Daftar Soal</h5>
@@ -170,7 +170,10 @@
                                         </div>
                                     @empty
                                         <tr>
-                                            <td colspan="4" class="text-start ps-4">Tidak ada soal.</td>
+                                            <td colspan="4" class="text-center py-5 text-muted">
+                                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                                Belum ada soal untuk ujian ini.
+                                            </td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -182,28 +185,30 @@
 
             <!-- Right: Table Peserta -->
             <div class="col-lg-7">
-                <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                     <div
                         class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                         <h5 class="fw-bold mb-0"><i class="bi bi-people-fill text-warning me-2"></i> Peserta Ujian</h5>
                         <div class="d-flex flex-column flex-md-row gap-2">
-                            <form action="" method="GET"
-                                class="input-group input-group-sm shadow-sm rounded-pill overflow-hidden"
-                                style="max-width: 250px;">
-                                <span class="input-group-text bg-white border-end-0 px-2"><i
-                                        class="bi bi-search text-muted small"></i></span>
-                                <input type="text" name="search" class="form-control border-start-0 shadow-none px-0"
-                                    placeholder="Cari..." value="{{ request('search') }}">
-                                <button type="submit" class="btn btn-primary px-3">Cari</button>
-                            </form>
+                            <input type="text" id="searchParticipantInput" class="form-control form-control-sm search-input rounded-pill" style="max-width: 250px;" placeholder="Cari peserta (NIM/Nama)...">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm dropdown-toggle d-flex align-items-center gap-1 h-100" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-funnel-fill"></i> <span id="activeFilterText">Urutkan: Normal</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow rounded-4 border-0" aria-labelledby="filterDropdown">
+                                    <li><a class="dropdown-item filter-option active" href="#" data-sort="normal"><i class="bi bi-sort-numeric-down me-2 text-primary"></i> Normal (Skor Tertinggi)</a></li>
+                                    <li><a class="dropdown-item filter-option" href="#" data-sort="terbaru"><i class="bi bi-clock-history me-2 text-success"></i> Submission Terakhir</a></li>
+                                    <li><a class="dropdown-item filter-option" href="#" data-sort="terlama"><i class="bi bi-clock me-2 text-warning"></i> Submission Terlama</a></li>
+                                </ul>
+                            </div>
                             <a href="{{ route('admin.ujian.export', $exam->ujian_id) }}"
-                                class="btn btn-sm btn-success rounded-pill shadow-sm px-3" title="Generate Laporan"><i
+                                class="btn btn-sm btn-success rounded-pill shadow-sm px-3 d-flex align-items-center justify-content-center" title="Generate Laporan"><i
                                     class="bi bi-printer-fill"></i></a>
                         </div>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
+                            <table id="participantTable" class="table table-hover align-middle mb-0">
                                 <thead class="table-light">
                                     <tr class="text-nowrap border-bottom border-warning border-2">
                                         <th class="ps-4 py-3">NIM</th>
@@ -215,7 +220,11 @@
                                 </thead>
                                 <tbody class="border-top-0">
                                     @forelse($participants as $p)
-                                        <tr>
+                                        @php
+                                            $latestSub = $p->submissions->sortByDesc('created_at')->first();
+                                            $latestTime = $latestSub ? \Carbon\Carbon::parse($latestSub->created_at)->timestamp : 0;
+                                        @endphp
+                                        <tr class="participant-row" data-nim="{{ $p->nim_nip }}" data-nama="{{ $p->name }}" data-skor="{{ $p->total_skor ?? 0 }}" data-waktu="{{ $latestTime }}">
                                             <td class="ps-4">{{ $p->nim_nip }}</td>
                                             <td class="fw-semibold">{{ $p->name }}</td>
                                             <td>
@@ -270,15 +279,17 @@
                                                                         <td>{{ $s->nama_soal }}</td>
                                                                         <td>
                                                                             @if ($s->status == 'Accepted')
-                                                                                <span
-                                                                                    class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">Accepted</span>
+                                                                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">Accepted</span>
                                                                             @elseif($s->status == 'Wrong Answer')
-                                                                                <span
-                                                                                    class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">Wrong
-                                                                                    Answer</span>
+                                                                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">Wrong Answer</span>
+                                                                            @elseif($s->status == 'Time Limit Exceeded')
+                                                                                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">Time Limit Exceeded</span>
+                                                                            @elseif($s->status == 'Compilation Error')
+                                                                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">Compilation Error</span>
+                                                                            @elseif($s->status == 'Runtime Error')
+                                                                                <span class="badge border border-opacity-25" style="color: #a855f7; background-color: rgba(168,85,247,0.15); border-color: rgba(168,85,247,0.3);">Runtime Error</span>
                                                                             @else
-                                                                                <span
-                                                                                    class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">{{ $s->status }}</span>
+                                                                                <span class="badge bg-dark bg-opacity-10 text-dark border border-dark border-opacity-25">{{ $s->status }}</span>
                                                                             @endif
                                                                         </td>
                                                                         <td>{{ $s->skor }}</td>
@@ -347,16 +358,6 @@
                             </table>
                         </div>
                     </div>
-                    <div class="card-footer bg-white border-top-0 py-3 rounded-bottom-4">
-                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center px-2">
-                            <span class="text-muted small fw-semibold mb-2 mb-md-0">Menampilkan
-                                {{ $participants->firstItem() ?? 0 }} hingga {{ $participants->lastItem() ?? 0 }} dari
-                                {{ $participants->total() }} peserta</span>
-                            <div class="m-0 pagination-sm">
-                                {{ $participants->links('pagination::bootstrap-5') }}
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -408,7 +409,7 @@
                 let currentPage = 1;
 
                 const paginationContainer = document.createElement('div');
-                paginationContainer.className = 'd-flex justify-content-end mt-2';
+                paginationContainer.className = 'd-flex flex-column flex-md-row justify-content-between align-items-center mt-2 px-2';
                 paginationContainer.id = tableId + '-pagination';
                 table.parentNode.insertBefore(paginationContainer, table.nextSibling);
 
@@ -423,6 +424,14 @@
 
                 function renderPagination() {
                     paginationContainer.innerHTML = '';
+                    const startItem = (currentPage - 1) * rowsPerPage + 1;
+                    const endItem = Math.min(currentPage * rowsPerPage, totalRows);
+
+                    const summarySpan = document.createElement('span');
+                    summarySpan.className = 'text-muted small fw-semibold mb-2 mb-md-0';
+                    summarySpan.innerText = `Menampilkan ${startItem} hingga ${endItem} dari ${totalRows} submisi`;
+                    paginationContainer.appendChild(summarySpan);
+
                     const nav = document.createElement('nav');
                     const ul = document.createElement('ul');
                     ul.className = 'pagination pagination-sm mb-0';
@@ -475,6 +484,173 @@
             document.querySelectorAll('.submission-table').forEach(table => {
                 paginateTable(table.id, 5);
             });
+
+            function initParticipantTablePagination() {
+                const searchInput = document.getElementById('searchParticipantInput');
+                const table = document.getElementById('participantTable');
+                if (!table) return;
+                const tbody = table.querySelector('tbody');
+                if (!tbody) return;
+
+                const allRows = Array.from(tbody.querySelectorAll('.participant-row')).map(row => {
+                    return {
+                        mainRow: row,
+                        collapseRow: row.nextElementSibling,
+                        skor: parseFloat(row.getAttribute('data-skor')) || 0,
+                        waktu: parseInt(row.getAttribute('data-waktu')) || 0,
+                        nim: (row.getAttribute('data-nim') || '').toLowerCase(),
+                        nama: (row.getAttribute('data-nama') || '').toLowerCase()
+                    };
+                });
+
+                const rowsPerPage = 10;
+                let currentPage = 1;
+                let currentSearchTerm = '';
+                let currentSort = 'normal';
+
+                const paginationContainer = document.createElement('div');
+                paginationContainer.className = 'd-flex flex-column flex-md-row justify-content-between align-items-center mt-3 px-3 pb-3';
+                paginationContainer.id = 'participantTable-pagination';
+                table.parentNode.insertBefore(paginationContainer, table.nextSibling);
+
+                function updateTable() {
+                    let filteredItems = allRows.filter(item => {
+                        return item.nim.includes(currentSearchTerm) || item.nama.includes(currentSearchTerm);
+                    });
+
+                    filteredItems.sort((a, b) => {
+                        if (currentSort === 'terbaru') {
+                            return b.waktu - a.waktu;
+                        } else if (currentSort === 'terlama') {
+                            return a.waktu - b.waktu;
+                        } else {
+                            return b.skor - a.skor;
+                        }
+                    });
+
+                    // Re-append to tbody to reflect sorted order in DOM
+                    filteredItems.forEach(item => {
+                        tbody.appendChild(item.mainRow);
+                        if (item.collapseRow) tbody.appendChild(item.collapseRow);
+                    });
+
+                    const totalRows = filteredItems.length;
+                    const totalPages = Math.ceil(totalRows / rowsPerPage) || 1;
+                    if (currentPage > totalPages) currentPage = totalPages;
+
+                    const start = (currentPage - 1) * rowsPerPage;
+                    const end = start + rowsPerPage;
+
+                    allRows.forEach(item => { 
+                        item.mainRow.style.display = 'none'; 
+                        if (item.collapseRow) item.collapseRow.style.display = 'none';
+                    });
+
+                    filteredItems.forEach((item, index) => {
+                        if (index >= start && index < end) {
+                            item.mainRow.style.display = '';
+                            if (item.collapseRow) item.collapseRow.style.display = '';
+                        }
+                    });
+
+                    renderPagination(totalRows, totalPages);
+                }
+
+                function renderPagination(totalRows, totalPages) {
+                    paginationContainer.innerHTML = '';
+                    if (totalRows === 0) {
+                        const emptySpan = document.createElement('span');
+                        emptySpan.className = 'text-muted small fw-semibold';
+                        emptySpan.innerText = 'Tidak ada peserta yang ditemukan';
+                        paginationContainer.appendChild(emptySpan);
+                        return;
+                    }
+
+                    const startItem = (currentPage - 1) * rowsPerPage + 1;
+                    const endItem = Math.min(currentPage * rowsPerPage, totalRows);
+
+                    const summarySpan = document.createElement('span');
+                    summarySpan.className = 'text-muted small fw-semibold mb-2 mb-md-0';
+                    summarySpan.innerText = `Menampilkan ${startItem} hingga ${endItem} dari ${totalRows} peserta`;
+                    paginationContainer.appendChild(summarySpan);
+
+                    if (totalPages <= 1) return;
+
+                    const nav = document.createElement('nav');
+                    const ul = document.createElement('ul');
+                    ul.className = 'pagination pagination-sm mb-0';
+
+                    const prevLi = document.createElement('li');
+                    prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+                    prevLi.innerHTML = `<a class="page-link" href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>`;
+                    prevLi.onclick = (e) => {
+                        e.preventDefault();
+                        if (currentPage > 1) { currentPage--; updateTable(); }
+                    };
+                    ul.appendChild(prevLi);
+
+                    for (let i = 1; i <= totalPages; i++) {
+                        const pageLi = document.createElement('li');
+                        pageLi.className = `page-item ${currentPage === i ? 'active' : ''}`;
+                        pageLi.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                        pageLi.onclick = (e) => {
+                            e.preventDefault();
+                            currentPage = i;
+                            updateTable();
+                        };
+                        ul.appendChild(pageLi);
+                    }
+
+                    const nextLi = document.createElement('li');
+                    nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+                    nextLi.innerHTML = `<a class="page-link" href="#" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>`;
+                    nextLi.onclick = (e) => {
+                        e.preventDefault();
+                        if (currentPage < totalPages) { currentPage++; updateTable(); }
+                    };
+                    ul.appendChild(nextLi);
+
+                    nav.appendChild(ul);
+                    paginationContainer.appendChild(nav);
+                }
+
+                if (searchInput) {
+                    searchInput.addEventListener('keyup', function() {
+                        currentSearchTerm = this.value.toLowerCase();
+                        currentPage = 1;
+                        updateTable();
+                    });
+                }
+
+                document.querySelectorAll('.filter-option').forEach(option => {
+                    option.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        document.querySelectorAll('.filter-option').forEach(opt => opt.classList.remove('active'));
+                        this.classList.add('active');
+                        currentSort = this.getAttribute('data-sort');
+                        const activeText = document.getElementById('activeFilterText');
+                        if (activeText) {
+                            if (currentSort === 'terbaru') activeText.innerText = 'Urutkan: Terbaru';
+                            else if (currentSort === 'terlama') activeText.innerText = 'Urutkan: Terlama';
+                            else activeText.innerText = 'Urutkan: Normal';
+                        }
+                        currentPage = 1;
+                        updateTable();
+                    });
+                });
+
+                updateTable();
+            }
+
+            initParticipantTablePagination();
         });
     </script>
+
+    <style>
+        /* Sembunyikan teks bahasa Inggris bawaan Laravel dari pagination */
+        .pagination-sm nav div.d-sm-flex > div:first-child,
+        .pagination-sm p.small.text-muted {
+            display: none !important;
+        }
+    </style>
 @endsection

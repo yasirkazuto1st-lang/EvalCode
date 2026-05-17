@@ -49,12 +49,14 @@ class MahasiswaUjianController extends Controller
             ->get();
 
         $acceptedCount = 0;
+        $myTotalScore = 0;
 
         foreach ($exam->soals as $soal) {
             $bestSubmission = $userSubmissions->where('soal_id', $soal->soal_id)->sortByDesc('skor')->first();
             if ($bestSubmission) {
                 $soal->status_pengerjaan = $bestSubmission->status;
                 $soal->skor_tertinggi = $bestSubmission->skor;
+                $myTotalScore += $bestSubmission->skor;
                 if ($soal->status_pengerjaan == 'Accepted') {
                     $acceptedCount++;
                 }
@@ -64,7 +66,7 @@ class MahasiswaUjianController extends Controller
             }
         }
 
-        return view('mahasiswa.ujian.detail', compact('exam', 'leaderboard', 'acceptedCount'));
+        return view('mahasiswa.ujian.detail', compact('exam', 'leaderboard', 'acceptedCount', 'myTotalScore'));
     }
 
     public function joinExam(Request $request, $id)

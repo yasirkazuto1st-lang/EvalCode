@@ -345,19 +345,19 @@ const Workspace = ({ initialData }) => {
                         <div className="bg-light px-3 py-2 border-bottom d-flex justify-content-between align-items-center">
                             <span className="fw-semibold small text-muted"><i className="bi bi-terminal me-2"></i>Konsol Eksekusi (Judge0)</span>
                             {output && output.status === 'Accepted' && (
-                                <span className="badge bg-success">Accepted (AC)</span>
+                                <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">Accepted (AC)</span>
                             )}
                             {output && output.status === 'Wrong Answer' && (
-                                <span className="badge bg-danger">Wrong Answer (WA)</span>
+                                <span className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">Wrong Answer (WA)</span>
                             )}
                             {output && output.status === 'Time Limit Exceeded' && (
-                                <span className="badge bg-warning text-dark">Time Limit Exceeded (TLE)</span>
+                                <span className="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">Time Limit Exceeded (TLE)</span>
                             )}
                             {output && output.status === 'Compilation Error' && (
-                                <span className="badge bg-info text-dark">Compilation Error (CE)</span>
+                                <span className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">Compilation Error (CE)</span>
                             )}
                             {output && output.status === 'Runtime Error' && (
-                                <span className="badge bg-secondary">Runtime Error (RTE)</span>
+                                <span className="badge border border-opacity-25" style={{ color: '#a855f7', backgroundColor: 'rgba(168,85,247,0.15)', borderColor: 'rgba(168,85,247,0.3)' }}>Runtime Error (RTE)</span>
                             )}
                         </div>
                         <div className="p-3 overflow-auto flex-grow-1 font-monospace small bg-dark text-light">
@@ -366,7 +366,13 @@ const Workspace = ({ initialData }) => {
                             ) : (
                                 <div>
                                     <div className="mb-3 d-flex justify-content-between align-items-center">
-                                        <strong className={output.status === 'Accepted' ? 'text-success' : 'text-danger'}>
+                                        <strong style={{
+                                            color: output.status === 'Accepted' ? '#28a745' :
+                                                   output.status === 'Wrong Answer' ? '#dc3545' :
+                                                   output.status === 'Time Limit Exceeded' ? '#ffc107' :
+                                                   output.status === 'Compilation Error' ? '#adb5bd' :
+                                                   output.status === 'Runtime Error' ? '#c084fc' : '#dc3545'
+                                        }}>
                                             Status Akhir: {output.status}
                                         </strong>
                                     </div>

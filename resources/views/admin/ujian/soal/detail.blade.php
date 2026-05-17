@@ -51,7 +51,7 @@
                     <div
                         class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold mb-0"><i class="bi bi-list-check text-success me-2"></i> Test Cases</h5>
-                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addTestCaseModal">
+                        <button class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#addTestCaseModal">
                             <i class="bi bi-plus-circle me-1"></i> Tambah Test Case
                         </button>
                     </div>

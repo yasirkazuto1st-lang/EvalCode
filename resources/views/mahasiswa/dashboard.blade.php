@@ -37,14 +37,17 @@
     </div>
 
     {{-- Ujian Berjalan --}}
-    <h5 class="fw-bold mb-3"><i class="bi bi-circle-fill text-success small me-1"></i> Ujian Berjalan</h5>
-    <div class="row g-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0"><i class="bi bi-play-circle-fill text-success small me-1"></i> Ujian Berjalan</h5>
+        <div id="pagination-mhs-berjalan"></div>
+    </div>
+    <div class="row g-4 mb-4" id="container-mhs-berjalan">
         @forelse($activeExams as $exam)
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-4 exam-card-mhs-berjalan">
                 <div class="card h-100 border-0 shadow-sm rounded-4 hover-shadow transition-all">
                     <div class="card-body p-4 d-flex flex-column">
                         <div class="d-flex justify-content-between align-items-start mb-3">
-                            <span class="badge bg-success rounded-pill">Berjalan</span>
+                            <span class="badge bg-success rounded-pill"><i class="bi bi-play-circle-fill me-1"></i> Berjalan</span>
                             <span class="text-muted small"><i class="bi bi-clock"></i> {{ $exam->durasi }} Menit</span>
                         </div>
                         <h5 class="fw-bold mb-2">{{ $exam->judul }}</h5>
@@ -83,8 +86,8 @@
             </div>
         @empty
             <div class="col-12">
-                <div class="text-center py-4 text-muted bg-white rounded-4 shadow-sm">
-                    <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                <div class="text-center py-5 text-muted bg-white rounded-4 shadow-sm">
+                    <i class="bi bi-inbox fs-2 d-block mb-2"></i>
                     <p class="mb-0">Tidak ada ujian yang sedang berjalan saat ini.</p>
                 </div>
             </div>
@@ -92,14 +95,17 @@
     </div>
 
     {{-- Ujian Belum Dimulai --}}
-    <h5 class="fw-bold mb-3"><i class="bi bi-pause-circle-fill text-warning small me-1"></i> Belum Dimulai</h5>
-    <div class="row g-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0"><i class="bi bi-pause-circle-fill text-warning small me-1"></i> Belum Dimulai</h5>
+        <div id="pagination-mhs-belum"></div>
+    </div>
+    <div class="row g-4 mb-4" id="container-mhs-belum">
         @forelse($closedExams as $exam)
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-4 exam-card-mhs-belum">
                 <div class="card h-100 border-0 shadow-sm rounded-4 hover-shadow transition-all opacity-75">
                     <div class="card-body p-4 d-flex flex-column">
                         <div class="d-flex justify-content-between align-items-start mb-3">
-                            <span class="badge bg-warning text-dark rounded-pill">Belum Dimulai</span>
+                            <span class="badge bg-warning text-dark rounded-pill"><i class="bi bi-pause-circle-fill me-1"></i> Belum Dimulai</span>
                             <span class="text-muted small"><i class="bi bi-clock"></i> {{ $exam->durasi }} Menit</span>
                         </div>
                         <h5 class="fw-bold mb-2">{{ $exam->judul }}</h5>
@@ -112,7 +118,8 @@
             </div>
         @empty
             <div class="col-12">
-                <div class="text-center py-4 text-muted bg-white rounded-4 shadow-sm">
+                <div class="text-center py-5 text-muted bg-white rounded-4 shadow-sm">
+                    <i class="bi bi-inbox fs-2 d-block mb-2"></i>
                     <p class="mb-0">Tidak ada ujian yang menunggu dimulai.</p>
                 </div>
             </div>
@@ -120,14 +127,17 @@
     </div>
 
     {{-- Ujian Selesai --}}
-    <h5 class="fw-bold mb-3"><i class="bi bi-check-circle-fill text-secondary small me-1"></i> Selesai</h5>
-    <div class="row g-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0"><i class="bi bi-check-circle-fill text-secondary small me-1"></i> Selesai</h5>
+        <div id="pagination-mhs-selesai"></div>
+    </div>
+    <div class="row g-4 mb-4" id="container-mhs-selesai">
         @forelse($finishedExams as $exam)
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-4 exam-card-mhs-selesai">
                 <div class="card h-100 border-0 shadow-sm rounded-4 hover-shadow transition-all opacity-50">
                     <div class="card-body p-4 d-flex flex-column">
                         <div class="d-flex justify-content-between align-items-start mb-3">
-                            <span class="badge bg-secondary rounded-pill">Selesai</span>
+                            <span class="badge bg-secondary rounded-pill"><i class="bi bi-check-circle-fill me-1"></i> Selesai</span>
                             <span class="text-muted small"><i class="bi bi-clock"></i> {{ $exam->durasi }} Menit</span>
                         </div>
                         <h5 class="fw-bold mb-2">{{ $exam->judul }}</h5>
@@ -140,13 +150,83 @@
             </div>
         @empty
             <div class="col-12">
-                <div class="text-center py-4 text-muted bg-white rounded-4 shadow-sm">
+                <div class="text-center py-5 text-muted bg-white rounded-4 shadow-sm">
+                    <i class="bi bi-inbox fs-2 d-block mb-2"></i>
                     <p class="mb-0">Belum ada ujian yang selesai.</p>
                 </div>
             </div>
         @endforelse
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function initCardPagination(containerId, cardClass, paginationContainerId, itemsPerPage = 3) {
+        const container = document.getElementById(containerId);
+        const paginationContainer = document.getElementById(paginationContainerId);
+        if (!container || !paginationContainer) return;
+
+        const cards = container.querySelectorAll('.' + cardClass);
+        if (cards.length === 0 || container.querySelector('.bi-inbox')) {
+            paginationContainer.innerHTML = '';
+            return;
+        }
+
+        const totalPages = Math.ceil(cards.length / itemsPerPage);
+        let currentPage = 1;
+
+        function render() {
+            cards.forEach((card, index) => {
+                const start = (currentPage - 1) * itemsPerPage;
+                const end = start + itemsPerPage;
+                if (index >= start && index < end) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            if (totalPages <= 1) {
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            let html = `<nav><ul class="pagination pagination-sm mb-0 shadow-sm">`;
+            html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                        <a class="page-link px-3" href="#" data-page="${currentPage - 1}">&laquo;</a>
+                     </li>`;
+            for (let i = 1; i <= totalPages; i++) {
+                html += `<li class="page-item ${currentPage === i ? 'active' : ''}">
+                            <a class="page-link px-3" href="#" data-page="${i}">${i}</a>
+                         </li>`;
+            }
+            html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                        <a class="page-link px-3" href="#" data-page="${currentPage + 1}">&raquo;</a>
+                     </li>`;
+            html += `</ul></nav>`;
+
+            paginationContainer.innerHTML = html;
+
+            paginationContainer.querySelectorAll('.page-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = parseInt(this.getAttribute('data-page'));
+                    if (!isNaN(page) && page >= 1 && page <= totalPages) {
+                        currentPage = page;
+                        render();
+                    }
+                });
+            });
+        }
+
+        render();
+    }
+
+    initCardPagination('container-mhs-berjalan', 'exam-card-mhs-berjalan', 'pagination-mhs-berjalan', 3);
+    initCardPagination('container-mhs-belum', 'exam-card-mhs-belum', 'pagination-mhs-belum', 3);
+    initCardPagination('container-mhs-selesai', 'exam-card-mhs-selesai', 'pagination-mhs-selesai', 3);
+});
+</script>
 
 <style>
 .hover-shadow:hover {

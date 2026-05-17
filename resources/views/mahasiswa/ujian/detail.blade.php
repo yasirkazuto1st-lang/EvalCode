@@ -24,14 +24,31 @@
                         <span><i class="bi bi-check2-square me-1"></i> Passing Grade: {{ $exam->passing_grade }} Pts</span>
                     </div>
                 </div>
-                <div class="text-md-end mt-3 mt-md-0">
-                    <div class="bg-black bg-opacity-25 rounded-4 p-3 border border-white border-opacity-25 shadow-sm text-center"
-                        style="backdrop-filter: blur(10px); min-width: 150px;">
-                        <span class="small opacity-75 d-block text-uppercase fw-semibold"
+                <div class="text-md-end mt-3 mt-md-0 d-flex flex-wrap gap-3 justify-content-md-end">
+                    <!-- Box 1: Progress Anda -->
+                    <div class="bg-black bg-opacity-25 rounded-4 p-3 border border-white border-opacity-25 shadow-sm text-center flex-grow-1 flex-md-grow-0"
+                        style="backdrop-filter: blur(10px); min-width: 140px;">
+                        <span class="small opacity-75 d-block text-uppercase fw-semibold mb-1"
                             style="letter-spacing: 1px; font-size: 10px;">Progress Anda</span>
-                        <!-- Placeholder progress, can be dynamic later -->
                         <h4 class="fw-bold mb-0 text-white">{{ $acceptedCount }} / {{ $exam->soals->count() }} <span
                                 class="fs-6 fw-normal">Soal</span></h4>
+                    </div>
+
+                    <!-- Box 2: Status Kelulusan -->
+                    @php
+                        $isPassed = $myTotalScore >= $exam->passing_grade;
+                        $statusBg = $isPassed ? 'bg-success bg-opacity-25 border-success' : 'bg-danger bg-opacity-25 border-danger';
+                        $statusText = $isPassed ? 'LULUS' : 'TIDAK LULUS';
+                        $statusIcon = $isPassed ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger';
+                    @endphp
+                    <div class="rounded-4 p-3 border border-opacity-50 shadow-sm text-center flex-grow-1 flex-md-grow-0 {{ $statusBg }}"
+                        style="backdrop-filter: blur(10px); min-width: 150px;">
+                        <span class="small opacity-75 d-block text-uppercase fw-semibold mb-1 text-white"
+                            style="letter-spacing: 1px; font-size: 10px;">Status Kelulusan</span>
+                        <h4 class="fw-bold mb-0 text-white d-flex align-items-center justify-content-center gap-2">
+                            <i class="bi {{ $statusIcon }} fs-5"></i>
+                            <span>{{ $statusText }}</span>
+                        </h4>
                     </div>
                 </div>
             </div>
@@ -222,21 +239,20 @@
                             @forelse($exam->soals as $index => $soal)
                                 <div class="col-12">
                                     @php
-                                        $borderColor = 'border-light-subtle bg-white';
+                                        $cardClass = 'soal-card-default';
                                         if ($soal->status_pengerjaan == 'Accepted') {
-                                            $borderColor = 'border-success border-2 bg-success bg-opacity-10';
-                                        } elseif (
-                                            in_array($soal->status_pengerjaan, [
-                                                'Wrong Answer',
-                                                'Time Limit Exceeded',
-                                                'Runtime Error',
-                                            ])
-                                        ) {
-                                            $borderColor = 'border-danger border-2 bg-danger bg-opacity-10';
+                                            $cardClass = 'soal-card-accepted border-2';
+                                        } elseif ($soal->status_pengerjaan == 'Wrong Answer') {
+                                            $cardClass = 'soal-card-wrong border-2';
+                                        } elseif ($soal->status_pengerjaan == 'Time Limit Exceeded') {
+                                            $cardClass = 'soal-card-tle border-2';
+                                        } elseif ($soal->status_pengerjaan == 'Compilation Error') {
+                                            $cardClass = 'soal-card-ce border-2';
+                                        } elseif ($soal->status_pengerjaan == 'Runtime Error') {
+                                            $cardClass = 'soal-card-re border-2';
                                         }
                                     @endphp
-                                    <div
-                                        class="border rounded-4 p-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center shadow-sm hover-shadow transition-all {{ $borderColor }}">
+                                    <div class="border rounded-4 p-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center shadow-sm hover-shadow transition-all {{ $cardClass }}">
                                         <div class="mb-3 mb-md-0">
                                             <h6 class="fw-bold mb-1 text-dark">{{ $index + 1 }}. {{ $soal->nama_soal }}
                                             </h6>
@@ -245,21 +261,21 @@
                                                     {{ $soal->bobot_nilai }}</span>
 
                                                 @php
-                                                    $statusColor = 'text-secondary';
+                                                    $statusStyle = 'color: #6c757d;';
                                                     if ($soal->status_pengerjaan == 'Accepted') {
-                                                        $statusColor = 'text-success';
-                                                    } elseif (
-                                                        in_array($soal->status_pengerjaan, [
-                                                            'Wrong Answer',
-                                                            'Time Limit Exceeded',
-                                                            'Runtime Error',
-                                                        ])
-                                                    ) {
-                                                        $statusColor = 'text-danger';
+                                                        $statusStyle = 'color: #198754;';
+                                                    } elseif ($soal->status_pengerjaan == 'Wrong Answer') {
+                                                        $statusStyle = 'color: #dc3545;';
+                                                    } elseif ($soal->status_pengerjaan == 'Time Limit Exceeded') {
+                                                        $statusStyle = 'color: #d97706;';
+                                                    } elseif ($soal->status_pengerjaan == 'Compilation Error') {
+                                                        $statusStyle = 'color: #6c757d;';
+                                                    } elseif ($soal->status_pengerjaan == 'Runtime Error') {
+                                                        $statusStyle = 'color: #9333ea;';
                                                     }
                                                 @endphp
 
-                                                <span class="{{ $statusColor }} fw-semibold">
+                                                <span class="fw-semibold" style="{{ $statusStyle }}">
                                                     Status: {{ $soal->status_pengerjaan }}
                                                     @if ($soal->status_pengerjaan != 'Belum Dikerjakan')
                                                         (Skor Tertinggi: {{ $soal->skor_tertinggi }})
@@ -285,7 +301,37 @@
     </div>
 
     <style>
-        .hover-shadow:hover {
+        .soal-card-accepted {
+            background-color: rgba(25, 135, 84, 0.1);
+            border-color: #198754 !important;
+        }
+        .soal-card-wrong {
+            background-color: rgba(220, 53, 69, 0.1);
+            border-color: #dc3545 !important;
+        }
+        .soal-card-tle {
+            background-color: rgba(255, 193, 7, 0.1);
+            border-color: #ffc107 !important;
+        }
+        .soal-card-ce {
+            background-color: rgba(108, 117, 125, 0.1);
+            border-color: #6c757d !important;
+        }
+        .soal-card-re {
+            background-color: rgba(168, 85, 247, 0.08);
+            border-color: rgba(168, 85, 247, 0.4) !important;
+        }
+        .soal-card-default {
+            background-color: #ffffff;
+            border-color: var(--bs-border-color-translucent) !important;
+        }
+
+        div.hover-shadow.soal-card-accepted:hover,
+        div.hover-shadow.soal-card-wrong:hover,
+        div.hover-shadow.soal-card-tle:hover,
+        div.hover-shadow.soal-card-ce:hover,
+        div.hover-shadow.soal-card-re:hover,
+        div.hover-shadow.soal-card-default:hover {
             transform: translateY(-2px);
             box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075) !important;
             border-color: #800000 !important;

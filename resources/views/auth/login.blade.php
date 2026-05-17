@@ -57,8 +57,14 @@
                             </div>
 
                             <div class="text-center mt-4">
-                                <p class="small text-muted mb-0">Mahasiswa Baru? <a href="{{ route('register') }}"
+                                <p class="small text-muted mb-3">Mahasiswa Baru? <a href="{{ route('register') }}"
                                         class="text-decoration-none text-unsulbar fw-semibold">Register</a></p>
+                                <hr class="text-muted opacity-25 my-3">
+                                <div class="bg-light p-3 rounded-4 text-center border border-secondary border-opacity-10 shadow-sm">
+                                    <p class="small text-muted mb-0">
+                                        <i class="bi bi-headset text-unsulbar me-1"></i> Mengalami kendala saat login? Silakan menghubungi <strong>Admin</strong>.
+                                    </p>
+                                </div>
                             </div>
                         </form>
                     </div>

@@ -135,9 +135,9 @@
                         class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold mb-0"><i class="bi bi-person-badge text-primary me-2"></i> Admin</h5>
                         <div class="d-flex gap-2">
-                            <input type="text" id="searchAdminInput" class="form-control form-control-sm search-input"
+                            <input type="text" id="searchAdminInput" class="form-control form-control-sm search-input rounded-pill"
                                 placeholder="Cari Admin (NIP/Nama)...">
-                            <button class="btn btn-sm btn-primary text-nowrap" data-bs-toggle="modal"
+                            <button class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm text-nowrap" data-bs-toggle="modal"
                                 data-bs-target="#addAdminModal">
                                 <i class="bi bi-plus-circle me-1"></i> Tambah Admin
                             </button>
@@ -172,73 +172,12 @@
                                                 @endif
                                             </td>
                                         </tr>
-
-                                        <!-- Edit User Modal -->
-                                        <div class="modal fade" id="editUserModal{{ $u->user_id }}" tabindex="-1"
-                                            aria-labelledby="editUserModalLabel{{ $u->user_id }}" aria-hidden="true">
-                                            <div class="modal-dialog">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title">Edit Admin</h5>
-                                                    </div>
-                                                    <form method="POST"
-                                                        action="{{ route('admin.users.update', $u->user_id) }}">
-                                                        @csrf
-                                                        @method('PUT')
-                                                        <div class="modal-body">
-                                                            <input type="hidden" name="role" value="Admin">
-                                                            <div class="mb-3"><label
-                                                                    class="form-label">NIP</label><input type="text"
-                                                                    name="nim_nip" class="form-control"
-                                                                    value="{{ $u->nim_nip }}" required></div>
-                                                            <div class="mb-3"><label
-                                                                    class="form-label">Nama</label><input type="text"
-                                                                    name="name" class="form-control"
-                                                                    value="{{ $u->name }}" required></div>
-                                                            <div class="mb-3"><label class="form-label">Password Baru
-                                                                    (Opsional)
-                                                                </label><input type="password" name="password"
-                                                                    class="form-control" minlength="8">
-                                                            </div>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary"
-                                                                data-bs-dismiss="modal">Batal</button>
-                                                            <button type="submit" class="btn btn-primary">Simpan</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Delete Confirmation -->
-                                        <div class="modal fade" id="deleteUserModal{{ $u->user_id }}" tabindex="-1"
-                                            aria-labelledby="deleteUserModalLabel{{ $u->user_id }}" aria-hidden="true">
-                                            <div class="modal-dialog">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title">Hapus Admin?</h5>
-                                                    </div>
-                                                    <form method="POST"
-                                                        action="{{ route('admin.users.destroy', $u->user_id) }}">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <div class="modal-body">Hapus admin
-                                                            <strong>{{ $u->name }}</strong>?
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary"
-                                                                data-bs-dismiss="modal">Batal</button>
-                                                            <button type="submit" class="btn btn-danger">Hapus</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-
                                     @empty
                                         <tr>
-                                            <td colspan="3" class="text-start">Tidak ada admin.</td>
+                                            <td colspan="3" class="text-center py-5 text-muted">
+                                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                                Belum ada data admin.
+                                            </td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -258,9 +197,9 @@
                         <h5 class="fw-bold mb-0"><i class="bi bi-person-video2 text-warning me-2"></i> Pengawas</h5>
                         <div class="d-flex gap-2">
                             <input type="text" id="searchPengawasInput"
-                                class="form-control form-control-sm search-input"
+                                class="form-control form-control-sm search-input rounded-pill"
                                 placeholder="Cari Pengawas (NIP/Nama)...">
-                            <button class="btn btn-sm btn-primary text-nowrap" data-bs-toggle="modal"
+                            <button class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm text-nowrap" data-bs-toggle="modal"
                                 data-bs-target="#addPengawasModal">
                                 <i class="bi bi-plus-circle me-1"></i> Tambah Pengawas
                             </button>
@@ -291,75 +230,12 @@
                                                         class="bi bi-trash"></i></button>
                                             </td>
                                         </tr>
-
-                                        <!-- Edit Pengawas Modal -->
-                                        <div class="modal fade" id="editPengawasModal{{ $u->user_id }}" tabindex="-1"
-                                            aria-labelledby="editPengawasModalLabel{{ $u->user_id }}"
-                                            aria-hidden="true">
-                                            <div class="modal-dialog">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title">Edit Pengawas</h5>
-                                                    </div>
-                                                    <form method="POST"
-                                                        action="{{ route('admin.users.update', $u->user_id) }}">
-                                                        @csrf
-                                                        @method('PUT')
-                                                        <div class="modal-body">
-                                                            <input type="hidden" name="role" value="Pengawas">
-                                                            <div class="mb-3"><label
-                                                                    class="form-label">NIP</label><input type="text"
-                                                                    name="nim_nip" class="form-control"
-                                                                    value="{{ $u->nim_nip }}" required></div>
-                                                            <div class="mb-3"><label
-                                                                    class="form-label">Nama</label><input type="text"
-                                                                    name="name" class="form-control"
-                                                                    value="{{ $u->name }}" required></div>
-                                                            <div class="mb-3"><label class="form-label">Password Baru
-                                                                    (Opsional)
-                                                                </label><input type="password" name="password"
-                                                                    class="form-control" minlength="8">
-                                                            </div>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary"
-                                                                data-bs-dismiss="modal">Batal</button>
-                                                            <button type="submit" class="btn btn-primary">Simpan</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Delete Pengawas Modal -->
-                                        <div class="modal fade" id="deletePengawasModal{{ $u->user_id }}"
-                                            tabindex="-1" aria-labelledby="deletePengawasModalLabel{{ $u->user_id }}"
-                                            aria-hidden="true">
-                                            <div class="modal-dialog">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title">Hapus Pengawas?</h5>
-                                                    </div>
-                                                    <form method="POST"
-                                                        action="{{ route('admin.users.destroy', $u->user_id) }}">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <div class="modal-body">Hapus pengawas
-                                                            <strong>{{ $u->name }}</strong>?
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary"
-                                                                data-bs-dismiss="modal">Batal</button>
-                                                            <button type="submit" class="btn btn-danger">Hapus</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-
                                     @empty
                                         <tr>
-                                            <td colspan="3" class="text-start">Tidak ada pengawas.</td>
+                                            <td colspan="3" class="text-center py-5 text-muted">
+                                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                                Belum ada data pengawas.
+                                            </td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -379,9 +255,9 @@
                         <h5 class="fw-bold mb-0"><i class="bi bi-mortarboard text-success me-2"></i> Mahasiswa</h5>
                         <div class="d-flex gap-2">
                             <input type="text" id="searchMahasiswaInput"
-                                class="form-control form-control-sm search-input"
+                                class="form-control form-control-sm search-input rounded-pill"
                                 placeholder="Cari Mahasiswa (NIM/Nama)...">
-                            <button class="btn btn-sm btn-primary text-nowrap" data-bs-toggle="modal"
+                            <button class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm text-nowrap" data-bs-toggle="modal"
                                 data-bs-target="#addMahasiswaModal">
                                 <i class="bi bi-plus-circle me-1"></i> Tambah Mahasiswa
                             </button>
@@ -412,75 +288,12 @@
                                                         class="bi bi-trash"></i></button>
                                             </td>
                                         </tr>
-
-                                        <!-- Edit Mahasiswa Modal -->
-                                        <div class="modal fade" id="editMahasiswaModal{{ $u->user_id }}"
-                                            tabindex="-1" aria-labelledby="editMahasiswaModalLabel{{ $u->user_id }}"
-                                            aria-hidden="true">
-                                            <div class="modal-dialog">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title">Edit Mahasiswa</h5>
-                                                    </div>
-                                                    <form method="POST"
-                                                        action="{{ route('admin.users.update', $u->user_id) }}">
-                                                        @csrf
-                                                        @method('PUT')
-                                                        <div class="modal-body">
-                                                            <input type="hidden" name="role" value="Mahasiswa">
-                                                            <div class="mb-3"><label
-                                                                    class="form-label">NIM</label><input type="text"
-                                                                    name="nim_nip" class="form-control"
-                                                                    value="{{ $u->nim_nip }}" required></div>
-                                                            <div class="mb-3"><label
-                                                                    class="form-label">Nama</label><input type="text"
-                                                                    name="name" class="form-control"
-                                                                    value="{{ $u->name }}" required></div>
-                                                            <div class="mb-3"><label class="form-label">Password Baru
-                                                                    (Opsional)
-                                                                </label><input type="password" name="password"
-                                                                    class="form-control" minlength="8">
-                                                            </div>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary"
-                                                                data-bs-dismiss="modal">Batal</button>
-                                                            <button type="submit" class="btn btn-primary">Simpan</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Delete Mahasiswa Modal -->
-                                        <div class="modal fade" id="deleteMahasiswaModal{{ $u->user_id }}"
-                                            tabindex="-1" aria-labelledby="deleteMahasiswaModalLabel{{ $u->user_id }}"
-                                            aria-hidden="true">
-                                            <div class="modal-dialog">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title">Hapus Mahasiswa?</h5>
-                                                    </div>
-                                                    <form method="POST"
-                                                        action="{{ route('admin.users.destroy', $u->user_id) }}">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <div class="modal-body">Hapus mahasiswa
-                                                            <strong>{{ $u->name }}</strong>?
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary"
-                                                                data-bs-dismiss="modal">Batal</button>
-                                                            <button type="submit" class="btn btn-danger">Hapus</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-
                                     @empty
                                         <tr>
-                                            <td colspan="3" class="text-start">Tidak ada mahasiswa.</td>
+                                            <td colspan="3" class="text-center py-5 text-muted">
+                                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                                Belum ada data mahasiswa.
+                                            </td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -491,6 +304,208 @@
             </div>
         </div>
     </div>
+
+    <!-- Edit & Delete Admin Modals -->
+    @foreach($admins as $u)
+        <!-- Edit User Modal -->
+        <div class="modal fade" id="editUserModal{{ $u->user_id }}" tabindex="-1"
+            aria-labelledby="editUserModalLabel{{ $u->user_id }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Admin</h5>
+                    </div>
+                    <form method="POST"
+                        action="{{ route('admin.users.update', $u->user_id) }}">
+                        @csrf
+                        @method('PUT')
+                        <div class="modal-body">
+                            <input type="hidden" name="role" value="Admin">
+                            <div class="mb-3"><label
+                                    class="form-label">NIP</label><input type="text"
+                                    name="nim_nip" class="form-control"
+                                    value="{{ $u->nim_nip }}" required></div>
+                            <div class="mb-3"><label
+                                    class="form-label">Nama</label><input type="text"
+                                    name="name" class="form-control"
+                                    value="{{ $u->name }}" required></div>
+                            <div class="mb-3"><label class="form-label">Password Baru
+                                    (Opsional)
+                                </label><input type="password" name="password"
+                                    class="form-control" minlength="8">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary"
+                                data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary">Simpan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation -->
+        <div class="modal fade" id="deleteUserModal{{ $u->user_id }}" tabindex="-1"
+            aria-labelledby="deleteUserModalLabel{{ $u->user_id }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Hapus Admin?</h5>
+                    </div>
+                    <form method="POST"
+                        action="{{ route('admin.users.destroy', $u->user_id) }}">
+                        @csrf
+                        @method('DELETE')
+                        <div class="modal-body">Hapus admin
+                            <strong>{{ $u->name }}</strong>?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary"
+                                data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-danger">Hapus</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endforeach
+
+    <!-- Edit & Delete Pengawas Modals -->
+    @foreach($pengawas as $u)
+        <!-- Edit Pengawas Modal -->
+        <div class="modal fade" id="editPengawasModal{{ $u->user_id }}" tabindex="-1"
+            aria-labelledby="editPengawasModalLabel{{ $u->user_id }}"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Pengawas</h5>
+                    </div>
+                    <form method="POST"
+                        action="{{ route('admin.users.update', $u->user_id) }}">
+                        @csrf
+                        @method('PUT')
+                        <div class="modal-body">
+                            <input type="hidden" name="role" value="Pengawas">
+                            <div class="mb-3"><label
+                                    class="form-label">NIP</label><input type="text"
+                                    name="nim_nip" class="form-control"
+                                    value="{{ $u->nim_nip }}" required></div>
+                            <div class="mb-3"><label
+                                    class="form-label">Nama</label><input type="text"
+                                    name="name" class="form-control"
+                                    value="{{ $u->name }}" required></div>
+                            <div class="mb-3"><label class="form-label">Password Baru
+                                    (Opsional)
+                                </label><input type="password" name="password"
+                                    class="form-control" minlength="8">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary"
+                                data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary">Simpan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Pengawas Modal -->
+        <div class="modal fade" id="deletePengawasModal{{ $u->user_id }}"
+            tabindex="-1" aria-labelledby="deletePengawasModalLabel{{ $u->user_id }}"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Hapus Pengawas?</h5>
+                    </div>
+                    <form method="POST"
+                        action="{{ route('admin.users.destroy', $u->user_id) }}">
+                        @csrf
+                        @method('DELETE')
+                        <div class="modal-body">Hapus pengawas
+                            <strong>{{ $u->name }}</strong>?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary"
+                                data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-danger">Hapus</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endforeach
+
+    <!-- Edit & Delete Mahasiswa Modals -->
+    @foreach($mahasiswa as $u)
+        <!-- Edit Mahasiswa Modal -->
+        <div class="modal fade" id="editMahasiswaModal{{ $u->user_id }}"
+            tabindex="-1" aria-labelledby="editMahasiswaModalLabel{{ $u->user_id }}"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Mahasiswa</h5>
+                    </div>
+                    <form method="POST"
+                        action="{{ route('admin.users.update', $u->user_id) }}">
+                        @csrf
+                        @method('PUT')
+                        <div class="modal-body">
+                            <input type="hidden" name="role" value="Mahasiswa">
+                            <div class="mb-3"><label
+                                    class="form-label">NIM</label><input type="text"
+                                    name="nim_nip" class="form-control"
+                                    value="{{ $u->nim_nip }}" required></div>
+                            <div class="mb-3"><label
+                                    class="form-label">Nama</label><input type="text"
+                                    name="name" class="form-control"
+                                    value="{{ $u->name }}" required></div>
+                            <div class="mb-3"><label class="form-label">Password Baru
+                                    (Opsional)
+                                </label><input type="password" name="password"
+                                    class="form-control" minlength="8">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary"
+                                data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary">Simpan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Mahasiswa Modal -->
+        <div class="modal fade" id="deleteMahasiswaModal{{ $u->user_id }}"
+            tabindex="-1" aria-labelledby="deleteMahasiswaModalLabel{{ $u->user_id }}"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Hapus Mahasiswa?</h5>
+                    </div>
+                    <form method="POST"
+                        action="{{ route('admin.users.destroy', $u->user_id) }}">
+                        @csrf
+                        @method('DELETE')
+                        <div class="modal-body">Hapus mahasiswa
+                            <strong>{{ $u->name }}</strong>?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary"
+                                data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-danger">Hapus</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endforeach
 
     <!-- Add Admin Modal -->
     <div class="modal fade" id="addAdminModal" tabindex="-1" aria-labelledby="addAdminModalLabel" aria-hidden="true">
@@ -629,46 +644,144 @@
             }
 
             // ========================
-            // SEARCH/FILTER LOGIC
+            // SEARCH/FILTER & PAGINATION LOGIC
             // ========================
             const searchConfigs = [{
                     inputId: 'searchAdminInput',
                     tableBodyId: 'adminTableBody',
-                    rowClass: 'admin-row'
+                    rowClass: 'admin-row',
+                    label: 'admin'
                 },
                 {
                     inputId: 'searchPengawasInput',
                     tableBodyId: 'pengawasTableBody',
-                    rowClass: 'pengawas-row'
+                    rowClass: 'pengawas-row',
+                    label: 'pengawas'
                 },
                 {
                     inputId: 'searchMahasiswaInput',
                     tableBodyId: 'mahasiswaTableBody',
-                    rowClass: 'mahasiswa-row'
+                    rowClass: 'mahasiswa-row',
+                    label: 'mahasiswa'
                 }
             ];
+
+            const rowsPerPage = 10; // Tampilkan 10 baris per halaman
 
             searchConfigs.forEach(config => {
                 const searchInput = document.getElementById(config.inputId);
                 const tableBody = document.getElementById(config.tableBodyId);
 
-                if (searchInput && tableBody) {
+                if (!tableBody) return;
+                const table = tableBody.closest('table');
+                if (!table) return;
+
+                const allRows = Array.from(tableBody.querySelectorAll('.' + config.rowClass));
+                let currentPage = 1;
+                let currentSearchTerm = '';
+
+                // Buat kontainer pagination di bawah tabel
+                const paginationContainer = document.createElement('div');
+                paginationContainer.className = 'd-flex flex-column flex-md-row justify-content-between align-items-center mt-3 px-2 pb-3';
+                paginationContainer.id = config.tableBodyId + '-pagination';
+                table.parentNode.insertBefore(paginationContainer, table.nextSibling);
+
+                function updateTable() {
+                    // Filter baris yang cocok dengan pencarian
+                    const filteredRows = allRows.filter(row => {
+                        const nim = (row.getAttribute('data-nim') || '').toLowerCase();
+                        const nama = (row.getAttribute('data-nama') || '').toLowerCase();
+                        return nim.includes(currentSearchTerm) || nama.includes(currentSearchTerm);
+                    });
+
+                    const totalRows = filteredRows.length;
+                    const totalPages = Math.ceil(totalRows / rowsPerPage) || 1;
+                    if (currentPage > totalPages) currentPage = totalPages;
+
+                    const start = (currentPage - 1) * rowsPerPage;
+                    const end = start + rowsPerPage;
+
+                    // Sembunyikan semua baris terlebih dahulu
+                    allRows.forEach(row => { row.style.display = 'none'; });
+
+                    // Tampilkan hanya baris yang lolos filter dan berada di halaman aktif
+                    filteredRows.forEach((row, index) => {
+                        if (index >= start && index < end) {
+                            row.style.display = '';
+                        }
+                    });
+
+                    renderPagination(totalRows, totalPages);
+                }
+
+                function renderPagination(totalRows, totalPages) {
+                    paginationContainer.innerHTML = '';
+                    if (totalRows === 0) {
+                        const emptySpan = document.createElement('span');
+                        emptySpan.className = 'text-muted small fw-semibold';
+                        emptySpan.innerText = `Tidak ada ${config.label} yang ditemukan`;
+                        paginationContainer.appendChild(emptySpan);
+                        return;
+                    }
+
+                    const startItem = (currentPage - 1) * rowsPerPage + 1;
+                    const endItem = Math.min(currentPage * rowsPerPage, totalRows);
+
+                    const summarySpan = document.createElement('span');
+                    summarySpan.className = 'text-muted small fw-semibold mb-2 mb-md-0';
+                    summarySpan.innerText = `Menampilkan ${startItem} hingga ${endItem} dari ${totalRows} ${config.label}`;
+                    paginationContainer.appendChild(summarySpan);
+
+                    if (totalPages <= 1) return; // Jika hanya 1 halaman, cukup tampilkan teks ringkasan
+
+                    const nav = document.createElement('nav');
+                    const ul = document.createElement('ul');
+                    ul.className = 'pagination pagination-sm mb-0';
+
+                    const prevLi = document.createElement('li');
+                    prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+                    prevLi.innerHTML = `<a class="page-link" href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>`;
+                    prevLi.onclick = (e) => {
+                        e.preventDefault();
+                        if (currentPage > 1) { currentPage--; updateTable(); }
+                    };
+                    ul.appendChild(prevLi);
+
+                    for (let i = 1; i <= totalPages; i++) {
+                        const pageLi = document.createElement('li');
+                        pageLi.className = `page-item ${currentPage === i ? 'active' : ''}`;
+                        pageLi.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                        pageLi.onclick = (e) => {
+                            e.preventDefault();
+                            currentPage = i;
+                            updateTable();
+                        };
+                        ul.appendChild(pageLi);
+                    }
+
+                    const nextLi = document.createElement('li');
+                    nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+                    nextLi.innerHTML = `<a class="page-link" href="#" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>`;
+                    nextLi.onclick = (e) => {
+                        e.preventDefault();
+                        if (currentPage < totalPages) { currentPage++; updateTable(); }
+                    };
+                    ul.appendChild(nextLi);
+
+                    nav.appendChild(ul);
+                    paginationContainer.appendChild(nav);
+                }
+
+                if (searchInput) {
                     searchInput.addEventListener('keyup', function() {
-                        const searchTerm = this.value.toLowerCase();
-                        const rows = tableBody.querySelectorAll('.' + config.rowClass);
-
-                        rows.forEach(row => {
-                            const nim = row.getAttribute('data-nim').toLowerCase();
-                            const nama = row.getAttribute('data-nama').toLowerCase();
-
-                            if (nim.includes(searchTerm) || nama.includes(searchTerm)) {
-                                row.style.display = '';
-                            } else {
-                                row.style.display = 'none';
-                            }
-                        });
+                        currentSearchTerm = this.value.toLowerCase();
+                        currentPage = 1; // Reset ke halaman 1 saat pencarian berubah
+                        updateTable();
                     });
                 }
+
+                // Inisialisasi tabel pertama kali
+                updateTable();
             });
 
             // ========================

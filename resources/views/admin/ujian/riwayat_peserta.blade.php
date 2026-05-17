@@ -60,8 +60,14 @@
                                         <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">Accepted</span>
                                     @elseif($s->status == 'Wrong Answer')
                                         <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">Wrong Answer</span>
+                                    @elseif($s->status == 'Time Limit Exceeded')
+                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">Time Limit Exceeded</span>
+                                    @elseif($s->status == 'Compilation Error')
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">Compilation Error</span>
+                                    @elseif($s->status == 'Runtime Error')
+                                        <span class="badge border border-opacity-25" style="color: #a855f7; background-color: rgba(168,85,247,0.15); border-color: rgba(168,85,247,0.3);">Runtime Error</span>
                                     @else
-                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">{{ $s->status }}</span>
+                                        <span class="badge bg-dark bg-opacity-10 text-dark border border-dark border-opacity-25">{{ $s->status }}</span>
                                     @endif
                                 </td>
                                 <td><strong>{{ $s->skor }}</strong> / {{ $s->bobot_nilai }}</td>

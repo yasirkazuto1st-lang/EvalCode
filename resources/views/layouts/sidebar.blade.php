@@ -297,6 +297,28 @@
             }, 5000); // Cek setiap 5 detik
         </script>
     @endauth
+
+    <!-- Global Double-Submit Prevention -->
+    <script>
+        document.addEventListener('submit', function(e) {
+            const form = e.target;
+            
+            if (form.classList.contains('is-submitting')) {
+                e.preventDefault();
+                return;
+            }
+            form.classList.add('is-submitting');
+
+            const submitButtons = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+            submitButtons.forEach(btn => {
+                btn.disabled = true;
+                if (!btn.dataset.originalText) {
+                    btn.dataset.originalText = btn.innerHTML;
+                }
+                btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Menyimpan...`;
+            });
+        });
+    </script>
 </body>
 
 </html>
