@@ -39,7 +39,7 @@
                         <p class="text-muted small mb-2">{{ Str::limit($exam->deskripsi, 80) }}</p>
                         <div class="d-flex gap-2 text-muted small mb-4">
                             <span><i class="bi bi-file-text me-1"></i>{{ $exam->soals()->count() }} Soal</span>
-                            <span><i class="bi bi-check2-square me-1"></i>PG: {{ $exam->passing_grade }}%</span>
+                            <span><i class="bi bi-check2-square me-1"></i>PG: {{ $exam->passing_grade }} Pts</span>
                         </div>
                         <a href="{{ route('pengawas.ujian.detail', $exam->ujian_id) }}"
                            class="btn {{ $isActive ? 'btn-unsulbar' : 'btn-outline-unsulbar' }} w-100 fw-semibold mt-auto">
@@ -74,7 +74,7 @@
                             <p class="text-muted small mb-2">{{ Str::limit($exam->deskripsi, 80) }}</p>
                             <div class="d-flex gap-2 text-muted small mb-4">
                                 <span><i class="bi bi-file-text me-1"></i>{{ $exam->soals()->count() }} Soal</span>
-                                <span><i class="bi bi-check2-square me-1"></i>PG: {{ $exam->passing_grade }}%</span>
+                                <span><i class="bi bi-check2-square me-1"></i>PG: {{ $exam->passing_grade }} Pts</span>
                             </div>
                             <a href="{{ route('pengawas.ujian.detail', $exam->ujian_id) }}"
                                class="btn btn-outline-secondary w-100 fw-semibold mt-auto">

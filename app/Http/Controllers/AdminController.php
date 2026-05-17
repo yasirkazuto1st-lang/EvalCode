@@ -48,7 +48,7 @@ class AdminController extends Controller
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'durasi' => 'required|integer|min:1',
-            'passing_grade' => 'required|numeric|min:0|max:100',
+            'passing_grade' => 'required|numeric|min:0',
         ]);
 
         Ujian::create([
@@ -70,7 +70,7 @@ class AdminController extends Controller
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'durasi' => 'required|integer|min:1',
-            'passing_grade' => 'required|numeric|min:0|max:100',
+            'passing_grade' => 'required|numeric|min:0',
             'status' => 'nullable|in:active,closed,finished',
         ]);
 
@@ -144,7 +144,7 @@ class AdminController extends Controller
         foreach ($participants as $p) {
             $p->progress_percentage = $totalSoal > 0 ? ($p->accepted_count / $totalSoal) * 100 : 0;
             $scorePercentage = $maxScore > 0 ? ($p->total_skor / $maxScore) * 100 : 0;
-            $p->status = $scorePercentage >= $passingGrade ? 'Lulus' : 'Tidak Lulus';
+            $p->status = ($p->total_skor ?? 0) >= $passingGrade ? 'Lulus' : 'Tidak Lulus';
             $p->submissions = $allSubmissions->get($p->user_id) ?? collect([]);
         }
 
@@ -196,7 +196,7 @@ class AdminController extends Controller
         $exportData = [];
         foreach ($participants as $p) {
             $scorePercentage = $maxScore > 0 ? ($p->total_skor / $maxScore) * 100 : 0;
-            $status = $scorePercentage >= $passingGrade ? 'Lulus' : 'Tidak Lulus';
+            $status = ($p->total_skor ?? 0) >= $passingGrade ? 'Lulus' : 'Tidak Lulus';
             
             $exportData[] = [
                 'NIM' => $p->nim_nip,

@@ -41,7 +41,7 @@
         <div class="row g-4">
             <!-- Kiri: Leaderboard -->
             <div class="col-md-4">
-                <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
                         <h5 class="fw-bold mb-0"><i class="bi bi-trophy text-warning me-2"></i> Leaderboard</h5>
                     </div>
@@ -93,16 +93,13 @@
                                         }
                                     @endphp
                                     <li @if($isMe) id="myLeaderboardListItem" @endif class="list-group-item d-flex justify-content-between align-items-center py-3 {{ $borderClass }} {{ $bgClass }} rounded mb-2 shadow-sm">
-                                        <div class="d-flex align-items-center">
-                                            <span class="badge {{ $badgeClass }} rounded-pill me-2 px-2 py-1 fs-6">
+                                        <div class="d-flex align-items-center" style="min-width: 0;">
+                                            <span class="badge {{ $badgeClass }} rounded-pill me-2 px-2 py-1 fs-6 flex-shrink-0">
                                                 {!! $icon !!}{{ $idx + 1 }}
                                             </span>
-                                            <span class="fw-semibold me-1">{{ $lb->name }}</span>
-                                            @if ($isMe)
-                                                <span class="badge bg-primary ms-1 small">Anda</span>
-                                            @endif
+                                            <span class="fw-semibold me-1 text-nowrap text-truncate">{{ $lb->name }}</span>
                                         </div>
-                                        <span class="fw-bold {{ $textClass }}">{{ $lb->total_skor }} Pts</span>
+                                        <span class="fw-bold {{ $textClass }} flex-shrink-0">{{ $lb->total_skor }} Pts</span>
                                     </li>
                                 @empty
                                     <li class="list-group-item text-center text-muted py-4 border-0">
@@ -163,14 +160,14 @@
                             @endphp
                             <div id="floatingMyRankBar" class="position-absolute" style="left: 1rem; right: 1.5rem; bottom: 1rem; z-index: 10; transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; transform: translateY(15px); pointer-events: none;" title="Klik untuk melihat posisi Anda">
                                 <div class="list-group-item d-flex justify-content-between align-items-center py-3 px-3 {{ $myBorderClass }} {{ $myBgClass }} rounded mb-0 shadow-lg" style="cursor: pointer; backdrop-filter: blur(8px); background-color: rgba(255,255,255,0.92);">
-                                    <div class="d-flex align-items-center">
-                                        <span class="badge {{ $myBadgeClass }} rounded-pill me-2 px-2 py-1 fs-6">
+                                    <div class="d-flex align-items-center" style="min-width: 0;">
+                                        <span class="badge {{ $myBadgeClass }} rounded-pill me-2 px-2 py-1 fs-6 flex-shrink-0">
                                             {!! $myIcon !!}{{ $myRankIndex + 1 }}
                                         </span>
-                                        <span class="fw-semibold me-1">{{ $myLeaderboardItem->name }}</span>
-                                        <span class="badge bg-primary ms-1 small">Anda</span>
+                                        <span class="fw-semibold me-1 text-nowrap text-truncate">{{ $myLeaderboardItem->name }}</span>
+                                        <span class="badge bg-primary ms-1 small flex-shrink-0">Anda</span>
                                     </div>
-                                    <span class="fw-bold {{ $myTextClass }}">{{ $myLeaderboardItem->total_skor }} Pts</span>
+                                    <span class="fw-bold {{ $myTextClass }} flex-shrink-0">{{ $myLeaderboardItem->total_skor }} Pts</span>
                                 </div>
                             </div>
 

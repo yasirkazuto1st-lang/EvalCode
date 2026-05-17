@@ -83,7 +83,7 @@ class PengawasUjianController extends Controller
         foreach ($participants as $p) {
             $p->progress_percentage = $totalSoal > 0 ? ($p->accepted_count / $totalSoal) * 100 : 0;
             $scorePercentage = $maxScore > 0 ? ($p->total_skor / $maxScore) * 100 : 0;
-            $p->status = $scorePercentage >= $passingGrade ? 'Lulus' : 'Tidak Lulus';
+            $p->status = ($p->total_skor ?? 0) >= $passingGrade ? 'Lulus' : 'Tidak Lulus';
             $p->submissions = $allSubmissions->get($p->user_id) ?? collect([]);
         }
 

@@ -55,7 +55,7 @@
                                 <th>Judul</th>
                                 <th>Deskripsi</th>
                                 <th>Durasi (menit)</th>
-                                <th>Passing Grade (%)</th>
+                                <th>Passing Grade (Pts)</th>
                                 <th>Status</th>
                                 <th>Aksi</th>
                             </tr>
@@ -115,13 +115,13 @@
                                                         <textarea name="deskripsi" class="form-control" rows="3">{{ $exam->deskripsi }}</textarea>
                                                     </div>
                                                     <div class="mb-3"><label class="form-label">Durasi
-                                                            (menit)</label><input type="number" name="durasi"
-                                                            class="form-control" value="{{ $exam->durasi }}" required
-                                                            min="1"></div>
+                                                            (menit)
+                                                        </label><input type="number" name="durasi" class="form-control"
+                                                            value="{{ $exam->durasi }}" required min="1"></div>
                                                     <div class="mb-3"><label class="form-label">Passing Grade
-                                                            (%)</label><input type="number" name="passing_grade"
+                                                            (Pts)</label><input type="number" name="passing_grade"
                                                             class="form-control" value="{{ $exam->passing_grade }}"
-                                                            required min="0" max="100"></div>
+                                                            required min="0"></div>
                                                     <div class="mb-3">
                                                         <label class="form-label">Status</label>
                                                         <select name="status" class="form-select">
@@ -200,9 +200,8 @@
                         </div>
                         <div class="mb-3"><label class="form-label">Durasi (menit)</label><input type="number"
                                 name="durasi" class="form-control" placeholder="60" required min="1"></div>
-                        <div class="mb-3"><label class="form-label">Passing Grade (%)</label><input type="number"
-                                name="passing_grade" class="form-control" placeholder="70" required min="0"
-                                max="100"></div>
+                        <div class="mb-3"><label class="form-label">Passing Grade (Pts)</label><input type="number"
+                                name="passing_grade" class="form-control" placeholder="70" required min="0"></div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
