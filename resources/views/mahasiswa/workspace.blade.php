@@ -16,7 +16,9 @@
         soal: @json($soal),
         all_soals: @json($exam->soals),
         soal_pdf_url: "{{ $soal->soal_pdf ? asset('storage/' . $soal->soal_pdf) : '' }}",
-        base_workspace_url: "{{ url('ujian/'.$exam->ujian_id.'/soal') }}"
+        base_workspace_url: "{{ url('ujian/'.$exam->ujian_id.'/soal') }}",
+        attemptsUsed: {{ $attemptsUsed }},
+        remainingSeconds: {{ $remainingSeconds }}
     };
 </script>
 @endsection

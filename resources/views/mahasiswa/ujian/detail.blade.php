@@ -50,6 +50,15 @@
                             <span>{{ $statusText }}</span>
                         </h4>
                     </div>
+
+                    <!-- Box 3: Sisa Waktu Ujian -->
+                    <div class="bg-black bg-opacity-25 rounded-4 p-3 border border-white border-opacity-25 shadow-sm text-center flex-grow-1 flex-md-grow-0"
+                        style="backdrop-filter: blur(10px); min-width: 150px;">
+                        <span class="small opacity-75 d-block text-uppercase fw-semibold mb-1 text-white"
+                            style="letter-spacing: 1px; font-size: 10px;">Sisa Waktu Ujian</span>
+                        <h4 id="studentTimerDisplay" class="fw-bold mb-0 text-white"
+                            style="font-family: 'Courier New', monospace; letter-spacing: 1px; font-size: 1.5rem;">--:--:--</h4>
+                    </div>
                 </div>
             </div>
         </div>
@@ -260,6 +269,8 @@
                                                 <span><i class="bi bi-star-fill text-warning me-1"></i>Bobot:
                                                     {{ $soal->bobot_nilai }}</span>
 
+                                                <span><i class="bi bi-send me-1"></i>Submit: {{ $soal->attempts_used }} / 3</span>
+
                                                 @php
                                                     $statusStyle = 'color: #6c757d;';
                                                     if ($soal->status_pengerjaan == 'Accepted') {
@@ -283,8 +294,14 @@
                                                 </span>
                                             </div>
                                         </div>
-                                        <a href="{{ route('workspace', ['examId' => $exam->ujian_id, 'soalId' => $soal->soal_id]) }}"
-                                            class="btn btn-sm btn-primary rounded-pill px-4 shadow-sm">Mulai Kerjakan</a>
+                                        @if ($soal->attempts_used >= 3)
+                                            <button class="btn btn-sm btn-secondary rounded-pill px-4 shadow-sm" disabled style="cursor: not-allowed;">
+                                                <i class="bi bi-x-circle me-1"></i> Batas Submit (3/3)
+                                            </button>
+                                        @else
+                                            <a href="{{ route('workspace', ['examId' => $exam->ujian_id, 'soalId' => $soal->soal_id]) }}"
+                                                class="btn btn-sm btn-primary rounded-pill px-4 shadow-sm">Mulai Kerjakan</a>
+                                        @endif
                                     </div>
                                 </div>
                             @empty
@@ -352,4 +369,75 @@
             border-color: #800000;
         }
     </style>
+
+    <script>
+        (function() {
+            let examRemaining = {{ $exam->getRemainingSeconds() }};
+            const studentTimerDisplay = document.getElementById('studentTimerDisplay');
+            let studentTimer = null;
+            let statusPoll = null;
+            let isRedirecting = false;
+
+            function handleRedirect(message) {
+                if (isRedirecting) return;
+                isRedirecting = true;
+                if (studentTimer) clearInterval(studentTimer);
+                if (statusPoll) clearInterval(statusPoll);
+                alert(message);
+                window.location.href = '/dashboard';
+            }
+
+            function formatTime(seconds) {
+                const totalSeconds = Math.floor(seconds);
+                const h = Math.floor(totalSeconds / 3600);
+                const m = Math.floor((totalSeconds % 3600) / 60);
+                const s = totalSeconds % 60;
+                return [
+                    h.toString().padStart(2, '0'),
+                    m.toString().padStart(2, '0'),
+                    s.toString().padStart(2, '0')
+                ].join(':');
+            }
+
+            function updateStudentTimer() {
+                if (examRemaining <= 0) {
+                    if (studentTimerDisplay) studentTimerDisplay.textContent = '00:00:00';
+                    handleRedirect("Waktu ujian telah habis! Anda akan dialihkan ke dashboard.");
+                    return;
+                }
+                if (studentTimerDisplay) {
+                    studentTimerDisplay.textContent = formatTime(examRemaining);
+                }
+                examRemaining--;
+            }
+
+            if (studentTimerDisplay) {
+                updateStudentTimer();
+                studentTimer = setInterval(updateStudentTimer, 1000);
+            }
+
+            // Poll for exam status every 5 seconds
+            statusPoll = setInterval(async () => {
+                try {
+                    const response = await fetch("{{ route('ujian.status', $exam->ujian_id) }}");
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.status !== 'active') {
+                            handleRedirect("Ujian telah ditutup atau di-pause oleh pengawas!");
+                            return;
+                        }
+                        // Sync remaining time
+                        examRemaining = data.remainingSeconds;
+                    }
+                } catch (error) {
+                    console.error("Gagal memeriksa status ujian:", error);
+                }
+            }, 5000);
+
+            window.addEventListener('beforeunload', () => {
+                if (studentTimer) clearInterval(studentTimer);
+                if (statusPoll) clearInterval(statusPoll);
+            });
+        })();
+    </script>
 @endsection

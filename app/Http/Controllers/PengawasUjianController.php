@@ -15,6 +15,12 @@ class PengawasUjianController extends Controller
      */
     public function dashboard()
     {
+        // Check timeout for all active exams before listing
+        $activeExamsList = Ujian::where('status', 'active')->get();
+        foreach ($activeExamsList as $exam) {
+            $exam->checkTimeout();
+        }
+
         $activeExams = Ujian::where('status', 'active')->orderBy('updated_at', 'desc')->get();
         $closedExams = Ujian::where('status', 'closed')->orderBy('updated_at', 'desc')->get();
         $finishedExams = Ujian::where('status', 'finished')->orderBy('updated_at', 'desc')->get();
@@ -37,6 +43,7 @@ class PengawasUjianController extends Controller
     public function detail(Request $request, $id)
     {
         $exam = Ujian::with('soals')->findOrFail($id);
+        $exam->checkTimeout();
 
         // Get active token for this exam
         $activeToken = Token::where('ujian_id', $exam->ujian_id)
@@ -157,6 +164,19 @@ class PengawasUjianController extends Controller
     }
 
     /**
+     * Hapus submisi peserta ujian.
+     * 
+     * @param int $submissionId ID Submisi
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function destroySubmission($submissionId)
+    {
+        \Illuminate\Support\Facades\DB::table('submissions')->where('submission_id', $submissionId)->delete();
+
+        return back()->with('success', 'Submisi berhasil dihapus.');
+    }
+
+    /**
      * Mulai ujian: ubah status ujian menjadi aktif dan hasilkan token pertama.
      * 
      * @param int $id ID Ujian
@@ -170,7 +190,11 @@ class PengawasUjianController extends Controller
             return redirect()->back()->with('error', 'Ujian yang sudah selesai tidak bisa dimulai lagi.');
         }
 
-        $exam->update(['status' => 'active']);
+        // Selalu reset ke durasi penuh setiap kali mulai
+        $exam->sisa_waktu = $exam->durasi * 60;
+        $exam->started_at = \Carbon\Carbon::now();
+        $exam->status = 'active';
+        $exam->save();
 
         // Deactivate all old tokens
         Token::where('ujian_id', $exam->ujian_id)->update(['status_aktif' => false]);
@@ -194,7 +218,12 @@ class PengawasUjianController extends Controller
     public function endExam($id)
     {
         $exam = Ujian::findOrFail($id);
-        $exam->update(['status' => 'closed']);
+
+        // Reset sisa_waktu ke 0 saat pause, next start akan mulai dari durasi penuh
+        $exam->sisa_waktu = 0;
+        $exam->started_at = null;
+        $exam->status = 'closed';
+        $exam->save();
 
         Token::where('ujian_id', $exam->ujian_id)->update(['status_aktif' => false]);
 
@@ -210,11 +239,38 @@ class PengawasUjianController extends Controller
     public function finishExam($id)
     {
         $exam = Ujian::findOrFail($id);
-        $exam->update(['status' => 'finished']);
+        
+        $exam->sisa_waktu = 0;
+        $exam->started_at = null;
+        $exam->status = 'finished';
+        $exam->save();
 
         Token::where('ujian_id', $exam->ujian_id)->update(['status_aktif' => false]);
 
         return redirect()->back()->with('success', 'Ujian berhasil diakhiri secara permanen.');
+    }
+
+    /**
+     * Reset attempt limit untuk mahasiswa pada soal tertentu.
+     * 
+     * @param int $examId ID Ujian
+     * @param int $userId ID User
+     * @param int $soalId ID Soal
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function resetAttempts($examId, $userId, $soalId)
+    {
+        $exam = Ujian::findOrFail($examId);
+
+        \Illuminate\Support\Facades\DB::table('submissions')
+            ->where('user_id', $userId)
+            ->where('soal_id', $soalId)
+            ->update([
+                'is_reset' => true,
+                'updated_at' => now()
+            ]);
+
+        return redirect()->back()->with('success', 'Kesempatan submit mahasiswa untuk soal ini berhasil di-reset.');
     }
 
     /**

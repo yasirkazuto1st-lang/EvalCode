@@ -122,36 +122,50 @@
                 </div>
 
                 <!-- Token & Action Section -->
-                <div class="d-flex flex-column gap-2" style="min-width: 240px;">
-                    <!-- Token Box -->
-                    <div id="tokenBox"
-                        class="bg-black bg-opacity-25 rounded-4 p-3 px-3 border border-white border-opacity-25 shadow-sm text-center {{ $exam->status === 'active' ? 'active-pulse' : '' }} token-box"
-                        style="backdrop-filter: blur(10px);">
-                        <span class="small opacity-75 d-block text-uppercase fw-semibold"
-                            style="letter-spacing: 1px; font-size: 10px;">Token Ujian</span>
-
-                        @if ($exam->status === 'active' && $activeToken)
-                            <div id="tokenDisplay" class="token-display fw-bold text-white mb-0">
-                                {{ $activeToken->kode_token }}</div>
-                        @else
-                            <div id="tokenDisplay" class="token-display fw-bold text-white mb-0 opacity-50">------</div>
-                        @endif
-
-                        <!-- Countdown -->
-                        <div id="countdownSection" style="{{ $exam->status === 'active' ? '' : 'display:none;' }}">
-                            <div class="countdown-bar">
-                                <div id="countdownBar" class="countdown-bar-fill" style="width: 100%;"></div>
+                <div class="d-flex flex-column gap-2" style="width: 100%; max-width: 400px;">
+                    <div class="d-flex gap-2">
+                        <!-- Exam Timer Box -->
+                        @if ($exam->status === 'active')
+                            <div id="examTimerBox"
+                                class="bg-black bg-opacity-25 rounded-4 p-3 px-3 border border-white border-opacity-25 shadow-sm text-center flex-fill d-flex flex-column justify-content-center"
+                                style="backdrop-filter: blur(10px);">
+                                <span class="small opacity-75 d-block text-uppercase fw-semibold"
+                                    style="letter-spacing: 1px; font-size: 10px;">Sisa Waktu Ujian</span>
+                                <div id="examTimerDisplay" class="fw-bold text-white mb-0 fs-3"
+                                    style="font-family: 'Courier New', monospace; letter-spacing: 1px;">--:--:--</div>
                             </div>
-                            <small id="countdownText" class="d-block opacity-75 mt-1" style="font-size: 10px;">
-                                <i class="bi bi-arrow-repeat me-1"></i>Token baru dalam <span
-                                    id="countdownSeconds">60</span> detik
-                            </small>
-                        </div>
-
-                        @if ($exam->status !== 'active')
-                            <small class="d-block opacity-50 mt-1" style="font-size: 10px;">Mulai ujian untuk mengaktifkan
-                                token</small>
                         @endif
+
+                        <!-- Token Box -->
+                        <div id="tokenBox"
+                            class="bg-black bg-opacity-25 rounded-4 p-3 px-3 border border-white border-opacity-25 shadow-sm text-center {{ $exam->status === 'active' ? 'active-pulse' : '' }} token-box flex-fill d-flex flex-column justify-content-center"
+                            style="backdrop-filter: blur(10px);">
+                            <span class="small opacity-75 d-block text-uppercase fw-semibold"
+                                style="letter-spacing: 1px; font-size: 10px;">Token Ujian</span>
+
+                            @if ($exam->status === 'active' && $activeToken)
+                                <div id="tokenDisplay" class="token-display fw-bold text-white mb-0">
+                                    {{ $activeToken->kode_token }}</div>
+                            @else
+                                <div id="tokenDisplay" class="token-display fw-bold text-white mb-0 opacity-50">------</div>
+                            @endif
+
+                            <!-- Countdown -->
+                            <div id="countdownSection" style="{{ $exam->status === 'active' ? '' : 'display:none;' }}">
+                                <div class="countdown-bar">
+                                    <div id="countdownBar" class="countdown-bar-fill" style="width: 100%;"></div>
+                                </div>
+                                <small id="countdownText" class="d-block opacity-75 mt-1" style="font-size: 10px;">
+                                    <i class="bi bi-arrow-repeat me-1"></i>Token baru dalam <span
+                                        id="countdownSeconds">60</span> detik
+                                </small>
+                            </div>
+
+                            @if ($exam->status !== 'active')
+                                <small class="d-block opacity-50 mt-1" style="font-size: 10px;">Mulai ujian untuk mengaktifkan
+                                    token</small>
+                            @endif
+                        </div>
                     </div>
 
                     <!-- Start / Pause / Finish Buttons -->
@@ -337,87 +351,131 @@
                                                 <div class="collapse" id="collapseSubmissions{{ $p->user_id }}">
                                                     <div
                                                         class="card card-body border-0 bg-light rounded-0 border-start border-4 border-primary m-3 shadow-sm">
-                                                        <h6 class="fw-bold mb-3">Riwayat Submission</h6>
-                                                        <table id="table-sub-{{ $p->user_id }}" class="table table-sm table-bordered mb-0 submission-table">
-                                                            <thead class="table-secondary">
-                                                                    <tr>
-                                                                        <th>Waktu</th>
-                                                                        <th>Soal</th>
-                                                                        <th>Status</th>
-                                                                        <th>Skor</th>
-                                                                        <th>Similarity</th>
-                                                                        <th>Catatan</th>
-                                                                        <th>Aksi</th>
-                                                                    </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                @forelse($p->submissions as $s)
-                                                                    <tr>
-                                                                        <td class="text-nowrap">
-                                                                            {{ \Carbon\Carbon::parse($s->created_at)->format('d M Y, H:i') }}
-                                                                        </td>
-                                                                        <td>{{ $s->nama_soal }}</td>
-                                                                        <td>
-                                                                            @if ($s->status == 'Accepted')
-                                                                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">Accepted</span>
-                                                                            @elseif($s->status == 'Wrong Answer')
-                                                                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">Wrong Answer</span>
-                                                                            @elseif($s->status == 'Time Limit Exceeded')
-                                                                                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">Time Limit Exceeded</span>
-                                                                            @elseif($s->status == 'Compilation Error')
-                                                                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">Compilation Error</span>
-                                                                            @elseif($s->status == 'Runtime Error')
-                                                                                <span class="badge border border-opacity-25" style="color: #a855f7; background-color: rgba(168,85,247,0.15); border-color: rgba(168,85,247,0.3);">Runtime Error</span>
-                                                                            @else
-                                                                                <span class="badge bg-dark bg-opacity-10 text-dark border border-dark border-opacity-25">{{ $s->status }}</span>
-                                                                            @endif
-                                                                        </td>
-                                                                        <td>{{ $s->skor }}</td>
-                                                                        <td>
-                                                                            @if ($s->similarity_index !== null)
-                                                                                @php
-                                                                                    $sColor =
-                                                                                        $s->similarity_index >= 70
-                                                                                            ? 'danger'
-                                                                                            : ($s->similarity_index >=
-                                                                                            40
-                                                                                                ? 'warning text-dark'
-                                                                                                : 'success');
-                                                                                @endphp
-                                                                                <span
-                                                                                    class="badge bg-{{ $sColor }}">{{ round($s->similarity_index, 2) }}%</span>
-                                                                            @else
-                                                                                <span class="text-muted small">-</span>
-                                                                            @endif
-                                                                        </td>
-                                                                        <td>
-                                                                            @if ($s->justification_note)
-                                                                                <span class="text-muted small" title="{{ $s->justification_note }}">
-                                                                                    {{ \Illuminate\Support\Str::limit($s->justification_note, 30) }}
-                                                                                </span>
-                                                                            @else
-                                                                                <span class="text-muted small">-</span>
-                                                                            @endif
-                                                                        </td>
-                                                                        <td>
-                                                                            <div class="d-flex gap-2">
-                                                                                <button class="btn btn-sm btn-outline-secondary py-0 d-inline-flex align-items-center justify-content-center gap-1 text-nowrap" style="width: 95px;" data-bs-toggle="modal" data-bs-target="#codeModal{{ $s->submission_id }}">
-                                                                                    <i class="bi bi-code-slash"></i> Kode
+                                                        <!-- Status Kesempatan per Soal (di atas) -->
+                                                        <div class="mb-3">
+                                                            <h6 class="fw-bold mb-2"><i class="bi bi-clock-history text-primary me-2"></i>Status Kesempatan per Soal</h6>
+                                                            <div class="d-flex flex-wrap gap-2">
+                                                                @foreach($exam->soals as $soal)
+                                                                    @php
+                                                                        $soalSubmissions = $p->submissions->where('soal_id', $soal->soal_id)->where('is_reset', false);
+                                                                        $attemptsUsed = $soalSubmissions->count();
+                                                                        $badgeColor = $attemptsUsed >= 3 ? 'danger' : ($attemptsUsed > 0 ? 'warning text-dark' : 'secondary');
+                                                                    @endphp
+                                                                    <div class="d-flex align-items-center gap-2 bg-white border rounded-pill px-3 py-1 shadow-sm" style="font-size: 0.85rem;">
+                                                                        <span class="fw-semibold text-dark text-truncate" style="max-width: 150px;">{{ $soal->nama_soal }}</span>
+                                                                        <span class="badge bg-{{ $badgeColor }} rounded-pill">{{ $attemptsUsed }} / 3</span>
+                                                                        @if ($attemptsUsed > 0)
+                                                                            <form action="{{ route('pengawas.ujian.peserta.reset-attempts', ['examId' => $exam->ujian_id, 'userId' => $p->user_id, 'soalId' => $soal->soal_id]) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin mereset kesempatan submit mahasiswa ini untuk soal {{ $soal->nama_soal }}?');" class="d-inline">
+                                                                                @csrf
+                                                                                <button type="submit" class="btn btn-xs btn-outline-danger py-0 px-2 rounded-pill" style="font-size: 0.7rem;">
+                                                                                    <i class="bi bi-arrow-counterclockwise"></i> Reset
                                                                                 </button>
-                                                                                <button class="btn btn-sm btn-warning py-0 d-inline-flex align-items-center justify-content-center gap-1 text-nowrap" style="width: 95px;" data-bs-toggle="modal" data-bs-target="#overrideModal{{ $s->submission_id }}">
-                                                                                    <i class="bi bi-pencil-square"></i> Override
-                                                                                </button>
-                                                                            </div>
-                                                                        </td>
-                                                                    </tr>
-                                                                @empty
-                                                                    <tr>
-                                                                        <td colspan="7" class="text-center text-muted">
-                                                                            Belum ada submission.</td>
-                                                                    </tr>
-                                                                @endforelse
-                                                            </tbody>
-                                                        </table>
+                                                                            </form>
+                                                                        @endif
+                                                                    </div>
+                                                                @endforeach
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Riwayat Submission (di bawah) -->
+                                                        <div>
+                                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                                <h6 class="fw-bold mb-0"><i class="bi bi-table text-primary me-2"></i>Riwayat Submission</h6>
+                                                                <select class="form-select form-select-sm w-auto" onchange="window.filterSubmissions('{{ $p->user_id }}', this.value)">
+                                                                    <option value="">Semua Soal</option>
+                                                                    @foreach($exam->soals as $soal)
+                                                                        <option value="{{ $soal->soal_id }}">{{ $soal->nama_soal }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                            <table id="table-sub-{{ $p->user_id }}" class="table table-sm table-bordered mb-0 submission-table">
+                                                                <thead class="table-secondary">
+                                                                        <tr>
+                                                                            <th>Waktu</th>
+                                                                            <th>Soal</th>
+                                                                            <th>Status</th>
+                                                                            <th>Skor</th>
+                                                                            <th>Similarity</th>
+                                                                            <th>Catatan</th>
+                                                                            <th>Aksi</th>
+                                                                        </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @forelse($p->submissions as $s)
+                                                                        <tr class="submission-row" data-soal="{{ $s->soal_id }}">
+                                                                            <td class="text-nowrap">
+                                                                                {{ \Carbon\Carbon::parse($s->created_at)->format('d M Y, H:i') }}
+                                                                            </td>
+                                                                            <td>{{ $s->nama_soal }}</td>
+                                                                            <td>
+                                                                                @if ($s->status == 'Accepted')
+                                                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">Accepted</span>
+                                                                                @elseif($s->status == 'Wrong Answer')
+                                                                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">Wrong Answer</span>
+                                                                                @elseif($s->status == 'Time Limit Exceeded')
+                                                                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">Time Limit Exceeded</span>
+                                                                                @elseif($s->status == 'Compilation Error')
+                                                                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">Compilation Error</span>
+                                                                                @elseif($s->status == 'Runtime Error')
+                                                                                    <span class="badge border border-opacity-25" style="color: #a855f7; background-color: rgba(168,85,247,0.15); border-color: rgba(168,85,247,0.3);">Runtime Error</span>
+                                                                                @else
+                                                                                    <span class="badge bg-dark bg-opacity-10 text-dark border border-dark border-opacity-25">{{ $s->status }}</span>
+                                                                                @endif
+                                                                            </td>
+                                                                            <td>{{ $s->skor }}</td>
+                                                                            <td>
+                                                                                @if ($s->similarity_index !== null)
+                                                                                    @php
+                                                                                        $sColor =
+                                                                                            $s->similarity_index >= 70
+                                                                                                ? 'danger'
+                                                                                                : ($s->similarity_index >=
+                                                                                                40
+                                                                                                    ? 'warning text-dark'
+                                                                                                    : 'success');
+                                                                                    @endphp
+                                                                                    <span
+                                                                                        class="badge bg-{{ $sColor }}">{{ round($s->similarity_index, 2) }}%</span>
+                                                                                @else
+                                                                                    <span class="text-muted small">-</span>
+                                                                                @endif
+                                                                            </td>
+                                                                            <td>
+                                                                                @if ($s->justification_note)
+                                                                                    <span class="text-muted small" title="{{ $s->justification_note }}">
+                                                                                        {{ \Illuminate\Support\Str::limit($s->justification_note, 30) }}
+                                                                                    </span>
+                                                                                @else
+                                                                                    <span class="text-muted small">-</span>
+                                                                                @endif
+                                                                            </td>
+                                                                            <td>
+                                                                                <div class="d-flex gap-2">
+                                                                                    <button class="btn btn-sm btn-outline-secondary py-0 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" data-bs-toggle="modal" data-bs-target="#codeModal{{ $s->submission_id }}" title="Lihat Kode">
+                                                                                        <i class="bi bi-code-slash"></i>
+                                                                                    </button>
+                                                                                    <button class="btn btn-sm btn-warning py-0 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" data-bs-toggle="modal" data-bs-target="#overrideModal{{ $s->submission_id }}" title="Override Skor">
+                                                                                        <i class="bi bi-pencil-square"></i>
+                                                                                    </button>
+                                                                                    <form action="{{ route('pengawas.submission.destroy', $s->submission_id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus submisi ini?');" class="d-inline">
+                                                                                        @csrf
+                                                                                        @method('DELETE')
+                                                                                        <button type="submit" class="btn btn-sm btn-outline-danger btn-icon-only py-0 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Hapus Submisi" data-icon-only>
+                                                                                            <i class="bi bi-trash"></i>
+                                                                                        </button>
+                                                                                    </form>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    @empty
+                                                                        <tr class="no-submissions-row">
+                                                                            <td colspan="7" class="text-center text-muted">
+                                                                                Belum ada submission.</td>
+                                                                        </tr>
+                                                                    @endforelse
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
                                                     </div>
                                                 </div>
 
@@ -652,27 +710,133 @@
                 }
             }
 
+            // Exam real-time countdown timer
+            let examRemaining = {{ $exam->getRemainingSeconds() }};
+            const examTimerDisplay = document.getElementById('examTimerDisplay');
+            let examTimer = null;
+            let statusPoll = null;
+
+            function formatTime(seconds) {
+                const totalSeconds = Math.floor(seconds);
+                const h = Math.floor(totalSeconds / 3600);
+                const m = Math.floor((totalSeconds % 3600) / 60);
+                const s = totalSeconds % 60;
+                return [
+                    h.toString().padStart(2, '0'),
+                    m.toString().padStart(2, '0'),
+                    s.toString().padStart(2, '0')
+                ].join(':');
+            }
+
+            function updateExamTimer() {
+                if (examRemaining <= 0) {
+                    if (examTimerDisplay) examTimerDisplay.textContent = '00:00:00';
+                    window.location.reload();
+                    return;
+                }
+                if (examTimerDisplay) {
+                    examTimerDisplay.textContent = formatTime(examRemaining);
+                }
+                examRemaining--;
+            }
+
+            if (examTimerDisplay) {
+                updateExamTimer();
+                examTimer = setInterval(updateExamTimer, 1000);
+            }
+
             // Start countdown
             countdownTimer = setInterval(updateCountdown, 1000);
+
+            // Poll for exam status and sync remaining time every 5 seconds
+            if (isActive) {
+                statusPoll = setInterval(async () => {
+                    try {
+                        const response = await fetch(`/ujian/${examId}/status`);
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.status !== 'active') {
+                                window.location.reload();
+                                return;
+                            }
+                            examRemaining = data.remainingSeconds;
+                        }
+                    } catch (error) {
+                        console.error("Gagal memeriksa status ujian:", error);
+                    }
+                }, 5000);
+            }
 
             // Cleanup on page unload
             window.addEventListener('beforeunload', () => {
                 if (countdownTimer) clearInterval(countdownTimer);
+                if (examTimer) clearInterval(examTimer);
+                if (statusPoll) clearInterval(statusPoll);
             });
         })();
 
         document.addEventListener('DOMContentLoaded', () => {
-            function paginateTable(tableId, rowsPerPage) {
+            window.paginateTable = function(tableId, rowsPerPage, filterSoalId = '') {
                 const table = document.getElementById(tableId);
                 if (!table) return;
                 const tbody = table.querySelector('tbody');
                 if (!tbody) return;
-                const rows = Array.from(tbody.querySelectorAll('tr:not(.no-pagination)'));
+
+                // Hapus container pagination yang sudah ada jika ada
+                const existingPagination = document.getElementById(tableId + '-pagination');
+                if (existingPagination) {
+                    existingPagination.remove();
+                }
+
+                const allRows = Array.from(tbody.querySelectorAll('.submission-row'));
+                const noSubRow = tbody.querySelector('.no-submissions-row');
+
+                if (noSubRow) {
+                    noSubRow.style.display = '';
+                    return;
+                }
+
+                // Filter baris
+                const rows = allRows.filter(row => {
+                    if (filterSoalId === '' || row.getAttribute('data-soal') === filterSoalId) {
+                        return true;
+                    }
+                    row.style.display = 'none';
+                    return false;
+                });
+
+                // Hapus empty state row jika ada
+                const existingEmptyRow = tbody.querySelector('.empty-state-row');
+                if (existingEmptyRow) {
+                    existingEmptyRow.remove();
+                }
+
                 const totalRows = rows.length;
-                if (totalRows <= rowsPerPage) return;
+                if (totalRows === 0) {
+                    const emptyRow = document.createElement('tr');
+                    emptyRow.className = 'empty-state-row';
+                    const colCount = table.querySelector('thead tr').children.length;
+                    emptyRow.innerHTML = `<td colspan="${colCount}" class="text-center text-muted">Tidak ada submission untuk soal ini.</td>`;
+                    tbody.appendChild(emptyRow);
+                    return;
+                }
+
+                let currentPage = 1;
+
+                if (totalRows <= rowsPerPage) {
+                    rows.forEach(row => {
+                        row.style.display = '';
+                    });
+                    // Sembunyikan baris lain yang tidak termasuk filter
+                    allRows.forEach(row => {
+                        if (!rows.includes(row)) {
+                            row.style.display = 'none';
+                        }
+                    });
+                    return;
+                }
 
                 const totalPages = Math.ceil(totalRows / rowsPerPage);
-                let currentPage = 1;
 
                 const paginationContainer = document.createElement('div');
                 paginationContainer.className = 'd-flex flex-column flex-md-row justify-content-between align-items-center mt-2 px-2';
@@ -684,6 +848,11 @@
                     const end = start + rowsPerPage;
                     rows.forEach((row, index) => {
                         row.style.display = (index >= start && index < end) ? '' : 'none';
+                    });
+                    allRows.forEach(row => {
+                        if (!rows.includes(row)) {
+                            row.style.display = 'none';
+                        }
                     });
                     renderPagination();
                 }
@@ -739,8 +908,12 @@
                 renderTable();
             }
 
+            window.filterSubmissions = function(userId, soalId) {
+                window.paginateTable('table-sub-' + userId, 5, soalId);
+            }
+
             document.querySelectorAll('.submission-table').forEach(table => {
-                paginateTable(table.id, 5); // Tampilkan 5 per halaman
+                window.paginateTable(table.id, 5); // Tampilkan 5 per halaman
             });
 
             function initParticipantTablePagination() {

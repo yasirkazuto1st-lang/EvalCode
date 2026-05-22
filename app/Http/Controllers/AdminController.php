@@ -7,6 +7,7 @@ use App\Models\Ujian;
 use App\Models\Soal;
 use App\Models\TestCase;
 use App\Models\User;
+use App\Models\Token;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
@@ -102,13 +103,39 @@ class AdminController extends Controller
             'status' => 'nullable|in:active,closed,finished',
         ]);
 
-        $exam->update([
-            'judul' => $request->judul,
-            'deskripsi' => $request->deskripsi,
-            'durasi' => $request->durasi,
-            'passing_grade' => $request->passing_grade,
-            'status' => $request->status ?? $exam->status,
-        ]);
+        $oldStatus = $exam->status;
+        $newStatus = $request->status ?? $exam->status;
+
+        $exam->judul = $request->judul;
+        $exam->deskripsi = $request->deskripsi;
+        $exam->durasi = $request->durasi;
+        $exam->passing_grade = $request->passing_grade;
+        $exam->status = $newStatus;
+
+        if ($newStatus !== $oldStatus) {
+            if ($newStatus === 'active') {
+                $exam->sisa_waktu = $request->durasi * 60;
+                $exam->started_at = \Carbon\Carbon::now();
+
+                // Deactivate all old tokens
+                Token::where('ujian_id', $exam->ujian_id)->update(['status_aktif' => false]);
+
+                // Create new token
+                Token::create([
+                    'ujian_id' => $exam->ujian_id,
+                    'kode_token' => Token::generateCode(),
+                    'status_aktif' => true,
+                ]);
+            } else {
+                $exam->sisa_waktu = 0;
+                $exam->started_at = null;
+
+                // Deactivate all old tokens
+                Token::where('ujian_id', $exam->ujian_id)->update(['status_aktif' => false]);
+            }
+        }
+
+        $exam->save();
 
         return redirect()->route('admin.ujian.index')->with('success', 'Ujian berhasil diperbarui.');
     }

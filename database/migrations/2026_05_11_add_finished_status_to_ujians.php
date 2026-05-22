@@ -7,11 +7,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement("ALTER TABLE ujians MODIFY COLUMN status ENUM('active', 'closed', 'finished') DEFAULT 'closed'");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE ujians MODIFY COLUMN status ENUM('active', 'closed', 'finished') DEFAULT 'closed'");
+        }
     }
 
     public function down(): void
     {
-        DB::statement("ALTER TABLE ujians MODIFY COLUMN status ENUM('active', 'closed') DEFAULT 'closed'");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE ujians MODIFY COLUMN status ENUM('active', 'closed') DEFAULT 'closed'");
+        }
     }
 };

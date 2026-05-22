@@ -31,6 +31,8 @@ Route::middleware('auth')->group(function () {
         return response()->json(['status' => 'valid']);
     })->name('check.session');
 
+    Route::get('/ujian/{id}/status', [\App\Http\Controllers\MahasiswaUjianController::class, 'checkStatus'])->name('ujian.status');
+
     // ------------------------------------------
     // MAHASISWA ROUTES
     // ------------------------------------------
@@ -53,7 +55,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/ujian/{id}/finish', [PengawasUjianController::class, 'finishExam'])->name('pengawas.ujian.finish');
         Route::get('/ujian/{examId}/soal/{soalId}', [PengawasUjianController::class, 'soal'])->name('pengawas.ujian.soal');
         Route::get('/ujian/{examId}/peserta/{userId}/riwayat', [PengawasUjianController::class, 'pesertaRiwayat'])->name('pengawas.ujian.peserta.riwayat');
+        Route::post('/ujian/{examId}/peserta/{userId}/soal/{soalId}/reset-attempts', [PengawasUjianController::class, 'resetAttempts'])->name('pengawas.ujian.peserta.reset-attempts');
         Route::post('/submission/{id}/override', [PengawasUjianController::class, 'overrideScore'])->name('pengawas.submission.override');
+        Route::delete('/submission/{id}', [PengawasUjianController::class, 'destroySubmission'])->name('pengawas.submission.destroy');
 
         // Token API (JSON) - for real-time JS polling
         Route::post('/ujian/{id}/token/refresh', [PengawasUjianController::class, 'refreshToken'])->name('pengawas.token.refresh');

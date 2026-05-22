@@ -332,7 +332,11 @@
                 if (!btn.dataset.originalText) {
                     btn.dataset.originalText = btn.innerHTML;
                 }
-                btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Menyimpan...`;
+                if (btn.classList.contains('btn-icon-only') || btn.hasAttribute('data-icon-only')) {
+                    btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>`;
+                } else {
+                    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Menyimpan...`;
+                }
             });
         });
     </script>

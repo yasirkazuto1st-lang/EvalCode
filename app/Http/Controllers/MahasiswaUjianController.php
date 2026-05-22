@@ -15,6 +15,12 @@ class MahasiswaUjianController extends Controller
      */
     public function dashboard()
     {
+        // Check timeout for active exams first
+        $activeExamsList = Ujian::where('status', 'active')->get();
+        foreach ($activeExamsList as $exam) {
+            $exam->checkTimeout();
+        }
+
         $activeExams = Ujian::where('status', 'active')->orderBy('updated_at', 'desc')->get();
         $closedExams = Ujian::where('status', 'closed')->orderBy('updated_at', 'desc')->get();
         $finishedExams = Ujian::where('status', 'finished')->orderBy('updated_at', 'desc')->get();
@@ -30,6 +36,7 @@ class MahasiswaUjianController extends Controller
     public function detail($id)
     {
         $exam = Ujian::with('soals')->findOrFail($id);
+        $exam->checkTimeout();
         
         // Ensure exam is active
         if ($exam->status !== 'active') {
@@ -63,7 +70,10 @@ class MahasiswaUjianController extends Controller
         $myTotalScore = 0;
 
         foreach ($exam->soals as $soal) {
-            $bestSubmission = $userSubmissions->where('soal_id', $soal->soal_id)->sortByDesc('skor')->first();
+            $soalSubmissions = $userSubmissions->where('soal_id', $soal->soal_id);
+            $soal->attempts_used = $soalSubmissions->where('is_reset', false)->count();
+
+            $bestSubmission = $soalSubmissions->sortByDesc('skor')->first();
             if ($bestSubmission) {
                 $soal->status_pengerjaan = $bestSubmission->status;
                 $soal->skor_tertinggi = $bestSubmission->skor;
@@ -94,6 +104,7 @@ class MahasiswaUjianController extends Controller
         ]);
 
         $exam = Ujian::findOrFail($id);
+        $exam->checkTimeout();
 
         if ($exam->status !== 'active') {
             return back()->with('error', 'Ujian tidak aktif.');
@@ -124,6 +135,7 @@ class MahasiswaUjianController extends Controller
     public function workspace($examId, $soalId)
     {
         $exam = Ujian::with('soals')->findOrFail($examId);
+        $exam->checkTimeout();
         
         if ($exam->status !== 'active') {
             return redirect()->route('dashboard')->with('error', 'Ujian tidak aktif.');
@@ -131,7 +143,16 @@ class MahasiswaUjianController extends Controller
 
         $soal = \App\Models\Soal::with('testCases')->where('ujian_id', $examId)->findOrFail($soalId);
         
-        return view('mahasiswa.workspace', compact('exam', 'soal'));
+        // Count active attempts
+        $attemptsUsed = \Illuminate\Support\Facades\DB::table('submissions')
+            ->where('soal_id', $soalId)
+            ->where('user_id', \Illuminate\Support\Facades\Auth::id())
+            ->where('is_reset', false)
+            ->count();
+
+        $remainingSeconds = $exam->getRemainingSeconds();
+
+        return view('mahasiswa.workspace', compact('exam', 'soal', 'attemptsUsed', 'remainingSeconds'));
     }
 
     /**
@@ -257,8 +278,20 @@ class MahasiswaUjianController extends Controller
         ]);
 
         $exam = Ujian::findOrFail($examId);
+        $exam->checkTimeout();
         if ($exam->status !== 'active') {
-            return response()->json(['success' => false, 'message' => 'Ujian tidak aktif']);
+            return response()->json(['success' => false, 'message' => 'Ujian tidak aktif atau sudah ditutup karena waktu habis.']);
+        }
+
+        // Count active attempts
+        $attemptsUsed = \Illuminate\Support\Facades\DB::table('submissions')
+            ->where('soal_id', $soalId)
+            ->where('user_id', \Illuminate\Support\Facades\Auth::id())
+            ->where('is_reset', false)
+            ->count();
+
+        if ($attemptsUsed >= 3) {
+            return response()->json(['success' => false, 'message' => 'Batas submit maksimal (3 kali) telah tercapai untuk soal ini.']);
         }
 
         $soal = \App\Models\Soal::with('testCases')->where('ujian_id', $examId)->findOrFail($soalId);
@@ -481,6 +514,7 @@ class MahasiswaUjianController extends Controller
             'similarity_index' => $similarityIndex,
             'execution_time' => $timeTaken . 's',
             'memory' => $memoryUsed . ' KB',
+            'is_reset' => false,
             'created_at' => now(),
             'updated_at' => now()
         ]);
@@ -495,6 +529,7 @@ class MahasiswaUjianController extends Controller
             'memory' => $memoryUsed . ' KB',
             'testCases' => $testCaseResults,
             'similarity' => $similarityIndex !== null ? round($similarityIndex, 2) . '%' : null,
+            'attempts_used' => $attemptsUsed + 1,
         ]);
     }
 
@@ -528,6 +563,23 @@ class MahasiswaUjianController extends Controller
         }
 
         return $maxSimilarity;
+    }
+
+    /**
+     * Endpoint untuk memeriksa status ujian secara real-time.
+     * 
+     * @param int $id ID Ujian
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkStatus($id)
+    {
+        $exam = Ujian::findOrFail($id);
+        $exam->checkTimeout();
+        
+        return response()->json([
+            'status' => $exam->status,
+            'remainingSeconds' => $exam->getRemainingSeconds()
+        ]);
     }
 
     private function tokenizeCode($code)

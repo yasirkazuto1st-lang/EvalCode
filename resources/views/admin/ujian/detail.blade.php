@@ -257,9 +257,17 @@
                                                 <div class="collapse" id="collapseSubmissions{{ $p->user_id }}">
                                                     <div
                                                         class="card card-body border-0 bg-light rounded-0 border-start border-4 border-primary m-3 shadow-sm">
-                                                        <h6 class="fw-bold mb-3">Riwayat Submission</h6>
-                                                        <table id="table-sub-{{ $p->user_id }}"
-                                                            class="table table-sm table-bordered mb-0 submission-table">
+                                                         <div class="d-flex justify-content-between align-items-center mb-3">
+                                                             <h6 class="fw-bold mb-0">Riwayat Submission</h6>
+                                                             <select class="form-select form-select-sm w-auto" onchange="window.filterSubmissions('{{ $p->user_id }}', this.value)">
+                                                                 <option value="">Semua Soal</option>
+                                                                 @foreach($exam->soals as $soal)
+                                                                     <option value="{{ $soal->soal_id }}">{{ $soal->nama_soal }}</option>
+                                                                 @endforeach
+                                                             </select>
+                                                         </div>
+                                                         <table id="table-sub-{{ $p->user_id }}"
+                                                             class="table table-sm table-bordered mb-0 submission-table">
                                                             <thead class="table-secondary">
                                                                 <tr>
                                                                     <th>Waktu</th>
@@ -272,7 +280,7 @@
                                                             </thead>
                                                             <tbody>
                                                                 @forelse($p->submissions as $s)
-                                                                    <tr>
+                                                                    <tr class="submission-row" data-soal="{{ $s->soal_id }}">
                                                                         <td class="text-nowrap">
                                                                             {{ \Carbon\Carbon::parse($s->created_at)->format('d M Y, H:i') }}
                                                                         </td>
@@ -314,7 +322,7 @@
                                                                         </td>
                                                                     </tr>
                                                                 @empty
-                                                                    <tr>
+                                                                    <tr class="no-submissions-row">
                                                                         <td colspan="6" class="text-center text-muted">
                                                                             Belum ada submission.</td>
                                                                     </tr>
@@ -396,17 +404,67 @@
 @section('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            function paginateTable(tableId, rowsPerPage) {
+            window.paginateTable = function(tableId, rowsPerPage, filterSoalId = '') {
                 const table = document.getElementById(tableId);
                 if (!table) return;
                 const tbody = table.querySelector('tbody');
                 if (!tbody) return;
-                const rows = Array.from(tbody.querySelectorAll('tr:not(.no-pagination)'));
+
+                // Hapus container pagination yang sudah ada jika ada
+                const existingPagination = document.getElementById(tableId + '-pagination');
+                if (existingPagination) {
+                    existingPagination.remove();
+                }
+
+                const allRows = Array.from(tbody.querySelectorAll('.submission-row'));
+                const noSubRow = tbody.querySelector('.no-submissions-row');
+
+                if (noSubRow) {
+                    noSubRow.style.display = '';
+                    return;
+                }
+
+                // Filter baris
+                const rows = allRows.filter(row => {
+                    if (filterSoalId === '' || row.getAttribute('data-soal') === filterSoalId) {
+                        return true;
+                    }
+                    row.style.display = 'none';
+                    return false;
+                });
+
+                // Hapus empty state row jika ada
+                const existingEmptyRow = tbody.querySelector('.empty-state-row');
+                if (existingEmptyRow) {
+                    existingEmptyRow.remove();
+                }
+
                 const totalRows = rows.length;
-                if (totalRows <= rowsPerPage) return;
+                if (totalRows === 0) {
+                    const emptyRow = document.createElement('tr');
+                    emptyRow.className = 'empty-state-row';
+                    const colCount = table.querySelector('thead tr').children.length;
+                    emptyRow.innerHTML = `<td colspan="${colCount}" class="text-center text-muted">Tidak ada submission untuk soal ini.</td>`;
+                    tbody.appendChild(emptyRow);
+                    return;
+                }
+
+                let currentPage = 1;
+
+                if (totalRows <= rowsPerPage) {
+                    rows.forEach(row => {
+                        row.style.display = '';
+                    });
+                    // Sembunyikan baris lain yang tidak termasuk filter
+                    allRows.forEach(row => {
+                        if (!rows.includes(row)) {
+                            row.style.display = 'none';
+                        }
+                    });
+                    return;
+                }
 
                 const totalPages = Math.ceil(totalRows / rowsPerPage);
-                let currentPage = 1;
 
                 const paginationContainer = document.createElement('div');
                 paginationContainer.className = 'd-flex flex-column flex-md-row justify-content-between align-items-center mt-2 px-2';
@@ -418,6 +476,11 @@
                     const end = start + rowsPerPage;
                     rows.forEach((row, index) => {
                         row.style.display = (index >= start && index < end) ? '' : 'none';
+                    });
+                    allRows.forEach(row => {
+                        if (!rows.includes(row)) {
+                            row.style.display = 'none';
+                        }
                     });
                     renderPagination();
                 }
@@ -481,8 +544,12 @@
                 renderTable();
             }
 
+            window.filterSubmissions = function(userId, soalId) {
+                window.paginateTable('table-sub-' + userId, 5, soalId);
+            }
+
             document.querySelectorAll('.submission-table').forEach(table => {
-                paginateTable(table.id, 5);
+                window.paginateTable(table.id, 5);
             });
 
             function initParticipantTablePagination() {

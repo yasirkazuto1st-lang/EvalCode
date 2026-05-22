@@ -8,6 +8,10 @@ const Workspace = ({ initialData }) => {
     const [output, setOutput] = useState(null);
     const [isRunning, setIsRunning] = useState(false);
     const [examMode, setExamMode] = useState(false);
+    
+    const [remainingTime, setRemainingTime] = useState(initialData?.remainingSeconds || 0);
+    const [attemptsUsed, setAttemptsUsed] = useState(initialData?.attemptsUsed || 0);
+    
     // Theme is managed globally via window.toggleGlobalTheme and synced in handleEditorDidMount
 
     // Provide default fallback in case props are empty
@@ -23,6 +27,74 @@ const Workspace = ({ initialData }) => {
 
     const [code, setCode] = useState(boilerplate.python);
     const [codeCache, setCodeCache] = useState({ ...boilerplate });
+
+    // Format seconds to HH:MM:SS
+    const formatRemainingTime = (seconds) => {
+        const totalSeconds = Math.floor(seconds);
+        const h = Math.floor(totalSeconds / 3600);
+        const m = Math.floor((totalSeconds % 3600) / 60);
+        const s = totalSeconds % 60;
+        return [
+            h.toString().padStart(2, '0'),
+            m.toString().padStart(2, '0'),
+            s.toString().padStart(2, '0')
+        ].join(':');
+    };
+
+    const isRedirectingRef = useRef(false);
+
+    const handleRedirect = (message) => {
+        if (isRedirectingRef.current) return;
+        isRedirectingRef.current = true;
+        alert(message);
+        window.location.href = '/dashboard';
+    };
+
+    // Countdown effect
+    React.useEffect(() => {
+        if (remainingTime <= 0) {
+            handleRedirect("Waktu ujian telah habis! Anda akan dialihkan ke dashboard.");
+            return;
+        }
+        const timer = setInterval(() => {
+            setRemainingTime(prev => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    handleRedirect("Waktu ujian telah habis! Anda akan dialihkan ke dashboard.");
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+        return () => clearInterval(timer);
+    }, [remainingTime]);
+
+    // Polling for exam status and remaining time sync
+    React.useEffect(() => {
+        if (!exam || !exam.ujian_id) return;
+
+        const checkExamStatus = async () => {
+            try {
+                const response = await fetch(`/ujian/${exam.ujian_id}/status`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status !== 'active') {
+                        handleRedirect("Ujian telah ditutup atau di-pause oleh pengawas!");
+                        return;
+                    }
+                    // Sync with server's remaining time to prevent client drift
+                    setRemainingTime(data.remainingSeconds);
+                }
+            } catch (error) {
+                console.error("Gagal memeriksa status ujian:", error);
+            }
+        };
+
+        // Poll every 5 seconds
+        const statusTimer = setInterval(checkExamStatus, 5000);
+
+        return () => clearInterval(statusTimer);
+    }, [exam]);
 
     const editorRef = useRef(null);
     const monacoRef = useRef(null);
@@ -171,6 +243,10 @@ const Workspace = ({ initialData }) => {
                     testCases: data.testCases || [],
                     similarity: data.similarity
                 });
+
+                if (data.attempts_used !== undefined) {
+                    setAttemptsUsed(data.attempts_used);
+                }
                 
                 // Jika error kompilasi/runtime, cari stderr di testcase pertama yg gagal
                 if ((data.status === 'Compilation Error' || data.status === 'Runtime Error') && data.testCases) {
@@ -214,6 +290,9 @@ const Workspace = ({ initialData }) => {
             <div className="d-flex justify-content-between align-items-center p-3 border-bottom bg-white shadow-sm">
                 <div className="d-flex align-items-center gap-3">
                     <h5 className="mb-0 text-unsulbar fw-bold">{exam ? exam.judul : 'EvalCode Workspace'}</h5>
+                    <span className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-2 fw-bold font-monospace fs-6">
+                        <i className="bi bi-clock-fill me-2"></i>Sisa Waktu: {formatRemainingTime(remainingTime)}
+                    </span>
                 </div>
                 <div>
                     <button 
@@ -231,7 +310,7 @@ const Workspace = ({ initialData }) => {
                 {/* Left Side: Language, Editor, Submit */}
                 <div className="d-flex flex-column border-end workspace-editor-col" style={{ width: `${editorWidth}%` }}>
                     <div className="p-2 bg-light border-bottom d-flex justify-content-between align-items-center">
-                        <div className="d-flex gap-2 flex-grow-1 me-3">
+                        <div className="d-flex gap-2 flex-grow-1 me-3 align-items-center">
                             <select 
                                 className="form-select form-select-sm" 
                                 style={{ maxWidth: '250px' }}
@@ -266,14 +345,17 @@ const Workspace = ({ initialData }) => {
                                     <option key={lang.id} value={lang.id}>{lang.name}</option>
                                 ))}
                             </select>
+                            <span className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 py-2 px-3 fw-semibold">
+                                <i className="bi bi-send-fill me-1"></i> Submit: {attemptsUsed} / 3
+                            </span>
                         </div>
                         
                         <button 
                             className="btn btn-sm btn-unsulbar px-4 fw-semibold"
                             onClick={handleRunCode}
-                            disabled={isRunning}
+                            disabled={isRunning || attemptsUsed >= 3}
                         >
-                            {isRunning ? 'Running...' : 'Submit Code'}
+                            {attemptsUsed >= 3 ? 'Batas Tercapai (3/3)' : (isRunning ? 'Running...' : 'Submit Code')}
                         </button>
                     </div>
 

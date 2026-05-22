@@ -105,7 +105,7 @@
                     } elseif ($role == 'pengawas') {
                         $homeRoute = route('pengawas.dashboard');
                     } elseif ($role == 'mahasiswa') {
-                        $homeRoute = route('mahasiswa.dashboard');
+                        $homeRoute = route('dashboard');
                     }
                 }
             @endphp

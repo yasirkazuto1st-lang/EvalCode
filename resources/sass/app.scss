@@ -276,50 +276,129 @@ input:checked + .slider:before {
 // ==========================================
 
 [data-bs-theme="dark"] {
+    --bs-body-bg: #101010;
+    --bs-body-bg-rgb: 16, 16, 16;
+    --bs-tertiary-bg: #101010;
+    --bs-tertiary-bg-rgb: 16, 16, 16;
+    --bs-secondary-bg: #101010;
+    --bs-secondary-bg-rgb: 16, 16, 16;
+    --bs-card-bg: #101010;
+    --bs-list-group-bg: #101010;
+    --bs-list-group-border-color: #2e2e2e;
+    --bs-border-color: #2e2e2e;
+    --bs-border-color-translucent: #2e2e2e;
+
     // 1. Body background (Deep pitch black/dark grey for premium OLED/Dark feel)
     body {
         background-color: #101010 !important;
         color: #e0e0e0 !important;
     }
 
-    // 2. Elevated Elements (Cards, Modals, Dropdowns, Pill Containers) - Distinct from body!
-    .card, .modal-content, .dropdown-menu, .bg-white, .bg-light {
+    // 2. Elevated Floating Elements (Modals, Dropdowns)
+    .modal-content, .dropdown-menu {
         background-color: #1a1a1a !important;
         color: #e0e0e0 !important;
         border-color: #2e2e2e !important;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
     }
 
-    // 3. Card & Modal Headers/Footers - Crisp distinction from card body
-    .card-header, .modal-header, .card-footer, .modal-footer {
+    .modal-header, .modal-footer {
         background-color: #222222 !important;
         border-color: #2e2e2e !important;
     }
 
-    // 4. Tables - Clear distinction between Header (thead) and Body (tbody)
-    .table {
-        --bs-table-bg: #1a1a1a;
-        --bs-table-color: #e0e0e0;
-        --bs-table-border-color: #2e2e2e;
+    // 3. Cards & Content Areas - Match body background with shadow!
+    .card, .bg-white, .bg-light, .list-group-item {
+        background-color: #101010 !important;
+        color: #e0e0e0 !important;
+        border-color: #2e2e2e !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
     }
 
-    .table-light, .table-secondary, td {
-        background-color: #1a1a1a !important;
-        color: #e0e0e0 !important;
+    .card-body {
+        background-color: transparent !important;
+    }
+
+    .card-header, .card-footer {
+        background-color: #101010 !important;
         border-color: #2e2e2e !important;
     }
 
-    thead, thead.table-light, thead.table-secondary, th {
+    .list-group {
+        background-color: #101010 !important;
+        border-color: #2e2e2e !important;
+    }
+
+    .list-group-item-action {
+        color: #e0e0e0 !important;
+        &:hover, &:focus {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            color: #ffffff !important;
+        }
+        &.active {
+            background-color: #800000 !important;
+            border-color: #800000 !important;
+            color: #ffffff !important;
+        }
+    }
+
+    // Pinned bottom leaderboard rank bar override (override inline light background style)
+    #floatingMyRankBar .list-group-item {
+        background-color: rgba(16, 16, 16, 0.92) !important;
+        backdrop-filter: blur(8px) !important;
+        border-color: #0d6efd !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+    }
+
+    // 4. Tables - Body matches body background, Header is distinct, Gridlines are visible!
+    .table {
+        --bs-table-bg: #101010 !important;
+        --bs-table-color: #e0e0e0 !important;
+        --bs-table-border-color: #383838 !important;
+        background-color: #101010 !important;
+        border-color: #383838 !important;
+    }
+
+    .table td {
+        background-color: #101010 !important;
+        color: #e0e0e0 !important;
+        border-color: #383838 !important;
+    }
+
+    .table tbody tr:hover td {
+        background-color: #1e1e1e !important;
+        color: #ffffff !important;
+    }
+
+    .table-light, .table-secondary {
+        background-color: #101010 !important;
+        color: #e0e0e0 !important;
+        border-color: #383838 !important;
+    }
+
+    .table-bordered {
+        border: 1px solid #383838 !important;
+        th, td {
+            border: 1px solid #383838 !important;
+        }
+    }
+
+    .table thead, 
+    .table thead.table-light, 
+    .table thead.table-secondary, 
+    .table thead th,
+    .table thead tr,
+    .table th {
         background-color: #2a2a2a !important;
         color: #ffffff !important;
         font-weight: 700 !important;
         border-bottom: 2px solid #444444 !important;
-        border-color: #2e2e2e !important;
+        border-color: #383838 !important;
     }
 
     // 5. Navigation Tabs & Pills (e.g. User Management Tabs) - Clear inactive tab visibility
     .nav-pills, .nav-tabs {
-        background-color: #1a1a1a !important;
+        background-color: #101010 !important;
         border-color: #2e2e2e !important;
 
         .nav-link {
@@ -338,7 +417,7 @@ input:checked + .slider:before {
 
     // Explicit override for #userTabs to ensure specificity
     #userTabs {
-        background-color: #1a1a1a !important;
+        background-color: #101010 !important;
         border: 1px solid #2e2e2e !important;
         .nav-link {
             color: #a0a0a0 !important;
@@ -364,7 +443,7 @@ input:checked + .slider:before {
 
     // 7. Mahasiswa Soal Cards
     .soal-card-default {
-        background-color: #1a1a1a !important;
+        background-color: #101010 !important;
         border-color: #2e2e2e !important;
         color: #e0e0e0 !important;
         h6, p, span {
@@ -376,6 +455,10 @@ input:checked + .slider:before {
     .navbar-unsulbar, #sidebar-wrapper, .top-navbar, .sidebar {
         background: #181818 !important;
         border-color: #2e2e2e !important;
+    }
+
+    .sidebar .list-group-item, #sidebar-wrapper .list-group-item {
+        box-shadow: none !important;
     }
 
     .text-dark, .text-muted, .text-secondary {
