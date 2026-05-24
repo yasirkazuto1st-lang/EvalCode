@@ -269,7 +269,7 @@
                                                 <span><i class="bi bi-star-fill text-warning me-1"></i>Bobot:
                                                     {{ $soal->bobot_nilai }}</span>
 
-                                                <span><i class="bi bi-send me-1"></i>Submit: {{ $soal->attempts_used }} / 3</span>
+                                                <span><i class="bi bi-send me-1"></i>Submit: {{ $soal->attempts_used }} / {{ $exam->max_attempt }}</span>
 
                                                 @php
                                                     $statusStyle = 'color: #6c757d;';
@@ -294,9 +294,9 @@
                                                 </span>
                                             </div>
                                         </div>
-                                        @if ($soal->attempts_used >= 3)
+                                        @if ($soal->attempts_used >= $exam->max_attempt)
                                             <button class="btn btn-sm btn-secondary rounded-pill px-4 shadow-sm" disabled style="cursor: not-allowed;">
-                                                <i class="bi bi-x-circle me-1"></i> Batas Submit (3/3)
+                                                <i class="bi bi-x-circle me-1"></i> Batas Submit ({{ $exam->max_attempt }}/{{ $exam->max_attempt }})
                                             </button>
                                         @else
                                             <a href="{{ route('workspace', ['examId' => $exam->ujian_id, 'soalId' => $soal->soal_id]) }}"

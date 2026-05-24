@@ -20,12 +20,14 @@ class Ujian extends Model
         'durasi',
         'status',
         'passing_grade',
+        'max_attempt',
         'started_at',
         'sisa_waktu',
     ];
 
     protected $casts = [
         'passing_grade' => 'integer',
+        'max_attempt' => 'integer',
         'started_at' => 'datetime',
     ];
 

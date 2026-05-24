@@ -56,7 +56,7 @@ Dokumen ini berfungsi sebagai panduan referensi sentral untuk memudahkan para _d
 Sistem menggunakan tipe penilaian berbasis **integer murni**.
 
 - `users`: Tabel akun (`user_id`, `name`, `nim_username`, `role`, `password`, `last_session_id`).
-- `ujians`: Tabel ujian (`ujian_id`, `judul`, `durasi`, `status`, `passing_grade` (integer), `started_at` (timestamp, waktu mulai ujian aktif), `sisa_waktu` (integer, sisa waktu dalam detik)).
+- `ujians`: Tabel ujian (`ujian_id`, `judul`, `durasi`, `status`, `passing_grade` (integer), `max_attempt` (integer, default 3, batas maksimal submit per soal), `started_at` (timestamp, waktu mulai ujian aktif), `sisa_waktu` (integer, sisa waktu dalam detik)).
 - `soals`: Tabel soal (`soal_id`, `ujian_id`, `nama_soal`, `soal_pdf`, `bobot_nilai` (integer)).
 - `test_cases`: Tabel skenario tes (`test_case_id`, `soal_id`, `input`, `expected_output`).
 - `tokens`: Tabel token _real-time_ (`token_id`, `ujian_id`, `kode_token`, `status_aktif`).
@@ -89,7 +89,7 @@ Sistem menggunakan tipe penilaian berbasis **integer murni**.
   - Mahasiswa dan Pengawas melakukan AJAX polling setiap 5 detik ke `/ujian/{id}/status` untuk mensinkronisasi timer klien dengan database guna mencegah *drift* / efek tab browser tertidur (*sleep*).
   - Ketika status ujian tidak lagi aktif, mahasiswa otomatis dikeluarkan dari workspace kembali ke dashboard dengan pesan alert terintegrasi.
 - **Batas Percobaan & Reset Kesempatan**:
-  - Mahasiswa dibatasi maksimal 3 kali submit untuk setiap soal. Informasi status sisa percobaan (`X / 3`) ditampilkan di daftar soal detail ujian dan di atas panel submit workspace mahasiswa.
+  - Mahasiswa dibatasi submit untuk setiap soal sesuai dengan nilai `max_attempt` pada ujian terkait (default: 3, dapat disetel oleh Admin melalui form tambah/edit ujian). Informasi status sisa percobaan (`X / max_attempt`) ditampilkan di daftar soal detail ujian dan di atas panel submit workspace mahasiswa.
   - Jika batas tercapai, tombol submit di-disable dan mahasiswa tidak dapat mengirimkan jawaban lagi.
   - Pengawas memiliki otorisasi untuk melakukan reset kesempatan mahasiswa pada soal tertentu. Tindakan ini menandai seluruh submisi mahasiswa pada soal tersebut dengan status `is_reset = true`.
   - Tampilan tabel reset ("Status Kesempatan per Soal") diposisikan tepat di atas tabel "Riwayat Submission" di menu kolaps baris peserta pada monitoring pengawas.

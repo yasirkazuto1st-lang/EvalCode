@@ -75,6 +75,7 @@ class UjianStatusTest extends TestCase
             'durasi' => 60,
             'status' => 'closed',
             'passing_grade' => 70,
+            'max_attempt' => 3,
             'started_at' => null,
             'sisa_waktu' => 0,
         ]);
@@ -86,6 +87,7 @@ class UjianStatusTest extends TestCase
                 'deskripsi' => 'Deskripsi terupdate',
                 'durasi' => 90,
                 'passing_grade' => 75,
+                'max_attempt' => 3,
                 'status' => 'active',
             ]);
 

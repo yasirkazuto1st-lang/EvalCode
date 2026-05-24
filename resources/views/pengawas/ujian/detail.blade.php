@@ -359,11 +359,11 @@
                                                                     @php
                                                                         $soalSubmissions = $p->submissions->where('soal_id', $soal->soal_id)->where('is_reset', false);
                                                                         $attemptsUsed = $soalSubmissions->count();
-                                                                        $badgeColor = $attemptsUsed >= 3 ? 'danger' : ($attemptsUsed > 0 ? 'warning text-dark' : 'secondary');
+                                                                        $badgeColor = $attemptsUsed >= $exam->max_attempt ? 'danger' : ($attemptsUsed > 0 ? 'warning text-dark' : 'secondary');
                                                                     @endphp
                                                                     <div class="d-flex align-items-center gap-2 bg-white border rounded-pill px-3 py-1 shadow-sm" style="font-size: 0.85rem;">
                                                                         <span class="fw-semibold text-dark text-truncate" style="max-width: 150px;">{{ $soal->nama_soal }}</span>
-                                                                        <span class="badge bg-{{ $badgeColor }} rounded-pill">{{ $attemptsUsed }} / 3</span>
+                                                                        <span class="badge bg-{{ $badgeColor }} rounded-pill">{{ $attemptsUsed }} / {{ $exam->max_attempt }}</span>
                                                                         @if ($attemptsUsed > 0)
                                                                             <form action="{{ route('pengawas.ujian.peserta.reset-attempts', ['examId' => $exam->ujian_id, 'userId' => $p->user_id, 'soalId' => $soal->soal_id]) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin mereset kesempatan submit mahasiswa ini untuk soal {{ $soal->nama_soal }}?');" class="d-inline">
                                                                                 @csrf

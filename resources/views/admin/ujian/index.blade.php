@@ -60,6 +60,7 @@
                                 <th>Deskripsi</th>
                                 <th>Durasi (menit)</th>
                                 <th>Passing Grade (Pts)</th>
+                                <th>Maks. Submit</th>
                                 <th>Status</th>
                                 <th>Aksi</th>
                             </tr>
@@ -72,6 +73,7 @@
                                     <td>{{ Str::limit($exam->deskripsi, 50) }}</td>
                                     <td>{{ $exam->durasi }}</td>
                                     <td>{{ $exam->passing_grade }}</td>
+                                    <td>{{ $exam->max_attempt }}</td>
                                     <td>
                                         @if ($exam->status === 'active')
                                             <span
@@ -126,6 +128,9 @@
                                                             (Pts)</label><input type="number" name="passing_grade"
                                                             class="form-control" value="{{ $exam->passing_grade }}"
                                                             required min="0"></div>
+                                                    <div class="mb-3"><label class="form-label">Maks. Submit per Soal</label><input type="number" name="max_attempt"
+                                                            class="form-control" value="{{ $exam->max_attempt }}"
+                                                            required min="1"></div>
                                                     <div class="mb-3">
                                                         <label class="form-label">Status</label>
                                                         <select name="status" class="form-select">
@@ -175,7 +180,7 @@
                                 </div>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center py-5 text-muted">
+                                    <td colspan="8" class="text-center py-5 text-muted">
                                         <i class="bi bi-inbox fs-2 d-block mb-2"></i>
                                         Belum ada ujian yang dibuat.
                                     </td>
@@ -209,6 +214,8 @@
                                 name="durasi" class="form-control" placeholder="60" required min="1"></div>
                         <div class="mb-3"><label class="form-label">Passing Grade (Pts)</label><input type="number"
                                 name="passing_grade" class="form-control" placeholder="70" required min="0"></div>
+                        <div class="mb-3"><label class="form-label">Maks. Submit per Soal</label><input type="number"
+                                name="max_attempt" class="form-control" placeholder="3" required min="1" value="3"></div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>

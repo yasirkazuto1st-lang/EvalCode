@@ -11,6 +11,7 @@ const Workspace = ({ initialData }) => {
     
     const [remainingTime, setRemainingTime] = useState(initialData?.remainingSeconds || 0);
     const [attemptsUsed, setAttemptsUsed] = useState(initialData?.attemptsUsed || 0);
+    const maxAttempt = initialData?.maxAttempt || 3;
     
     // Theme is managed globally via window.toggleGlobalTheme and synced in handleEditorDidMount
 
@@ -346,16 +347,16 @@ const Workspace = ({ initialData }) => {
                                 ))}
                             </select>
                             <span className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 py-2 px-3 fw-semibold">
-                                <i className="bi bi-send-fill me-1"></i> Submit: {attemptsUsed} / 3
+                                <i className="bi bi-send-fill me-1"></i> Submit: {attemptsUsed} / {maxAttempt}
                             </span>
                         </div>
                         
                         <button 
                             className="btn btn-sm btn-unsulbar px-4 fw-semibold"
                             onClick={handleRunCode}
-                            disabled={isRunning || attemptsUsed >= 3}
+                            disabled={isRunning || attemptsUsed >= maxAttempt}
                         >
-                            {attemptsUsed >= 3 ? 'Batas Tercapai (3/3)' : (isRunning ? 'Running...' : 'Submit Code')}
+                            {attemptsUsed >= maxAttempt ? `Batas Tercapai (${maxAttempt}/${maxAttempt})` : (isRunning ? 'Running...' : 'Submit Code')}
                         </button>
                     </div>
 

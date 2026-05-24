@@ -39,6 +39,7 @@ class SubmissionDeletionTest extends TestCase
             'durasi' => 60,
             'status' => 'active',
             'passing_grade' => 70,
+            'max_attempt' => 3,
             'started_at' => now(),
             'sisa_waktu' => 3600,
         ]);
@@ -98,6 +99,7 @@ class SubmissionDeletionTest extends TestCase
             'durasi' => 60,
             'status' => 'active',
             'passing_grade' => 70,
+            'max_attempt' => 3,
             'started_at' => now(),
             'sisa_waktu' => 3600,
         ]);

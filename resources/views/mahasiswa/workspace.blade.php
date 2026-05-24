@@ -18,6 +18,7 @@
         soal_pdf_url: "{{ $soal->soal_pdf ? asset('storage/' . $soal->soal_pdf) : '' }}",
         base_workspace_url: "{{ url('ujian/'.$exam->ujian_id.'/soal') }}",
         attemptsUsed: {{ $attemptsUsed }},
+        maxAttempt: {{ $maxAttempt }},
         remainingSeconds: {{ $remainingSeconds }}
     };
 </script>

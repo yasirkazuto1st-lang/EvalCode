@@ -152,7 +152,9 @@ class MahasiswaUjianController extends Controller
 
         $remainingSeconds = $exam->getRemainingSeconds();
 
-        return view('mahasiswa.workspace', compact('exam', 'soal', 'attemptsUsed', 'remainingSeconds'));
+        $maxAttempt = $exam->max_attempt;
+
+        return view('mahasiswa.workspace', compact('exam', 'soal', 'attemptsUsed', 'remainingSeconds', 'maxAttempt'));
     }
 
     /**
@@ -290,8 +292,8 @@ class MahasiswaUjianController extends Controller
             ->where('is_reset', false)
             ->count();
 
-        if ($attemptsUsed >= 3) {
-            return response()->json(['success' => false, 'message' => 'Batas submit maksimal (3 kali) telah tercapai untuk soal ini.']);
+        if ($attemptsUsed >= $exam->max_attempt) {
+            return response()->json(['success' => false, 'message' => 'Batas submit maksimal (' . $exam->max_attempt . ' kali) telah tercapai untuk soal ini.']);
         }
 
         $soal = \App\Models\Soal::with('testCases')->where('ujian_id', $examId)->findOrFail($soalId);

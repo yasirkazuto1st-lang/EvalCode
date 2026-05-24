@@ -71,6 +71,7 @@ class AdminController extends Controller
             'deskripsi' => 'nullable|string',
             'durasi' => 'required|integer|min:1',
             'passing_grade' => 'required|integer|min:0',
+            'max_attempt' => 'required|integer|min:1',
         ]);
 
         Ujian::create([
@@ -79,6 +80,7 @@ class AdminController extends Controller
             'deskripsi' => $request->deskripsi,
             'durasi' => $request->durasi,
             'passing_grade' => $request->passing_grade,
+            'max_attempt' => $request->max_attempt,
         ]);
 
         return redirect()->route('admin.ujian.index')->with('success', 'Ujian berhasil ditambahkan.');
@@ -100,6 +102,7 @@ class AdminController extends Controller
             'deskripsi' => 'nullable|string',
             'durasi' => 'required|integer|min:1',
             'passing_grade' => 'required|integer|min:0',
+            'max_attempt' => 'required|integer|min:1',
             'status' => 'nullable|in:active,closed,finished',
         ]);
 
@@ -110,6 +113,7 @@ class AdminController extends Controller
         $exam->deskripsi = $request->deskripsi;
         $exam->durasi = $request->durasi;
         $exam->passing_grade = $request->passing_grade;
+        $exam->max_attempt = $request->max_attempt;
         $exam->status = $newStatus;
 
         if ($newStatus !== $oldStatus) {
