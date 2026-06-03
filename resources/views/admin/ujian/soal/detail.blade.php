@@ -49,10 +49,11 @@
             <div class="col-md-6">
                 <div class="card border-0 shadow-sm rounded-4 h-100">
                     <div
-                        class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
-                        <h5 class="fw-bold mb-0"><i class="bi bi-list-check text-success me-2"></i> Test Cases</h5>
-                        <button class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#addTestCaseModal">
-                            <i class="bi bi-plus-circle me-1"></i> Tambah Test Case
+                        class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex justify-content-between align-items-center gap-3 gap-md-4">
+                        <h5 class="fw-bold mb-0 text-nowrap flex-shrink-0"><i class="bi bi-list-check text-success me-2"></i> Test Cases</h5>
+                        <button class="btn btn-sm btn-primary rounded-pill px-2 px-md-3 shadow-sm d-flex align-items-center ms-auto text-nowrap" data-bs-toggle="modal" data-bs-target="#addTestCaseModal">
+                            <i class="bi bi-plus-circle"></i>
+                            <span class="d-none d-md-inline ms-1">Tambah Test Case</span>
                         </button>
                     </div>
                     <div class="card-body">

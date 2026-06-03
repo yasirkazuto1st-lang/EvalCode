@@ -48,7 +48,7 @@
         <!-- Header Exam Info -->
         <div class="card border-0 shadow-sm rounded-4 mb-4 position-relative overflow-hidden"
             style="background: linear-gradient(135deg, var(--bs-primary) 0%, #4a0000 100%); color: white;">
-            <i class="bi bi-journal-code position-absolute opacity-10"
+            <i class="bi bi-journal-code position-absolute opacity-10 card-bg-illustration"
                 style="font-size: 12rem; right: -2rem; top: -3rem; transform: rotate(15deg);"></i>
             <div
                 class="card-body p-3 p-md-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center position-relative z-1">
@@ -71,11 +71,12 @@
             <div class="col-lg-5 mb-4 mb-lg-0">
                 <div class="card border-0 shadow-sm rounded-4">
                     <div
-                        class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex justify-content-between align-items-center">
-                        <h5 class="fw-bold mb-0"><i class="bi bi-list-task text-primary me-2"></i> Daftar Soal</h5>
-                        <button class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" data-bs-toggle="modal"
+                        class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex justify-content-between align-items-center gap-3 gap-md-4">
+                        <h5 class="fw-bold mb-0 text-nowrap flex-shrink-0"><i class="bi bi-list-task text-primary me-2"></i> Daftar Soal</h5>
+                        <button class="btn btn-sm btn-primary rounded-pill px-2 px-md-3 shadow-sm d-flex align-items-center ms-auto text-nowrap" data-bs-toggle="modal"
                             data-bs-target="#addQuestionModal">
-                            <i class="bi bi-plus-circle me-1"></i> Tambah Soal
+                            <i class="bi bi-plus-circle"></i>
+                            <span class="d-none d-md-inline ms-1">Tambah Soal</span>
                         </button>
                     </div>
                     <div class="card-body p-0">
@@ -187,23 +188,27 @@
             <div class="col-lg-7">
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                     <div
-                        class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-                        <h5 class="fw-bold mb-0"><i class="bi bi-people-fill text-warning me-2"></i> Peserta Ujian</h5>
-                        <div class="d-flex flex-column flex-md-row gap-2">
-                            <input type="text" id="searchParticipantInput" class="form-control form-control-sm search-input rounded-pill" style="max-width: 250px;" placeholder="Cari peserta (NIM/Nama)...">
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm dropdown-toggle d-flex align-items-center gap-1 h-100" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-funnel-fill"></i> <span id="activeFilterText">Urutkan: Normal</span>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end shadow rounded-4 border-0" aria-labelledby="filterDropdown">
-                                    <li><a class="dropdown-item filter-option active" href="#" data-sort="normal"><i class="bi bi-sort-numeric-down me-2 text-primary"></i> Normal (Skor Tertinggi)</a></li>
-                                    <li><a class="dropdown-item filter-option" href="#" data-sort="terbaru"><i class="bi bi-clock-history me-2 text-success"></i> Submission Terakhir</a></li>
-                                    <li><a class="dropdown-item filter-option" href="#" data-sort="terlama"><i class="bi bi-clock me-2 text-warning"></i> Submission Terlama</a></li>
-                                </ul>
+                        class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 gap-md-4">
+                        <h5 class="fw-bold mb-0 text-nowrap flex-shrink-0"><i class="bi bi-people-fill text-warning me-2"></i> Peserta Ujian</h5>
+                        <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2 w-100 w-md-auto ms-md-auto">
+                            <input type="text" id="searchParticipantInput" class="form-control form-control-sm search-input rounded-pill w-100 flex-grow-1 flex-md-grow-0" style="min-width: 150px;" placeholder="Cari peserta (NIM/Nama)...">
+                            <div class="d-flex align-items-center gap-2 w-100 w-sm-auto">
+                                <div class="dropdown flex-grow-1 flex-sm-grow-0 w-100 w-sm-auto">
+                                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm dropdown-toggle d-flex align-items-center justify-content-center gap-1 w-100" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-funnel-fill"></i> <span id="activeFilterText">Urutkan: Normal</span>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow rounded-4 border-0 w-100" aria-labelledby="filterDropdown">
+                                        <li><a class="dropdown-item filter-option active" href="#" data-sort="normal"><i class="bi bi-sort-numeric-down me-2 text-primary"></i> Normal (Skor Tertinggi)</a></li>
+                                        <li><a class="dropdown-item filter-option" href="#" data-sort="terbaru"><i class="bi bi-clock-history me-2 text-success"></i> Submission Terakhir</a></li>
+                                        <li><a class="dropdown-item filter-option" href="#" data-sort="terlama"><i class="bi bi-clock me-2 text-warning"></i> Submission Terlama</a></li>
+                                    </ul>
+                                </div>
+                                <a href="{{ route('admin.ujian.export', $exam->ujian_id) }}"
+                                    class="btn btn-sm btn-success rounded-pill shadow-sm d-flex align-items-center justify-content-center flex-shrink-0"
+                                    style="width: 32px; height: 32px; padding: 0;" title="Generate Laporan">
+                                    <i class="bi bi-printer-fill"></i>
+                                </a>
                             </div>
-                            <a href="{{ route('admin.ujian.export', $exam->ujian_id) }}"
-                                class="btn btn-sm btn-success rounded-pill shadow-sm px-3 d-flex align-items-center justify-content-center" title="Generate Laporan"><i
-                                    class="bi bi-printer-fill"></i></a>
                         </div>
                     </div>
                     <div class="card-body p-0">

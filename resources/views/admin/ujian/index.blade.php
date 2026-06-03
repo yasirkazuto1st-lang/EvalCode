@@ -40,13 +40,14 @@
         @endif
 
         <div class="card border-0 shadow-sm rounded-4 mb-4">
-            <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
-                <h5 class="fw-bold mb-0"><i class="bi bi-card-list text-primary me-2"></i> Daftar Ujian</h5>
-                <div class="d-flex gap-2">
-                    <input type="text" id="searchUjianInput" class="form-control form-control-sm search-input rounded-pill"
+            <div class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 gap-sm-4">
+                <h5 class="fw-bold mb-0 text-nowrap flex-shrink-0"><i class="bi bi-card-list text-primary me-2"></i> Daftar Ujian</h5>
+                <div class="d-flex align-items-center gap-2 w-100 w-sm-auto ms-auto justify-content-sm-end">
+                    <input type="text" id="searchUjianInput" class="form-control form-control-sm search-input rounded-pill flex-grow-1 flex-sm-grow-0 w-100 w-sm-auto"
                         placeholder="Cari Judul Ujian...">
-                    <button class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm text-nowrap" data-bs-toggle="modal" data-bs-target="#addExamModal">
-                        <i class="bi bi-plus-circle me-1"></i> Tambah Ujian
+                    <button class="btn btn-primary btn-sm rounded-pill px-2 px-sm-3 shadow-sm text-nowrap d-flex align-items-center justify-content-center flex-shrink-0" data-bs-toggle="modal" data-bs-target="#addExamModal" title="Tambah Ujian">
+                        <i class="bi bi-plus-circle"></i>
+                        <span class="d-none d-sm-inline ms-1">Tambah Ujian</span>
                     </button>
                 </div>
             </div>

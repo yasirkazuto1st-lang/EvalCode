@@ -10,7 +10,7 @@
         <!-- Header Informasi Ujian -->
         <div class="card border-0 shadow-sm rounded-4 mb-4 detail-ujian-header position-relative overflow-hidden"
             style="background: linear-gradient(135deg, var(--bs-primary) 0%, #4a0000 100%); color: white;">
-            <i class="bi bi-mortarboard position-absolute opacity-10"
+            <i class="bi bi-mortarboard position-absolute opacity-10 card-bg-illustration"
                 style="font-size: 12rem; right: -2rem; top: -3rem; transform: rotate(15deg);"></i>
 
             <div
@@ -66,7 +66,7 @@
         <!-- 2 Kolom Konten -->
         <div class="row g-4">
             <!-- Kiri: Leaderboard -->
-            <div class="col-md-4">
+            <div class="col-xl-4 d-none d-xl-block">
                 <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
                         <h5 class="fw-bold mb-0"><i class="bi bi-trophy text-warning me-2"></i> Leaderboard</h5>
@@ -119,11 +119,14 @@
                                         }
                                     @endphp
                                     <li @if($isMe) id="myLeaderboardListItem" @endif class="list-group-item d-flex justify-content-between align-items-center py-3 {{ $borderClass }} {{ $bgClass }} rounded mb-2 shadow-sm">
-                                        <div class="d-flex align-items-center" style="min-width: 0;">
+                                        <div class="d-flex align-items-center me-3" style="min-width: 0;">
                                             <span class="badge {{ $badgeClass }} rounded-pill me-2 px-2 py-1 fs-6 flex-shrink-0">
                                                 {!! $icon !!}{{ $idx + 1 }}
                                             </span>
                                             <span class="fw-semibold me-1 text-nowrap text-truncate">{{ $lb->name }}</span>
+                                            @if($isMe)
+                                                <span class="badge bg-primary ms-1 small flex-shrink-0">Anda</span>
+                                            @endif
                                         </div>
                                         <span class="fw-bold {{ $textClass }} flex-shrink-0">{{ $lb->total_skor }} Pts</span>
                                     </li>
@@ -186,7 +189,7 @@
                             @endphp
                             <div id="floatingMyRankBar" class="position-absolute" style="left: 1rem; right: 1.5rem; bottom: 1rem; z-index: 10; transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; transform: translateY(15px); pointer-events: none;" title="Klik untuk melihat posisi Anda">
                                 <div class="list-group-item d-flex justify-content-between align-items-center py-3 px-3 {{ $myBorderClass }} {{ $myBgClass }} rounded mb-0 shadow-lg" style="cursor: pointer; backdrop-filter: blur(8px); background-color: rgba(255,255,255,0.92);">
-                                    <div class="d-flex align-items-center" style="min-width: 0;">
+                                    <div class="d-flex align-items-center me-3" style="min-width: 0;">
                                         <span class="badge {{ $myBadgeClass }} rounded-pill me-2 px-2 py-1 fs-6 flex-shrink-0">
                                             {!! $myIcon !!}{{ $myRankIndex + 1 }}
                                         </span>
@@ -238,10 +241,13 @@
             </div>
 
             <!-- Kanan: Daftar Soal -->
-            <div class="col-md-8">
+            <div class="col-12 col-xl-8">
                 <div class="card border-0 shadow-sm rounded-4 h-100">
-                    <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold mb-0"><i class="bi bi-list-task text-primary me-2"></i> Daftar Soal</h5>
+                        <button class="btn btn-sm btn-outline-warning rounded-pill px-3 d-xl-none fw-bold" type="button" data-bs-toggle="offcanvas" data-bs-target="#leaderboardOffcanvas" aria-controls="leaderboardOffcanvas">
+                            <i class="bi bi-trophy-fill me-1 text-warning"></i> Leaderboard
+                        </button>
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
@@ -440,4 +446,75 @@
             });
         })();
     </script>
+
+    <!-- Offcanvas Leaderboard for Screen sizes < 1200px (Laptop S and down) -->
+    <div class="offcanvas offcanvas-start d-xl-none leaderboard-offcanvas-drawer" tabindex="-1" id="leaderboardOffcanvas" aria-labelledby="leaderboardOffcanvasLabel">
+        <div class="offcanvas-header border-bottom bg-white">
+            <h5 class="offcanvas-title fw-bold" id="leaderboardOffcanvasLabel">
+                <i class="bi bi-trophy text-warning me-2"></i> Leaderboard
+            </h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-3 bg-light">
+            <div class="leaderboard-scroll pe-1" style="max-height: calc(100vh - 100px); overflow-y: auto;">
+                <ul class="list-group list-group-flush pb-2">
+                    @forelse($leaderboard as $idx => $lb)
+                        @php
+                            $bgClass = 'bg-white';
+                            $textClass = 'text-secondary';
+                            $badgeClass = 'bg-dark bg-opacity-25 text-dark';
+                            $icon = '';
+                            $borderClass = 'border-0';
+
+                            if ($idx == 0) {
+                                $bgClass = 'bg-warning bg-opacity-10';
+                                $textClass = 'text-warning';
+                                $badgeClass = 'bg-warning text-dark shadow-sm';
+                                $icon = '<i class="bi bi-trophy-fill me-1"></i>';
+                                $borderClass = 'border border-warning border-opacity-50';
+                            } elseif ($idx == 1) {
+                                $bgClass = 'bg-secondary bg-opacity-10';
+                                $textClass = 'text-secondary';
+                                $badgeClass = 'bg-secondary text-white shadow-sm';
+                                $icon = '<i class="bi bi-award-fill me-1"></i>';
+                                $borderClass = 'border border-secondary border-opacity-50';
+                            } elseif ($idx == 2) {
+                                $bgClass = 'bg-danger bg-opacity-10';
+                                $textClass = 'text-danger';
+                                $badgeClass = 'bg-danger text-white shadow-sm';
+                                $icon = '<i class="bi bi-award-fill me-1"></i>';
+                                $borderClass = 'border border-danger border-opacity-50';
+                            }
+
+                            $isMe = ($lb->user_id == Auth::id());
+                            if ($isMe) {
+                                $borderClass = 'border border-2 border-primary';
+                                if ($idx > 2) {
+                                    $bgClass = 'bg-primary bg-opacity-10';
+                                    $textClass = 'text-primary';
+                                    $badgeClass = 'bg-primary text-white';
+                                }
+                            }
+                        @endphp
+                        <li class="list-group-item d-flex justify-content-between align-items-center py-3 {{ $borderClass }} {{ $bgClass }} rounded mb-2 shadow-sm">
+                            <div class="d-flex align-items-center me-3" style="min-width: 0;">
+                                <span class="badge {{ $badgeClass }} rounded-pill me-2 px-2 py-1 fs-6 flex-shrink-0">
+                                    {!! $icon !!}{{ $idx + 1 }}
+                                </span>
+                                <span class="fw-semibold me-1 text-nowrap text-truncate">{{ $lb->name }}</span>
+                                @if($isMe)
+                                    <span class="badge bg-primary ms-1 small flex-shrink-0">Anda</span>
+                                @endif
+                            </div>
+                            <span class="fw-bold {{ $textClass }} flex-shrink-0">{{ $lb->total_skor }} Pts</span>
+                        </li>
+                    @empty
+                        <li class="list-group-item text-center text-muted py-4 border-0">
+                            Belum ada data leaderboard.
+                        </li>
+                    @endforelse
+                </ul>
+            </div>
+        </div>
+    </div>
 @endsection

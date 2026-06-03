@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mt-4">
+<div class="container mhs-dashboard mt-4">
 
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show rounded-4" role="alert">
@@ -43,7 +43,7 @@
     </div>
     <div class="row g-4 mb-4" id="container-mhs-berjalan">
         @forelse($activeExams as $exam)
-            <div class="col-md-6 col-lg-4 exam-card-mhs-berjalan">
+            <div class="col-12 col-md-6 col-lg-4 exam-card-mhs-berjalan">
                 <div class="card h-100 border-0 shadow-sm rounded-4 hover-shadow transition-all">
                     <div class="card-body p-4 d-flex flex-column">
                         <div class="d-flex justify-content-between align-items-start mb-3">
@@ -101,7 +101,7 @@
     </div>
     <div class="row g-4 mb-4" id="container-mhs-belum">
         @forelse($closedExams as $exam)
-            <div class="col-md-6 col-lg-4 exam-card-mhs-belum">
+            <div class="col-12 col-md-6 col-lg-4 exam-card-mhs-belum">
                 <div class="card h-100 border-0 shadow-sm rounded-4 hover-shadow transition-all opacity-75">
                     <div class="card-body p-4 d-flex flex-column">
                         <div class="d-flex justify-content-between align-items-start mb-3">
@@ -133,7 +133,7 @@
     </div>
     <div class="row g-4 mb-4" id="container-mhs-selesai">
         @forelse($finishedExams as $exam)
-            <div class="col-md-6 col-lg-4 exam-card-mhs-selesai">
+            <div class="col-12 col-md-6 col-lg-4 exam-card-mhs-selesai">
                 <div class="card h-100 border-0 shadow-sm rounded-4 hover-shadow transition-all opacity-50">
                     <div class="card-body p-4 d-flex flex-column">
                         <div class="d-flex justify-content-between align-items-start mb-3">

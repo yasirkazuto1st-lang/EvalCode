@@ -78,24 +78,19 @@ $font-family-base: 'Inter', sans-serif;
 // Workspace responsive
 @media (max-width: 991.98px) {
     .workspace-container {
-        height: auto;
-        min-height: calc(100vh - 56px);
+        height: calc(100vh - 56px) !important;
+        overflow: hidden !important;
     }
     .workspace-split {
         flex-direction: column !important;
-    }
-    .workspace-split > div {
-        width: 100% !important;
-        height: auto !important;
+        height: 0 !important;
+        flex-grow: 1 !important;
+        overflow: hidden !important;
     }
     .workspace-editor-col {
-        min-height: 50vh;
-    }
-    .workspace-viewer-col {
-        min-height: 40vh;
-    }
-    .workspace-console {
-        height: 200px !important;
+        width: 100% !important;
+        height: 100% !important;
+        flex-grow: 1 !important;
     }
 }
 
@@ -503,3 +498,204 @@ input:checked + .slider:before {
         }
     }
 }
+
+// Custom search-input sizing to keep card headers in a single row on PC/laptop
+.card-header .search-input {
+    width: 100%;
+    @media (min-width: 576px) {
+        max-width: 480px !important;
+    }
+}
+
+// ==========================================
+// UNIVERSAL MOBILE DESIGN POLISH
+// ==========================================
+@media (max-width: 767.98px) {
+    // 1. Font scaling
+    body {
+        font-size: 0.875rem !important; // 14px instead of 16px
+    }
+    h1, .h1 { font-size: 1.75rem !important; }
+    h2, .h2 { font-size: 1.5rem !important; }
+    h3, .h3 { font-size: 1.25rem !important; }
+    h4, .h4 { font-size: 1.15rem !important; }
+    h5, .h5 { font-size: 1rem !important; }
+    h6, .h6 { font-size: 0.875rem !important; }
+    
+    // 2. Padding adjustments
+    .container {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+    .card-body {
+        padding: 1.25rem !important;
+    }
+    .p-4 {
+        padding: 1.25rem !important;
+    }
+    
+    // 3. Auto-responsive tables without wrapper
+    .table:not(.table-no-responsive) {
+        display: block !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    // 4. Hide big welcome card illustrations to keep text readable
+    .card-bg-illustration {
+        display: none !important;
+    }
+
+    // 5. User management tabs scrollable in single row
+    #userTabs {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        width: 100% !important;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+        &::-webkit-scrollbar {
+            display: none;
+        }
+    }
+    #userTabs .nav-item {
+        flex-shrink: 0 !important;
+    }
+}
+
+// 4. Monaco editor responsive resizers
+@media (max-width: 991.98px) {
+    .workspace-resizer-col,
+    .workspace-resizer-row {
+        display: none !important;
+    }
+}
+
+// 5. Offcanvas custom drawer styling for Mahasiswa navbar
+@media (max-width: 767.98px) {
+    .navbar-unsulbar-offcanvas {
+        background-color: #800000 !important; // Primary maroon
+        width: 280px !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    [data-bs-theme="dark"] .navbar-unsulbar-offcanvas {
+        background-color: #181818 !important; // Dark grey
+        border-right: 1px solid #2e2e2e !important;
+    }
+    
+    .navbar-unsulbar-offcanvas .nav-link {
+        color: rgba(255, 255, 255, 0.8) !important;
+        &:hover {
+            color: #ffffff !important;
+        }
+    }
+}
+
+// 6. Faint opacity for welcome card illustrations on tablets/iPads (768px to 991.98px)
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .card-bg-illustration {
+        font-size: 12rem !important; // Keep it large and proportional
+        opacity: 0.03 !important;   // Set opacity extremely low (3%) to prevent text overlap readability issues
+        right: -2rem !important;
+        top: -3rem !important;
+    }
+}
+
+// Dark mode overrides for console trigger buttons (make them whiter/lighter)
+[data-bs-theme="dark"] {
+    .btn-trigger-console {
+        color: #f8f9fa !important;
+        border-color: #f8f9fa !important;
+        &:hover {
+            color: #212529 !important;
+            background-color: #f8f9fa !important;
+            border-color: #f8f9fa !important;
+        }
+    }
+    
+    .fab-trigger-console {
+        background-color: #f8f9fa !important;
+        border-color: #f8f9fa !important;
+        
+        i {
+            color: #212529 !important;
+        }
+        
+        &:hover {
+            background-color: #e2e6ea !important;
+            border-color: #e2e6ea !important;
+        }
+    }
+}
+
+// Leaderboard Offcanvas Drawer Custom Sizing and Styling
+.leaderboard-offcanvas-drawer {
+    width: 100% !important;
+
+    // Small laptop / tablet viewports (576px up to 1199.98px)
+    @media (min-width: 576px) {
+        width: 66.666vw !important; // 2/3 of viewport screen width
+        max-width: 800px !important;
+    }
+
+    // Font scaling and text wrapping in mobile view
+    @media (max-width: 575.98px) {
+        .offcanvas-body {
+            font-size: 0.8rem !important; // smaller font size
+            
+            .badge {
+                font-size: 0.75rem !important;
+                padding: 0.25rem 0.5rem !important;
+            }
+            
+            .list-group-item {
+                padding-top: 0.5rem !important;
+                padding-bottom: 0.5rem !important;
+            }
+            
+            // Override bootstrap clipping to wrap long student names
+            .text-nowrap {
+                white-space: normal !important;
+            }
+            .text-truncate {
+                overflow: visible !important;
+                text-overflow: clip !important;
+                white-space: normal !important;
+            }
+            
+            .fw-semibold {
+                font-size: 0.8rem !important;
+                word-break: break-word !important;
+            }
+        }
+    }
+}
+
+// === Dashboard Mahasiswa - Card content full width on Mobile ===
+@media (max-width: 767.98px) {
+    .exam-card-mhs-berjalan,
+    .exam-card-mhs-belum,
+    .exam-card-mhs-selesai {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+
+        .card {
+            width: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+
+            .card-body {
+                width: 100% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                flex-grow: 1 !important;
+            }
+        }
+    }
+}
+

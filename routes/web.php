@@ -1,9 +1,26 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PengawasUjianController;
+
+// ==========================================
+// TEMPORARY DEPLOYMENT ROUTES (Hapus setelah deploy!)
+// ==========================================
+Route::get('/deploy-clear-cache', function () {
+    Illuminate\Support\Facades\Artisan::call('config:clear');
+    Illuminate\Support\Facades\Artisan::call('route:clear');
+    Illuminate\Support\Facades\Artisan::call('view:clear');
+    Illuminate\Support\Facades\Artisan::call('cache:clear');
+    return 'Semua cache berhasil dihapus!';
+});
+
+Route::get('/deploy-link-storage', function () {
+    Illuminate\Support\Facades\Artisan::call('storage:link');
+    return 'Storage link berhasil dibuat!';
+});
 
 // ==========================================
 // PUBLIC ROUTES (Guest Only)

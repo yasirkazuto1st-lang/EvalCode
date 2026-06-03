@@ -132,14 +132,15 @@
                 <!-- Administrators Table -->
                 <div class="card border-0 shadow-sm rounded-4 mb-4">
                     <div
-                        class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
-                        <h5 class="fw-bold mb-0"><i class="bi bi-person-badge text-primary me-2"></i> Admin</h5>
-                        <div class="d-flex gap-2">
-                            <input type="text" id="searchAdminInput" class="form-control form-control-sm search-input rounded-pill"
+                        class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex justify-content-between align-items-center gap-3 gap-md-4">
+                        <h5 class="fw-bold mb-0 text-nowrap flex-shrink-0"><i class="bi bi-person-badge text-primary me-2"></i> Admin</h5>
+                        <div class="d-flex align-items-center gap-2 ms-auto">
+                            <input type="text" id="searchAdminInput" class="form-control form-control-sm search-input rounded-pill flex-grow-1 flex-sm-grow-0 w-100 w-sm-auto"
                                 placeholder="Cari Admin (Username/Nama)...">
-                            <button class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm text-nowrap" data-bs-toggle="modal"
+                            <button class="btn btn-sm btn-primary rounded-pill px-2 px-sm-3 shadow-sm d-flex align-items-center justify-content-center flex-shrink-0" data-bs-toggle="modal"
                                 data-bs-target="#addAdminModal">
-                                <i class="bi bi-plus-circle me-1"></i> Tambah Admin
+                                <i class="bi bi-plus-circle"></i>
+                                <span class="d-none d-sm-inline ms-1">Tambah Admin</span>
                             </button>
                         </div>
                     </div>
@@ -193,15 +194,16 @@
                 <!-- Pengawas Table -->
                 <div class="card border-0 shadow-sm rounded-4 mb-4">
                     <div
-                        class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
-                        <h5 class="fw-bold mb-0"><i class="bi bi-person-video2 text-warning me-2"></i> Pengawas</h5>
-                        <div class="d-flex gap-2">
+                        class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex justify-content-between align-items-center gap-3 gap-md-4">
+                        <h5 class="fw-bold mb-0 text-nowrap flex-shrink-0"><i class="bi bi-person-video2 text-warning me-2"></i> Pengawas</h5>
+                        <div class="d-flex align-items-center gap-2 ms-auto">
                             <input type="text" id="searchPengawasInput"
-                                class="form-control form-control-sm search-input rounded-pill"
+                                class="form-control form-control-sm search-input rounded-pill flex-grow-1 flex-sm-grow-0 w-100 w-sm-auto"
                                 placeholder="Cari Pengawas (Username/Nama)...">
-                            <button class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm text-nowrap" data-bs-toggle="modal"
+                            <button class="btn btn-sm btn-primary rounded-pill px-2 px-sm-3 shadow-sm d-flex align-items-center justify-content-center flex-shrink-0" data-bs-toggle="modal"
                                 data-bs-target="#addPengawasModal">
-                                <i class="bi bi-plus-circle me-1"></i> Tambah Pengawas
+                                <i class="bi bi-plus-circle"></i>
+                                <span class="d-none d-sm-inline ms-1">Tambah Pengawas</span>
                             </button>
                         </div>
                     </div>
@@ -251,15 +253,16 @@
                 <!-- Mahasiswa Table -->
                 <div class="card border-0 shadow-sm rounded-4 mb-4">
                     <div
-                        class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
-                        <h5 class="fw-bold mb-0"><i class="bi bi-mortarboard text-success me-2"></i> Mahasiswa</h5>
-                        <div class="d-flex gap-2">
+                        class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex justify-content-between align-items-center gap-3 gap-md-4">
+                        <h5 class="fw-bold mb-0 text-nowrap flex-shrink-0"><i class="bi bi-mortarboard text-success me-2"></i> Mahasiswa</h5>
+                        <div class="d-flex align-items-center gap-2 ms-auto">
                             <input type="text" id="searchMahasiswaInput"
-                                class="form-control form-control-sm search-input rounded-pill"
+                                class="form-control form-control-sm search-input rounded-pill flex-grow-1 flex-sm-grow-0 w-100 w-sm-auto"
                                 placeholder="Cari Mahasiswa (NIM/Nama)...">
-                            <button class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm text-nowrap" data-bs-toggle="modal"
+                            <button class="btn btn-sm btn-primary rounded-pill px-2 px-sm-3 shadow-sm d-flex align-items-center justify-content-center flex-shrink-0" data-bs-toggle="modal"
                                 data-bs-target="#addMahasiswaModal">
-                                <i class="bi bi-plus-circle me-1"></i> Tambah Mahasiswa
+                                <i class="bi bi-plus-circle"></i>
+                                <span class="d-none d-sm-inline ms-1">Tambah Mahasiswa</span>
                             </button>
                         </div>
                     </div>
@@ -796,7 +799,7 @@
                     const containerRect = tabsContainer.getBoundingClientRect();
                     const activeRect = activeTab.getBoundingClientRect();
 
-                    const leftPos = activeRect.left - containerRect.left;
+                    const leftPos = activeRect.left - containerRect.left + tabsContainer.scrollLeft;
                     const width = activeRect.width;
 
                     indicator.style.left = leftPos + 'px';
@@ -806,14 +809,24 @@
 
             if (tabsContainer && indicator) {
                 // Jalankan saat load pertama dan resize
-                setTimeout(updateTabIndicator, 50);
+                setTimeout(() => {
+                    updateTabIndicator();
+                    const activeTab = document.querySelector('#userTabs .nav-link.active');
+                    if (activeTab) {
+                        activeTab.scrollIntoView({ block: 'nearest', inline: 'center' });
+                    }
+                }, 50);
                 window.addEventListener('resize', updateTabIndicator);
 
                 // Tambahkan listener untuk setiap perubahan tab
                 document.querySelectorAll('#userTabs .nav-link').forEach(button => {
-                    button.addEventListener('shown.bs.tab', updateTabIndicator);
+                    button.addEventListener('shown.bs.tab', function() {
+                        updateTabIndicator();
+                        button.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    });
                     button.addEventListener('click', function() {
                         setTimeout(updateTabIndicator, 10);
+                        button.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                     });
                 });
             }

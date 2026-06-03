@@ -159,18 +159,47 @@
         }
 
         @media (max-width: 991.98px) {
-
-            /* Keep sidebar visible and toggle button shown */
+            /* Sidebar as a drawer overlay on mobile/tablet */
             #sidebar-wrapper {
-                position: static !important;
+                position: fixed !important;
                 left: 0 !important;
+                top: 0;
+                bottom: 0;
+                height: 100vh;
+                width: 250px !important;
+                transform: translateX(-100%);
+                z-index: 1050;
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            #sidebar-wrapper.show {
+                transform: translateX(0) !important;
+            }
+
+            /* Disable collapse width changing on mobile drawer */
+            #sidebar-wrapper.collapsed {
+                width: 250px !important;
+            }
+
+            #sidebar-wrapper.collapsed .sidebar-text,
+            #sidebar-wrapper.collapsed .sidebar-brand-content {
+                display: inline-block !important;
             }
 
             #sidebarToggle {
                 display: block !important;
             }
-        }
+            
+            /* Sidebar overlay sits behind sidebar but above other content */
+            .sidebar-overlay {
+                z-index: 1040;
+            }
 
+            /* Make sure content takes full width without squeezing */
+            #page-content-wrapper {
+                width: 100% !important;
+            }
+        }
 
         @media (max-width: 575.98px) {
             .top-navbar {
@@ -231,9 +260,14 @@
         <div id="page-content-wrapper">
             <!-- Top Navbar (White) -->
             <nav class="navbar navbar-expand-lg navbar-light top-navbar py-2 px-4">
-                <div class="w-100 d-flex justify-content-end align-items-center">
+                <div class="w-100 d-flex justify-content-between align-items-center">
+                    <!-- Hamburger Toggle for Mobile/Tablet -->
+                    <button class="btn btn-link text-unsulbar p-0 border-0 d-lg-none me-3" id="mobileSidebarToggle" title="Toggle Sidebar">
+                        <i class="bi bi-list fs-3"></i>
+                    </button>
+                    
                     <!-- User Info di Kanan -->
-                    <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-3 ms-auto">
                         <div class="d-flex align-items-center me-2">
                             <label class="theme-switch" title="Ganti Mode Terang / Gelap">
                                 <input type="checkbox" id="themeToggleCheckbox" onchange="toggleGlobalTheme()">
@@ -269,10 +303,15 @@
             const sidebar = document.getElementById("sidebar-wrapper");
             const overlay = document.getElementById("sidebarOverlay");
 
-            // Desktop toggle (collapse sidebar)
+            // Desktop toggle (collapse sidebar) or Mobile close
             const desktopToggle = document.getElementById("sidebarToggle");
             desktopToggle.addEventListener("click", function() {
-                sidebar.classList.toggle("collapsed");
+                if (window.innerWidth < 992) {
+                    sidebar.classList.remove("show");
+                    overlay.classList.remove("show");
+                } else {
+                    sidebar.classList.toggle("collapsed");
+                }
             });
 
             // Mobile toggle (slide in/out)

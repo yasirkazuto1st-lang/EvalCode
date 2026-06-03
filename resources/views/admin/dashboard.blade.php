@@ -24,7 +24,7 @@
             <div class="col-md-12">
                 <div class="card border-0 shadow-sm rounded-4 position-relative overflow-hidden"
                     style="background: linear-gradient(135deg, var(--bs-primary) 0%, #4a0000 100%); color: white;">
-                    <i class="bi bi-speedometer2 position-absolute opacity-10"
+                    <i class="bi bi-speedometer2 position-absolute opacity-10 card-bg-illustration"
                         style="font-size: 15rem; right: -2rem; top: -4rem; transform: rotate(15deg);"></i>
                     <div class="card-body p-4 p-md-5 position-relative z-1">
                         <span class="badge bg-white text-primary mb-3 px-3 py-2 rounded-pill shadow-sm fw-bold"><i
