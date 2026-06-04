@@ -19,6 +19,12 @@
     @viteReactRefresh
     @vite(['resources/sass/app.scss', 'resources/js/app.jsx'])
 
+    <!-- PDF.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+
     <!-- Global Theme Initialization -->
     <script>
         (function() {
@@ -95,17 +101,6 @@
             border-left: 4px solid #ffc107;
         }
 
-        .sidebar .list-group-item.btn-logout {
-            background-color: #dc3545 !important;
-            color: white !important;
-            border-left: none !important;
-        }
-
-        .sidebar .list-group-item.btn-logout:hover {
-            background-color: #bb2d3b !important;
-            color: white !important;
-            border-left: none !important;
-        }
 
         .sidebar-icon {
             width: 24px;
@@ -242,14 +237,12 @@
                     <i class="bi bi-key sidebar-icon"></i> <span class="sidebar-text">Ganti Password</span>
                 </a>
 
-                <div class="mt-auto">
-                    <a href="{{ route('logout') }}"
-                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
-                        class="list-group-item list-group-item-action btn-logout rounded-0">
-                        <i class="bi bi-box-arrow-right sidebar-icon"></i> <span
-                            class="sidebar-text fw-bold">Logout</span>
-                    </a>
-                </div>
+                <a href="{{ route('logout') }}"
+                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+                    class="list-group-item list-group-item-action bg-transparent">
+                    <i class="bi bi-box-arrow-right sidebar-icon"></i> <span class="sidebar-text">Logout</span>
+                </a>
+
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                     @csrf
                 </form>
@@ -404,6 +397,7 @@
             });
         });
     </script>
+    @stack('modals')
 </body>
 
 </html>

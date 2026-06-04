@@ -102,6 +102,7 @@
                                     </td>
                                 </tr>
 
+                                @push('modals')
                                 <!-- Edit Exam Modal -->
                                 <div class="modal fade" id="editExamModal{{ $exam->ujian_id }}" tabindex="-1"
                                     aria-hidden="true">
@@ -179,6 +180,7 @@
                                         </div>
                                     </div>
                                 </div>
+                               @endpush
                             @empty
                                 <tr>
                                     <td colspan="8" class="text-center py-5 text-muted">
@@ -195,6 +197,7 @@
         </div>
     </div>
 
+    @push('modals')
     <!-- Add Exam Modal -->
     <div class="modal fade" id="addExamModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
@@ -226,6 +229,7 @@
             </div>
         </div>
     </div>
+    @endpush
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {

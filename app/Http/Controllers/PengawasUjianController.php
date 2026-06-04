@@ -270,6 +270,13 @@ class PengawasUjianController extends Controller
                 'updated_at' => now()
             ]);
 
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Kesempatan submit mahasiswa untuk soal ini berhasil di-reset.'
+            ]);
+        }
+
         return redirect()->back()->with('success', 'Kesempatan submit mahasiswa untuk soal ini berhasil di-reset.');
     }
 

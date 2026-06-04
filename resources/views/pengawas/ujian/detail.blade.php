@@ -97,8 +97,8 @@
                 style="font-size: 12rem; right: -2rem; top: -3rem; transform: rotate(15deg);"></i>
 
             <div
-                class="card-body p-3 p-md-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center position-relative z-1">
-                <div class="mb-3 mb-md-0">
+                class="card-body p-3 p-md-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 gap-md-4 position-relative z-1">
+                <div class="mb-3 mb-md-0 pe-md-4">
                     @if ($exam->status === 'active')
                         <span class="badge bg-white text-primary mb-2 px-2 py-1 rounded-pill shadow-sm fw-bold">
                             <i class="bi bi-circle-fill text-success small me-1"></i> Sedang Berlangsung
@@ -123,7 +123,7 @@
 
                 <!-- Token & Action Section -->
                 <div class="d-flex flex-column gap-2" style="width: 100%; max-width: 400px;">
-                    <div class="d-flex gap-2">
+                    <div class="d-flex flex-column flex-sm-row gap-2">
                         <!-- Exam Timer Box -->
                         @if ($exam->status === 'active')
                             <div id="examTimerBox"
@@ -369,7 +369,7 @@
                                                                         <span class="fw-semibold text-dark text-truncate" style="max-width: 150px;">{{ $soal->nama_soal }}</span>
                                                                         <span class="badge bg-{{ $badgeColor }} rounded-pill">{{ $attemptsUsed }} / {{ $exam->max_attempt }}</span>
                                                                         @if ($attemptsUsed > 0)
-                                                                            <form action="{{ route('pengawas.ujian.peserta.reset-attempts', ['examId' => $exam->ujian_id, 'userId' => $p->user_id, 'soalId' => $soal->soal_id]) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin mereset kesempatan submit mahasiswa ini untuk soal {{ $soal->nama_soal }}?');" class="d-inline">
+                                                                            <form action="{{ route('pengawas.ujian.peserta.reset-attempts', ['examId' => $exam->ujian_id, 'userId' => $p->user_id, 'soalId' => $soal->soal_id]) }}" method="POST" class="d-inline reset-attempts-form" data-confirm-text="Apakah Anda yakin ingin mereset kesempatan submit mahasiswa ini untuk soal {{ $soal->nama_soal }}?">
                                                                                 @csrf
                                                                                 <button type="submit" class="btn btn-xs btn-outline-danger py-0 px-2 rounded-pill" style="font-size: 0.7rem;">
                                                                                     <i class="bi bi-arrow-counterclockwise"></i> Reset
@@ -483,6 +483,7 @@
                                                     </div>
                                                 </div>
 
+                                                @push('modals')
                                                 <!-- Modals for source code -->
                                                 @foreach ($p->submissions as $s)
                                                     <div class="modal fade" id="codeModal{{ $s->submission_id }}"
@@ -535,6 +536,7 @@
                                                         </div>
                                                     </div>
                                                 @endforeach
+                                                @endpush
                                             </td>
                                         </tr>
                                     @empty
@@ -554,6 +556,7 @@
         </div>
     </div>
 
+    @push('modals')
     <!-- Start Exam Modal -->
     <div class="modal fade" id="startExamModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -636,6 +639,7 @@
             </div>
         </div>
     </div>
+    @endpush
 @endsection
 
 @section('scripts')
@@ -1078,6 +1082,73 @@
             }
 
             initParticipantTablePagination();
+
+            // Handle AJAX reset attempts
+            document.addEventListener('submit', function(e) {
+                const form = e.target.closest('.reset-attempts-form');
+                if (!form) return;
+
+                e.preventDefault();
+
+                const confirmText = form.getAttribute('data-confirm-text') || 'Apakah Anda yakin ingin mereset kesempatan submit mahasiswa ini?';
+                if (!confirm(confirmText)) {
+                    return;
+                }
+
+                const url = form.getAttribute('action');
+                const csrfTokenInput = form.querySelector('input[name="_token"]');
+                const token = csrfTokenInput ? csrfTokenInput.value : '';
+
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" style="width: 0.7rem; height: 0.7rem;" role="status" aria-hidden="true"></span>';
+                }
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': token,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Server error');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Find the badge inside the parent container and update it
+                        const container = form.closest('.d-flex');
+                        if (container) {
+                            const badge = container.querySelector('.badge');
+                            if (badge) {
+                                badge.textContent = `0 / {{ $exam->max_attempt }}`;
+                                badge.className = 'badge bg-secondary rounded-pill';
+                            }
+                            // Remove the form
+                            form.remove();
+                        }
+                    } else {
+                        alert('Gagal mereset kesempatan: ' + (data.message || 'Terjadi kesalahan'));
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> Reset';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan koneksi.');
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> Reset';
+                    }
+                });
+            });
         });
     </script>
 

@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PengawasUjianController;
@@ -9,6 +8,8 @@ use App\Http\Controllers\PengawasUjianController;
 // ==========================================
 // TEMPORARY DEPLOYMENT ROUTES (Hapus setelah deploy!)
 // ==========================================
+use Illuminate\Support\Facades\Artisan;
+
 Route::get('/deploy-clear-cache', function () {
     Illuminate\Support\Facades\Artisan::call('config:clear');
     Illuminate\Support\Facades\Artisan::call('route:clear');

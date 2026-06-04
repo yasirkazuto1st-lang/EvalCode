@@ -108,6 +108,7 @@
                                             </td>
                                         </tr>
 
+                                        @push('modals')
                                         <!-- Edit Soal Modal -->
                                         <div class="modal fade" id="editSoalModal{{ $q->soal_id }}" tabindex="-1"
                                             aria-hidden="true">
@@ -169,6 +170,7 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        @endpush
                                     @empty
                                         <tr>
                                             <td colspan="4" class="text-center py-5 text-muted">
@@ -337,6 +339,7 @@
                                                     </div>
                                                 </div>
 
+                                                @push('modals')
                                                 <!-- Modals for source code -->
                                                 @foreach ($p->submissions as $s)
                                                     <div class="modal fade" id="codeModal{{ $s->submission_id }}"
@@ -357,6 +360,7 @@
                                                         </div>
                                                     </div>
                                                 @endforeach
+                                                @endpush
                                             </td>
                                         </tr>
                                     @empty
@@ -376,6 +380,7 @@
         </div>
     </div>
 
+    @push('modals')
     <!-- Add Question Modal -->
     <div class="modal fade" id="addQuestionModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
@@ -404,6 +409,7 @@
             </div>
         </div>
     </div>
+    @endpush
 @endsection
 
 @section('scripts')

@@ -88,6 +88,7 @@
                                         <i class="bi bi-code-slash me-1"></i> Lihat Kode
                                     </button>
 
+                                    @push('modals')
                                     <!-- Code Modal -->
                                     <div class="modal fade" id="codeModal{{ $s->submission_id }}" tabindex="-1" aria-hidden="true">
                                         <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -102,6 +103,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    @endpush
                                 </td>
                             </tr>
                         @empty

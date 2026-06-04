@@ -1,5 +1,171 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
+
+// === PREMIUM PDF.js PAGE COMPONENT ===
+const PdfPage = ({ pdf, pageNum, scale }) => {
+    const canvasRef = useRef(null);
+    const renderTaskRef = useRef(null);
+
+    useEffect(() => {
+        if (!pdf) return;
+
+        if (renderTaskRef.current) {
+            renderTaskRef.current.cancel();
+        }
+
+        pdf.getPage(pageNum).then((page) => {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+
+            const context = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            // Render at high resolution (min scale 1.5) to keep text sharp when zoomed out
+            const renderScale = Math.max(scale, 1.5);
+            const renderViewport = page.getViewport({ scale: renderScale });
+
+            canvas.width = renderViewport.width * dpr;
+            canvas.height = renderViewport.height * dpr;
+
+            context.scale(dpr, dpr);
+
+            const renderContext = {
+                canvasContext: context,
+                viewport: renderViewport,
+            };
+
+            const renderTask = page.render(renderContext);
+            renderTaskRef.current = renderTask;
+
+            renderTask.promise.then(
+                () => {
+                    renderTaskRef.current = null;
+                },
+                (err) => {
+                    if (err.name !== 'RenderingCancelledException') {
+                        console.error('Render error:', err);
+                    }
+                }
+            );
+        });
+
+        return () => {
+            if (renderTaskRef.current) {
+                renderTaskRef.current.cancel();
+            }
+        };
+    }, [pdf, pageNum, scale]);
+
+    return (
+        <canvas ref={canvasRef} className="shadow-sm bg-white rounded mb-3 d-block mx-auto" style={{ height: 'auto', width: `${scale * 100}%` }} />
+    );
+};
+
+// === PREMIUM PDF.js RENDERER COMPONENT ===
+const PdfViewer = ({ url }) => {
+    const [pdf, setPdf] = useState(null);
+    const [numPages, setNumPages] = useState(0);
+    const [scale, setScale] = useState(1.0);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        if (!url) return;
+        setLoading(true);
+        setError(null);
+        
+        const loadingTask = window.pdfjsLib.getDocument(url);
+        loadingTask.promise.then(
+            (pdfDoc) => {
+                setPdf(pdfDoc);
+                setNumPages(pdfDoc.numPages);
+                setLoading(false);
+            },
+            (err) => {
+                console.error('Error loading PDF: ', err);
+                setError('Gagal memuat file PDF soal.');
+                setLoading(false);
+            }
+        );
+
+        return () => {
+            if (loadingTask) {
+                loadingTask.destroy();
+            }
+        };
+    }, [url]);
+
+    if (loading) {
+        return (
+            <div className="w-100 h-100 d-flex align-items-center justify-content-center py-5">
+                <div className="spinner-border text-danger" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="alert alert-danger m-3" role="alert">
+                <i className="bi bi-exclamation-triangle-fill me-2"></i> {error}
+            </div>
+        );
+    }
+
+    const pages = [];
+    for (let i = 1; i <= numPages; i++) {
+        pages.push(i);
+    }
+
+    return (
+        <div className="d-flex flex-column h-100 bg-light rounded" style={{ overflow: 'hidden' }}>
+            {/* Toolbar PDF */}
+            <div className="d-flex flex-wrap justify-content-between align-items-center bg-white p-2 border-bottom gap-2">
+                <div className="d-flex align-items-center gap-1">
+                    <span className="small mx-2 fw-semibold">
+                        Total: {numPages} Halaman
+                    </span>
+                </div>
+
+                <div className="d-flex align-items-center gap-1">
+                    <button 
+                        type="button"
+                        className="btn btn-sm btn-light border" 
+                        onClick={() => setScale(s => Math.max(s - 0.2, 0.3))}
+                        title="Perkecil"
+                    >
+                        <i class="bi bi-zoom-out"></i>
+                    </button>
+                    <span className="small mx-1">{Math.round(scale * 100)}%</span>
+                    <button 
+                        type="button"
+                        className="btn btn-sm btn-light border" 
+                        onClick={() => setScale(s => Math.min(s + 0.2, 2.5))}
+                        title="Perbesar"
+                    >
+                        <i className="bi bi-zoom-in"></i>
+                    </button>
+                    <a 
+                        href={url} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="btn btn-sm btn-light border ms-2"
+                        title="Buka di tab baru"
+                    >
+                        <i className="bi bi-box-arrow-up-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            {/* Canvas scroll container */}
+            <div className="flex-grow-1 overflow-auto p-3 d-flex flex-column align-items-center bg-secondary bg-opacity-10">
+                {pages.map((pageNum) => (
+                    <PdfPage key={pageNum} pdf={pdf} pageNum={pageNum} scale={scale} />
+                ))}
+            </div>
+        </div>
+    );
+};
 
 const Workspace = ({ initialData }) => {
     const { exam, soal, soal_pdf_url } = initialData || {};
@@ -239,6 +405,7 @@ const Workspace = ({ initialData }) => {
             const data = await response.json();
             
             setIsRunning(false);
+            setShowConsoleDrawer(true);
             if (data.success) {
                 setOutput({
                     status: data.status,
@@ -270,6 +437,7 @@ const Workspace = ({ initialData }) => {
             }
         } catch (error) {
             setIsRunning(false);
+            setShowConsoleDrawer(true);
             setOutput({
                 status: 'Network Error',
                 stderr: 'Gagal terhubung ke server.'
@@ -506,21 +674,23 @@ const Workspace = ({ initialData }) => {
                 {/* Right Side: Soal PDF & Console */}
                 <div className="d-none d-lg-flex flex-column bg-light workspace-viewer-col" style={{ width: `calc(${100 - editorWidth}% - 6px)` }}>
                     {/* Top Right: PDF Viewer */}
-                    <div className="p-3 overflow-auto border-bottom bg-white" style={{ height: `${viewerTopHeight}%`, position: 'relative' }}>
-                        <div className="d-flex justify-content-between align-items-center mb-3">
+                    <div className="p-0 border-bottom bg-white d-flex flex-column" style={{ height: `${viewerTopHeight}%`, position: 'relative' }}>
+                        <div className="px-3 pt-3 pb-2 d-flex justify-content-between align-items-center">
                             <h5 className="fw-bold m-0"><i className="bi bi-file-earmark-pdf text-danger me-2"></i>Soal Ujian</h5>
                             <span className="badge bg-primary">Bobot: {currentSoalBobot}</span>
                         </div>
                         
-                        {soal_pdf_url ? (
-                            <iframe src={soal_pdf_url} width="100%" height="100%" style={{ minHeight: '400px', border: '1px solid #dee2e6', borderRadius: '12px', pointerEvents: (isDraggingCol || isDraggingRow) ? 'none' : 'auto' }}></iframe>
-                        ) : (
-                            <div className="w-100 h-100 bg-light border rounded d-flex align-items-center justify-content-center flex-column text-muted" style={{ minHeight: '400px' }}>
-                                <i className="bi bi-file-pdf fs-1 mb-2"></i>
-                                <p className="mb-0">Belum ada file PDF</p>
-                                <small>Menampilkan soal: {currentSoalTitle}</small>
-                            </div>
-                        )}
+                        <div className="flex-grow-1 overflow-hidden p-2">
+                            {soal_pdf_url ? (
+                                <PdfViewer url={soal_pdf_url} />
+                            ) : (
+                                <div className="w-100 h-100 bg-light border rounded d-flex align-items-center justify-content-center flex-column text-muted" style={{ minHeight: '300px' }}>
+                                    <i className="bi bi-file-pdf fs-1 mb-2"></i>
+                                    <p className="mb-0">Belum ada file PDF</p>
+                                    <small>Menampilkan soal: {currentSoalTitle}</small>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Row Resizer (Atas - Bawah) */}
@@ -682,12 +852,7 @@ const Workspace = ({ initialData }) => {
                     
                     <div className="flex-grow-1 bg-white rounded border p-2 d-flex flex-column overflow-hidden">
                         {soal_pdf_url ? (
-                            <iframe 
-                                src={soal_pdf_url} 
-                                width="100%" 
-                                height="100%" 
-                                style={{ border: 'none', flexGrow: 1, minHeight: '300px' }}
-                            />
+                            <PdfViewer url={soal_pdf_url} />
                         ) : (
                             <div className="w-100 h-100 bg-light border rounded d-flex align-items-center justify-content-center flex-column text-muted py-5" style={{ flexGrow: 1 }}>
                                 <i className="bi bi-file-pdf fs-1 mb-2"></i>
