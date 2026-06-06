@@ -154,6 +154,7 @@
         }
 
         @media (max-width: 991.98px) {
+
             /* Sidebar as a drawer overlay on mobile/tablet */
             #sidebar-wrapper {
                 position: fixed !important;
@@ -184,7 +185,7 @@
             #sidebarToggle {
                 display: block !important;
             }
-            
+
             /* Sidebar overlay sits behind sidebar but above other content */
             .sidebar-overlay {
                 z-index: 1040;
@@ -255,10 +256,11 @@
             <nav class="navbar navbar-expand-lg navbar-light top-navbar py-2 px-4">
                 <div class="w-100 d-flex justify-content-between align-items-center">
                     <!-- Hamburger Toggle for Mobile/Tablet -->
-                    <button class="btn btn-link text-unsulbar p-0 border-0 d-lg-none me-3" id="mobileSidebarToggle" title="Toggle Sidebar">
+                    <button class="btn btn-link text-unsulbar p-0 border-0 d-lg-none me-3" id="mobileSidebarToggle"
+                        title="Toggle Sidebar">
                         <i class="bi bi-list fs-3"></i>
                     </button>
-                    
+
                     <!-- User Info di Kanan -->
                     <div class="d-flex align-items-center gap-3 ms-auto">
                         <div class="d-flex align-items-center me-2">
@@ -351,7 +353,7 @@
     <script>
         document.addEventListener('submit', function(e) {
             const form = e.target;
-            
+
             if (form.classList.contains('is-submitting')) {
                 e.preventDefault();
                 return;
@@ -365,9 +367,11 @@
                     btn.dataset.originalText = btn.innerHTML;
                 }
                 if (btn.classList.contains('btn-icon-only') || btn.hasAttribute('data-icon-only')) {
-                    btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>`;
+                    btn.innerHTML =
+                        `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>`;
                 } else {
-                    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Menyimpan...`;
+                    btn.innerHTML =
+                        `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Menyimpan...`;
                 }
             });
         });

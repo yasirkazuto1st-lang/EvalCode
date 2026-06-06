@@ -195,7 +195,12 @@ document.addEventListener('DOMContentLoaded', function() {
             html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
                         <a class="page-link px-3" href="#" data-page="${currentPage - 1}">&laquo;</a>
                      </li>`;
-            for (let i = 1; i <= totalPages; i++) {
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + 4);
+            if (endPage - startPage < 4) {
+                startPage = Math.max(1, endPage - 4);
+            }
+            for (let i = startPage; i <= endPage; i++) {
                 html += `<li class="page-item ${currentPage === i ? 'active' : ''}">
                             <a class="page-link px-3" href="#" data-page="${i}">${i}</a>
                          </li>`;

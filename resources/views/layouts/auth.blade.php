@@ -21,19 +21,24 @@
     @vite(['resources/sass/app.scss', 'resources/js/app.jsx'])
 
     <style>
+        html, body {
+            overflow-x: hidden;
+            max-width: 100%;
+        }
+
         .auth-bg {
             background: linear-gradient(135deg, var(--bs-primary) 0%, #3a0000 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden;
             z-index: 1;
         }
 
         /* Floating Glowing Orbs for Elegance */
-        .auth-bg::before,
-        .auth-bg::after {
+        .auth-bg-decorations::before,
+        .auth-bg-decorations::after {
             content: '';
             position: absolute;
             border-radius: 50%;
@@ -42,7 +47,7 @@
             animation: float 10s infinite alternate ease-in-out;
         }
 
-        .auth-bg::before {
+        .auth-bg-decorations::before {
             width: 400px;
             height: 400px;
             background: rgba(255, 193, 7, 0.12);
@@ -51,7 +56,7 @@
             left: -100px;
         }
 
-        .auth-bg::after {
+        .auth-bg-decorations::after {
             width: 500px;
             height: 500px;
             background: rgba(255, 255, 255, 0.08);
@@ -159,53 +164,55 @@
 </head>
 
 <body class="auth-bg">
-    <div class="auth-pattern"></div>
+    <div class="auth-bg-decorations" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden; pointer-events: none; z-index: 0;">
+        <div class="auth-pattern"></div>
 
-    <!-- Code Background Decorations -->
-    <div class="code-decor code-1">
-        while (alive) {
-        eat();
-        code();
-        sleep();
-        }
-    </div>
-    <div class="code-decor code-2">
-        if (coffee.isEmpty()) {
-        developer.refill();
-        }
-    </div>
-    <div class="code-decor code-3">
-        throw new Error("Works on my machine 🤷‍♂️");
-    </div>
-    <div class="code-decor code-4">
-        // TODO: Fix this later
-        // (Written 3 years ago)
-    </div>
-    <div class="code-decor code-5">
-        [1, 2, 3].map(parseInt);
-        // Returns: [1, NaN, NaN]
-    </div>
-    <div class="code-decor code-6">
-        !false // It's funny because it's true
-    </div>
-    <div class="code-decor code-7">
-        try {
-        // do something risky
-        } catch (e) {
-        // ignore
-        }
-    </div>
-    <div class="code-decor code-8">
-        git commit -m "minor tweaks"
-        // *changed 124 files*
-    </div>
-    <div class="code-decor code-9">
-        let random = 4;
-        // chosen by fair dice roll
-    </div>
-    <div class="code-decor code-10">
-        console.log("here 1");
-        console.log("here 2");
+        <!-- Code Background Decorations -->
+        <div class="code-decor code-1">
+            while (alive) {
+            eat();
+            code();
+            sleep();
+            }
+        </div>
+        <div class="code-decor code-2">
+            if (coffee.isEmpty()) {
+            developer.refill();
+            }
+        </div>
+        <div class="code-decor code-3">
+            throw new Error("Works on my machine 🤷‍♂️");
+        </div>
+        <div class="code-decor code-4">
+            // TODO: Fix this later
+            // (Written 3 years ago)
+        </div>
+        <div class="code-decor code-5">
+            [1, 2, 3].map(parseInt);
+            // Returns: [1, NaN, NaN]
+        </div>
+        <div class="code-decor code-6">
+            !false // It's funny because it's true
+        </div>
+        <div class="code-decor code-7">
+            try {
+            // do something risky
+            } catch (e) {
+            // ignore
+            }
+        </div>
+        <div class="code-decor code-8">
+            git commit -m "minor tweaks"
+            // *changed 124 files*
+        </div>
+        <div class="code-decor code-9">
+            let random = 4;
+            // chosen by fair dice roll
+        </div>
+        <div class="code-decor code-10">
+            console.log("here 1");
+            console.log("here 2");
+        </div>
     </div>
 
     <div id="app" class="w-100 position-relative" style="z-index: 2;">

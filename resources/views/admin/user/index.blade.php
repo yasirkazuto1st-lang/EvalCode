@@ -132,12 +132,12 @@
                 <!-- Administrators Table -->
                 <div class="card border-0 shadow-sm rounded-4 mb-4">
                     <div
-                        class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
+                        class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
                         <h5 class="fw-bold mb-0 text-nowrap flex-shrink-0"><i class="bi bi-person-badge text-primary me-2"></i> Admin</h5>
-                        <div class="d-flex align-items-center gap-2 w-100 w-lg-auto ms-lg-auto">
-                            <input type="text" id="searchAdminInput" class="form-control form-control-sm search-input rounded-pill flex-grow-1 w-100 w-lg-auto"
+                        <div class="d-flex align-items-center gap-2 w-100 w-md-auto ms-md-auto justify-content-md-end">
+                            <input type="text" id="searchAdminInput" class="form-control form-control-sm search-input rounded-pill flex-grow-1 flex-md-grow-0 w-100 w-md-auto"
                                 placeholder="Cari Admin (Username/Nama)...">
-                            <button class="btn btn-sm btn-primary rounded-pill px-2 px-lg-3 shadow-sm d-flex align-items-center justify-content-center flex-shrink-0" data-bs-toggle="modal"
+                            <button class="btn btn-sm btn-primary rounded-pill px-2 px-md-3 shadow-sm d-flex align-items-center justify-content-center flex-shrink-0" data-bs-toggle="modal"
                                 data-bs-target="#addAdminModal">
                                 <i class="bi bi-plus-circle"></i>
                                 <span class="d-none d-sm-inline ms-1">Tambah Admin</span>
@@ -194,13 +194,13 @@
                 <!-- Pengawas Table -->
                 <div class="card border-0 shadow-sm rounded-4 mb-4">
                     <div
-                        class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
+                        class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
                         <h5 class="fw-bold mb-0 text-nowrap flex-shrink-0"><i class="bi bi-person-video2 text-warning me-2"></i> Pengawas</h5>
-                        <div class="d-flex align-items-center gap-2 w-100 w-lg-auto ms-lg-auto">
+                        <div class="d-flex align-items-center gap-2 w-100 w-md-auto ms-md-auto justify-content-md-end">
                             <input type="text" id="searchPengawasInput"
-                                class="form-control form-control-sm search-input rounded-pill flex-grow-1 w-100 w-lg-auto"
+                                class="form-control form-control-sm search-input rounded-pill flex-grow-1 flex-md-grow-0 w-100 w-md-auto"
                                 placeholder="Cari Pengawas (Username/Nama)...">
-                            <button class="btn btn-sm btn-primary rounded-pill px-2 px-lg-3 shadow-sm d-flex align-items-center justify-content-center flex-shrink-0" data-bs-toggle="modal"
+                            <button class="btn btn-sm btn-primary rounded-pill px-2 px-md-3 shadow-sm d-flex align-items-center justify-content-center flex-shrink-0" data-bs-toggle="modal"
                                 data-bs-target="#addPengawasModal">
                                 <i class="bi bi-plus-circle"></i>
                                 <span class="d-none d-sm-inline ms-1">Tambah Pengawas</span>
@@ -253,13 +253,13 @@
                 <!-- Mahasiswa Table -->
                 <div class="card border-0 shadow-sm rounded-4 mb-4">
                     <div
-                        class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
+                        class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
                         <h5 class="fw-bold mb-0 text-nowrap flex-shrink-0"><i class="bi bi-mortarboard text-success me-2"></i> Mahasiswa</h5>
-                        <div class="d-flex align-items-center gap-2 w-100 w-lg-auto ms-lg-auto">
+                        <div class="d-flex align-items-center gap-2 w-100 w-md-auto ms-md-auto justify-content-md-end">
                             <input type="text" id="searchMahasiswaInput"
-                                class="form-control form-control-sm search-input rounded-pill flex-grow-1 w-100 w-lg-auto"
+                                class="form-control form-control-sm search-input rounded-pill flex-grow-1 flex-md-grow-0 w-100 w-md-auto"
                                 placeholder="Cari Mahasiswa (NIM/Nama)...">
-                            <button class="btn btn-sm btn-primary rounded-pill px-2 px-lg-3 shadow-sm d-flex align-items-center justify-content-center flex-shrink-0" data-bs-toggle="modal"
+                            <button class="btn btn-sm btn-primary rounded-pill px-2 px-md-3 shadow-sm d-flex align-items-center justify-content-center flex-shrink-0" data-bs-toggle="modal"
                                 data-bs-target="#addMahasiswaModal">
                                 <i class="bi bi-plus-circle"></i>
                                 <span class="d-none d-sm-inline ms-1">Tambah Mahasiswa</span>
@@ -752,7 +752,12 @@
                     };
                     ul.appendChild(prevLi);
 
-                    for (let i = 1; i <= totalPages; i++) {
+                    let startPage = Math.max(1, currentPage - 2);
+                    let endPage = Math.min(totalPages, startPage + 4);
+                    if (endPage - startPage < 4) {
+                        startPage = Math.max(1, endPage - 4);
+                    }
+                    for (let i = startPage; i <= endPage; i++) {
                         const pageLi = document.createElement('li');
                         pageLi.className = `page-item ${currentPage === i ? 'active' : ''}`;
                         pageLi.innerHTML = `<a class="page-link" href="#">${i}</a>`;

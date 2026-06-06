@@ -140,15 +140,22 @@
                         <div id="tokenBox"
                             class="bg-black bg-opacity-25 rounded-4 p-3 px-3 border border-white border-opacity-25 shadow-sm text-center {{ $exam->status === 'active' ? 'active-pulse' : '' }} token-box flex-fill d-flex flex-column justify-content-center"
                             style="backdrop-filter: blur(10px);">
-                            <span class="small opacity-75 d-block text-uppercase fw-semibold"
+                            <span class="small opacity-75 d-block text-uppercase fw-semibold mb-2"
                                 style="letter-spacing: 1px; font-size: 10px;">Token Ujian</span>
 
-                            @if ($exam->status === 'active' && $activeToken)
-                                <div id="tokenDisplay" class="token-display fw-bold text-white mb-0">
-                                    {{ $activeToken->kode_token }}</div>
-                            @else
-                                <div id="tokenDisplay" class="token-display fw-bold text-white mb-0 opacity-50">------</div>
-                            @endif
+                            <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
+                                @if ($exam->status === 'active' && $activeToken)
+                                    <div id="tokenDisplay" class="token-display fw-bold text-white mb-0">••••••</div>
+                                    <button id="btnToggleToken" class="btn btn-link text-white text-opacity-75 p-0 border-0 align-middle" type="button" onclick="toggleToken()" style="box-shadow: none;" title="Tampilkan/Sembunyikan Token">
+                                        <i class="bi bi-eye-slash" id="eyeIcon" style="font-size: 1.2rem;"></i>
+                                    </button>
+                                @else
+                                    <div id="tokenDisplay" class="token-display fw-bold text-white mb-0 opacity-50">------</div>
+                                    <button id="btnToggleToken" class="btn btn-link text-white text-opacity-75 p-0 border-0 align-middle d-none" type="button" onclick="toggleToken()" style="box-shadow: none;" title="Tampilkan/Sembunyikan Token">
+                                        <i class="bi bi-eye-slash" id="eyeIcon" style="font-size: 1.2rem;"></i>
+                                    </button>
+                                @endif
+                            </div>
 
                             <!-- Countdown -->
                             <div id="countdownSection" style="{{ $exam->status === 'active' ? '' : 'display:none;' }}">
@@ -649,6 +656,25 @@
             const isActive = {{ $exam->status === 'active' ? 'true' : 'false' }};
             const REFRESH_INTERVAL = 60; // seconds
 
+            // Token toggle visibility state
+            let tokenHidden = true;
+            let currentTokenVal = '{{ $activeToken ? $activeToken->kode_token : "" }}';
+
+            window.toggleToken = function() {
+                tokenHidden = !tokenHidden;
+                const tokenDisplay = document.getElementById('tokenDisplay');
+                const eyeIcon = document.getElementById('eyeIcon');
+                if (!tokenDisplay || !eyeIcon) return;
+                
+                if (tokenHidden) {
+                    tokenDisplay.textContent = '••••••';
+                    eyeIcon.className = 'bi bi-eye-slash';
+                } else {
+                    tokenDisplay.textContent = currentTokenVal || '------';
+                    eyeIcon.className = 'bi bi-eye';
+                }
+            };
+
             if (!isActive) return;
 
             const tokenDisplay = document.getElementById('tokenDisplay');
@@ -704,7 +730,16 @@
                     const data = await response.json();
 
                     setTimeout(() => {
-                        tokenDisplay.textContent = data.token;
+                        currentTokenVal = data.token;
+                        const btnToggleToken = document.getElementById('btnToggleToken');
+                        if (btnToggleToken) {
+                            btnToggleToken.classList.remove('d-none');
+                        }
+                        if (tokenHidden) {
+                            tokenDisplay.textContent = '••••••';
+                        } else {
+                            tokenDisplay.textContent = data.token;
+                        }
                         tokenDisplay.classList.remove('refreshing');
                     }, 300);
 
@@ -888,7 +923,12 @@
                     };
                     ul.appendChild(prevLi);
 
-                    for (let i = 1; i <= totalPages; i++) {
+                    let startPage = Math.max(1, currentPage - 2);
+                    let endPage = Math.min(totalPages, startPage + 4);
+                    if (endPage - startPage < 4) {
+                        startPage = Math.max(1, endPage - 4);
+                    }
+                    for (let i = startPage; i <= endPage; i++) {
                         const pageLi = document.createElement('li');
                         pageLi.className = `page-item ${currentPage === i ? 'active' : ''}`;
                         pageLi.innerHTML = `<a class="page-link" href="#">${i}</a>`;
@@ -1028,7 +1068,12 @@
                     };
                     ul.appendChild(prevLi);
 
-                    for (let i = 1; i <= totalPages; i++) {
+                    let startPage = Math.max(1, currentPage - 2);
+                    let endPage = Math.min(totalPages, startPage + 4);
+                    if (endPage - startPage < 4) {
+                        startPage = Math.max(1, endPage - 4);
+                    }
+                    for (let i = startPage; i <= endPage; i++) {
                         const pageLi = document.createElement('li');
                         pageLi.className = `page-item ${currentPage === i ? 'active' : ''}`;
                         pageLi.innerHTML = `<a class="page-link" href="#">${i}</a>`;

@@ -11,7 +11,8 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="{{ url()->current() }}">
 <meta property="og:title" content="EvalCode - Platform Ujian Coding">
-<meta property="og:description" content="Platform Ujian Pemrograman Praktis, Otomatis, dan Aman Universitas Sulawesi Barat.">
+<meta property="og:description"
+    content="Platform Ujian Pemrograman Praktis, Otomatis, dan Aman Universitas Sulawesi Barat.">
 <meta property="og:image" content="{{ asset('images/og-image.png') }}">
 <meta property="og:site_name" content="EvalCode">
 
@@ -19,7 +20,8 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:url" content="{{ url()->current() }}">
 <meta name="twitter:title" content="EvalCode - Platform Ujian Coding">
-<meta name="twitter:description" content="Platform Ujian Pemrograman Praktis, Otomatis, dan Aman Universitas Sulawesi Barat.">
+<meta name="twitter:description"
+    content="Platform Ujian Pemrograman Praktis, Otomatis, dan Aman Universitas Sulawesi Barat.">
 <meta name="twitter:image" content="{{ asset('images/og-image.png') }}">
 
 <!-- PWA Service Worker Registration -->

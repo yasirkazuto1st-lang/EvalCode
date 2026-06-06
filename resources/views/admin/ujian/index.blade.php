@@ -309,10 +309,15 @@
                 };
                 ul.appendChild(prevLi);
 
-                for (let i = 1; i <= totalPages; i++) {
+                let startPage = Math.max(1, currentPage - 2);
+                let endPage = Math.min(totalPages, startPage + 4);
+                if (endPage - startPage < 4) {
+                    startPage = Math.max(1, endPage - 4);
+                }
+                for (let i = startPage; i <= endPage; i++) {
                     const li = document.createElement('li');
                     li.className = `page-item ${currentPage === i ? 'active' : ''}`;
-                    li.innerHTML = `<a class="page-link px-3" href="#">${i}</a>`;
+                    li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
                     li.onclick = (e) => {
                         e.preventDefault();
                         currentPage = i;
