@@ -15,15 +15,22 @@ class MahasiswaUjianController extends Controller
      */
     public function dashboard()
     {
-        // Check timeout for active exams first
-        $activeExamsList = Ujian::where('status', 'active')->get();
-        foreach ($activeExamsList as $exam) {
-            $exam->checkTimeout();
-        }
+        $activeExams = \Illuminate\Support\Facades\Cache::remember('active_exams', 10, function () {
+            $list = Ujian::where('status', 'active')->orderBy('updated_at', 'desc')->get();
+            foreach ($list as $exam) {
+                $exam->checkTimeout();
+            }
+            return Ujian::where('status', 'active')->orderBy('updated_at', 'desc')->get();
+        });
 
-        $activeExams = Ujian::where('status', 'active')->orderBy('updated_at', 'desc')->get();
-        $closedExams = Ujian::where('status', 'closed')->orderBy('updated_at', 'desc')->get();
-        $finishedExams = Ujian::where('status', 'finished')->orderBy('updated_at', 'desc')->get();
+        $closedExams = \Illuminate\Support\Facades\Cache::remember('closed_exams', 10, function () {
+            return Ujian::where('status', 'closed')->orderBy('updated_at', 'desc')->get();
+        });
+
+        $finishedExams = \Illuminate\Support\Facades\Cache::remember('finished_exams', 10, function () {
+            return Ujian::where('status', 'finished')->orderBy('updated_at', 'desc')->get();
+        });
+
         return view('mahasiswa.dashboard', compact('activeExams', 'closedExams', 'finishedExams'));
     }
 

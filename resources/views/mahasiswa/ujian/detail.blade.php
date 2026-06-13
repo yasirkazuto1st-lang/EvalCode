@@ -417,28 +417,69 @@
                 examRemaining--;
             }
 
+            async function fetchWithRetry(url, options = {}, retries = 3, delay = 1000) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response;
+                } catch (error) {
+                    if (retries > 0) {
+                        console.warn(`Fetch failed, retrying in ${delay}ms... (${retries} retries left)`, error);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        return fetchWithRetry(url, options, retries - 1, delay * 2);
+                    }
+                    throw error;
+                }
+            }
+
+            let connWarningDiv = null;
+            function showConnectionWarning(show) {
+                if (show) {
+                    if (!connWarningDiv) {
+                        connWarningDiv = document.createElement('div');
+                        connWarningDiv.id = 'connection-warning-alert';
+                        connWarningDiv.className = 'alert alert-warning position-fixed top-0 start-50 translate-middle-x mt-3 z-3 rounded-4 shadow-sm';
+                        connWarningDiv.style.zIndex = '9999';
+                        connWarningDiv.innerHTML = '<i class="bi bi-wifi-off me-2"></i><strong>Koneksi Bermasalah.</strong> Menghubungkan kembali ke server...';
+                        document.body.appendChild(connWarningDiv);
+                    }
+                } else {
+                    if (connWarningDiv) {
+                        connWarningDiv.remove();
+                        connWarningDiv = null;
+                    }
+                }
+            }
+
             if (studentTimerDisplay) {
                 updateStudentTimer();
                 studentTimer = setInterval(updateStudentTimer, 1000);
             }
 
-            // Poll for exam status every 5 seconds
+            // Poll for exam status every 15 seconds (reduced from 5s to lower server load)
+            let isPollingStatus = false;
             statusPoll = setInterval(async () => {
+                if (isPollingStatus) return;
+                isPollingStatus = true;
                 try {
-                    const response = await fetch("{{ route('ujian.status', $exam->ujian_id) }}");
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.status !== 'active') {
-                            handleRedirect("Ujian telah ditutup atau di-pause oleh pengawas!");
-                            return;
-                        }
-                        // Sync remaining time
-                        examRemaining = data.remainingSeconds;
+                    const response = await fetchWithRetry("{{ route('ujian.status', $exam->ujian_id) }}", {}, 2, 1000);
+                    const data = await response.json();
+                    showConnectionWarning(false); // Hide warning if request succeeds
+                    if (data.status !== 'active') {
+                        handleRedirect("Ujian telah ditutup atau di-pause oleh pengawas!");
+                        return;
                     }
+                    // Sync remaining time
+                    examRemaining = data.remainingSeconds;
                 } catch (error) {
                     console.error("Gagal memeriksa status ujian:", error);
+                    showConnectionWarning(true); // Show warning when connection drops
+                } finally {
+                    isPollingStatus = false;
                 }
-            }, 5000);
+            }, 15000);
 
             window.addEventListener('beforeunload', () => {
                 if (studentTimer) clearInterval(studentTimer);

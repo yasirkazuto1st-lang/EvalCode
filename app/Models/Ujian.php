@@ -88,4 +88,25 @@ class Ujian extends Model
             }
         }
     }
+
+    protected static function booted()
+    {
+        static::saved(function ($ujian) {
+            \Illuminate\Support\Facades\Cache::forget('active_exams');
+            \Illuminate\Support\Facades\Cache::forget('closed_exams');
+            \Illuminate\Support\Facades\Cache::forget('finished_exams');
+            \Illuminate\Support\Facades\Cache::forget('active_exams_with_count');
+            \Illuminate\Support\Facades\Cache::forget('closed_exams_with_count');
+            \Illuminate\Support\Facades\Cache::forget('finished_exams_with_count');
+        });
+
+        static::deleted(function ($ujian) {
+            \Illuminate\Support\Facades\Cache::forget('active_exams');
+            \Illuminate\Support\Facades\Cache::forget('closed_exams');
+            \Illuminate\Support\Facades\Cache::forget('finished_exams');
+            \Illuminate\Support\Facades\Cache::forget('active_exams_with_count');
+            \Illuminate\Support\Facades\Cache::forget('closed_exams_with_count');
+            \Illuminate\Support\Facades\Cache::forget('finished_exams_with_count');
+        });
+    }
 }

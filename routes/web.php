@@ -18,10 +18,7 @@ Route::get('/deploy-clear-cache', function () {
     return 'Semua cache berhasil dihapus!';
 });
 
-Route::get('/deploy-link-storage', function () {
-    Illuminate\Support\Facades\Artisan::call('storage:link');
-    return 'Storage link berhasil dibuat!';
-});
+
 
 // ==========================================
 // PUBLIC ROUTES (Guest Only)

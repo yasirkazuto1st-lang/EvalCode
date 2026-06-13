@@ -167,6 +167,23 @@ const PdfViewer = ({ url }) => {
     );
 };
 
+const fetchWithRetry = async (url, options = {}, retries = 3, delay = 1000) => {
+    try {
+        const response = await fetch(url, options);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response;
+    } catch (error) {
+        if (retries > 0) {
+            console.warn(`Fetch failed, retrying in ${delay}ms... (${retries} retries left)`, error);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return fetchWithRetry(url, options, retries - 1, delay * 2);
+        }
+        throw error;
+    }
+};
+
 const Workspace = ({ initialData }) => {
     const { exam, soal, soal_pdf_url } = initialData || {};
     
@@ -243,25 +260,28 @@ const Workspace = ({ initialData }) => {
     React.useEffect(() => {
         if (!exam || !exam.ujian_id) return;
 
+        let isPolling = false;
         const checkExamStatus = async () => {
+            if (isPolling) return;
+            isPolling = true;
             try {
-                const response = await fetch(`/ujian/${exam.ujian_id}/status`);
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.status !== 'active') {
-                        handleRedirect("Ujian telah ditutup atau di-pause oleh pengawas!");
-                        return;
-                    }
-                    // Sync with server's remaining time to prevent client drift
-                    setRemainingTime(data.remainingSeconds);
+                const response = await fetchWithRetry(`/ujian/${exam.ujian_id}/status`, {}, 2, 1000);
+                const data = await response.json();
+                if (data.status !== 'active') {
+                    handleRedirect("Ujian telah ditutup atau di-pause oleh pengawas!");
+                    return;
                 }
+                // Sync with server's remaining time to prevent client drift
+                setRemainingTime(data.remainingSeconds);
             } catch (error) {
                 console.error("Gagal memeriksa status ujian:", error);
+            } finally {
+                isPolling = false;
             }
         };
 
-        // Poll every 5 seconds
-        const statusTimer = setInterval(checkExamStatus, 5000);
+        // Poll every 30 seconds (reduced from 5s to lower server load)
+        const statusTimer = setInterval(checkExamStatus, 30000);
 
         return () => clearInterval(statusTimer);
     }, [exam]);
@@ -390,7 +410,7 @@ const Workspace = ({ initialData }) => {
             // Get CSRF token
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             
-            const response = await fetch(`${window.location.href}/submit`, {
+            const response = await fetchWithRetry(`${window.location.href}/submit`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -400,7 +420,7 @@ const Workspace = ({ initialData }) => {
                     code: code,
                     language: language
                 })
-            });
+            }, 2, 1000);
 
             const data = await response.json();
             
@@ -419,7 +439,6 @@ const Workspace = ({ initialData }) => {
                     setAttemptsUsed(data.attempts_used);
                 }
                 
-                // Jika error kompilasi/runtime, cari stderr di testcase pertama yg gagal
                 if ((data.status === 'Compilation Error' || data.status === 'Runtime Error') && data.testCases) {
                     const failedTc = data.testCases.find(tc => tc.stderr);
                     if (failedTc && failedTc.stderr) {

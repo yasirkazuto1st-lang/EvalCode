@@ -711,21 +711,39 @@
                 }
             }
 
+            async function fetchWithRetry(url, options = {}, retries = 3, delay = 1000) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response;
+                } catch (error) {
+                    if (retries > 0) {
+                        console.warn(`Fetch failed, retrying in ${delay}ms... (${retries} retries left)`, error);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        return fetchWithRetry(url, options, retries - 1, delay * 2);
+                    }
+                    throw error;
+                }
+            }
+
+            let isRefreshing = false;
             async function refreshToken() {
+                if (isRefreshing) return;
+                isRefreshing = true;
                 try {
                     // Visual feedback
                     tokenDisplay.classList.add('refreshing');
 
-                    const response = await fetch(`/pengawas/ujian/${examId}/token/refresh`, {
+                    const response = await fetchWithRetry(`/pengawas/ujian/${examId}/token/refresh`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': csrfToken,
                             'Accept': 'application/json',
                         },
-                    });
-
-                    if (!response.ok) throw new Error('Failed to refresh');
+                    }, 3, 1000);
 
                     const data = await response.json();
 
@@ -750,6 +768,8 @@
                     console.error('Token refresh failed:', err);
                     tokenDisplay.classList.remove('refreshing');
                     secondsLeft = 5; // retry in 5 seconds
+                } finally {
+                    isRefreshing = false;
                 }
             }
 
@@ -793,19 +813,22 @@
 
             // Poll for exam status and sync remaining time every 5 seconds
             if (isActive) {
+                let isPollingStatus = false;
                 statusPoll = setInterval(async () => {
+                    if (isPollingStatus) return;
+                    isPollingStatus = true;
                     try {
-                        const response = await fetch(`/ujian/${examId}/status`);
-                        if (response.ok) {
-                            const data = await response.json();
-                            if (data.status !== 'active') {
-                                window.location.reload();
-                                return;
-                            }
-                            examRemaining = data.remainingSeconds;
+                        const response = await fetchWithRetry(`/ujian/${examId}/status`, {}, 2, 1000);
+                        const data = await response.json();
+                        if (data.status !== 'active') {
+                            window.location.reload();
+                            return;
                         }
+                        examRemaining = data.remainingSeconds;
                     } catch (error) {
                         console.error("Gagal memeriksa status ujian:", error);
+                    } finally {
+                        isPollingStatus = false;
                     }
                 }, 5000);
             }
