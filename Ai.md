@@ -112,11 +112,11 @@ Sistem menggunakan berbagai warna (_badge_) dan label untuk memudahkan identifik
 
 ### B. Indeks Similaritas (Plagiarisme)
 
-Indeks kesamaan (_similarity_) dikategorikan dalam 3 rentang warna untuk membantu Pengawas mengidentifikasi kecurangan:
+Indeks kesamaan (_similarity_) dikategorikan dalam 3 rentang warna berdasarkan konfigurasi dinamis `JUDGE_PLAGIARISM_THRESHOLD` dari file `.env` (default: 0.75 atau 75%):
 
-- **>= 70%** (Merah / _Danger_): Indikasi plagiarisme sangat tinggi.
-- **40% - 69%** (Kuning / _Warning_): Indikasi plagiarisme sedang (perlu peninjauan manual).
-- **< 40%** (Hijau / _Success_): Kode dianggap aman atau kemiripan wajar.
+- **>= Threshold** (Merah / _Danger_): Indikasi plagiarisme sangat tinggi (default: >= 75%).
+- **>= Setengah dari Threshold** (Kuning / _Warning_): Indikasi plagiarisme sedang yang memerlukan peninjauan manual (default: >= 37.5% hingga < 75%).
+- **< Setengah dari Threshold** (Hijau / _Success_): Kode dianggap aman atau tingkat kemiripan wajar (default: < 37.5%).
 
 ### C. Tingkat Kesulitan Soal (Berdasarkan Kelulusan)
 

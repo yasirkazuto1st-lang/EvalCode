@@ -78,11 +78,11 @@
             </div>
         @endif
 
-        @if($errors->any())
+        @if ($errors->any())
             <div class="alert alert-danger alert-dismissible fade show rounded-4" role="alert">
                 <strong><i class="bi bi-exclamation-triangle-fill me-1"></i> Terjadi Kesalahan:</strong>
                 <ul class="mb-0 mt-1">
-                    @foreach($errors->all() as $error)
+                    @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
                 </ul>
@@ -146,12 +146,19 @@
                             <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
                                 @if ($exam->status === 'active' && $activeToken)
                                     <div id="tokenDisplay" class="token-display fw-bold text-white mb-0">••••••</div>
-                                    <button id="btnToggleToken" class="btn btn-link text-white text-opacity-75 p-0 border-0 align-middle" type="button" onclick="toggleToken()" style="box-shadow: none;" title="Tampilkan/Sembunyikan Token">
+                                    <button id="btnToggleToken"
+                                        class="btn btn-link text-white text-opacity-75 p-0 border-0 align-middle"
+                                        type="button" onclick="toggleToken()" style="box-shadow: none;"
+                                        title="Tampilkan/Sembunyikan Token">
                                         <i class="bi bi-eye-slash" id="eyeIcon" style="font-size: 1.2rem;"></i>
                                     </button>
                                 @else
-                                    <div id="tokenDisplay" class="token-display fw-bold text-white mb-0 opacity-50">------</div>
-                                    <button id="btnToggleToken" class="btn btn-link text-white text-opacity-75 p-0 border-0 align-middle d-none" type="button" onclick="toggleToken()" style="box-shadow: none;" title="Tampilkan/Sembunyikan Token">
+                                    <div id="tokenDisplay" class="token-display fw-bold text-white mb-0 opacity-50">------
+                                    </div>
+                                    <button id="btnToggleToken"
+                                        class="btn btn-link text-white text-opacity-75 p-0 border-0 align-middle d-none"
+                                        type="button" onclick="toggleToken()" style="box-shadow: none;"
+                                        title="Tampilkan/Sembunyikan Token">
                                         <i class="bi bi-eye-slash" id="eyeIcon" style="font-size: 1.2rem;"></i>
                                     </button>
                                 @endif
@@ -169,7 +176,8 @@
                             </div>
 
                             @if ($exam->status !== 'active')
-                                <small class="d-block opacity-50 mt-1" style="font-size: 10px;">Mulai ujian untuk mengaktifkan
+                                <small class="d-block opacity-50 mt-1" style="font-size: 10px;">Mulai ujian untuk
+                                    mengaktifkan
                                     token</small>
                             @endif
                         </div>
@@ -193,7 +201,8 @@
                         </div>
                     @else
                         <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-light flex-fill fw-bold shadow-sm rounded-pill text-primary"
+                            <button type="button"
+                                class="btn btn-light flex-fill fw-bold shadow-sm rounded-pill text-primary"
                                 data-bs-toggle="modal" data-bs-target="#startExamModal">
                                 <i class="bi bi-play-circle-fill me-1"></i> Mulai
                             </button>
@@ -252,8 +261,10 @@
                                 <a href="{{ route('pengawas.ujian.soal', ['examId' => $exam->ujian_id, 'soalId' => $soal->soal_id]) }}"
                                     class="list-group-item list-group-item-action border py-3 rounded mb-2 d-flex flex-column gap-1 shadow-sm">
                                     <div class="d-flex justify-content-between align-items-start mb-1">
-                                        <span class="fw-semibold text-dark">{{ $index + 1 }}. {{ $soal->nama_soal }}</span>
-                                        <span class="badge bg-{{ $colorClass }} rounded-pill">{{ $mockCount }}/{{ $totalParticipants }}</span>
+                                        <span class="fw-semibold text-dark">{{ $index + 1 }}.
+                                            {{ $soal->nama_soal }}</span>
+                                        <span
+                                            class="badge bg-{{ $colorClass }} rounded-pill">{{ $mockCount }}/{{ $totalParticipants }}</span>
                                     </div>
                                     <div class="progress bg-secondary bg-opacity-25" style="height: 6px;">
                                         <div class="progress-bar bg-{{ $colorClass }} rounded-pill" role="progressbar"
@@ -261,7 +272,8 @@
                                             aria-valuemin="0" aria-valuemax="100"></div>
                                     </div>
                                     <small class="text-{{ $color }} fw-bold mt-1" style="font-size: 0.75rem;">
-                                        <i class="bi bi-{{ $icon }} me-1"></i>{{ $level }} ({{ $mockPercent }}% Selesai)
+                                        <i class="bi bi-{{ $icon }} me-1"></i>{{ $level }}
+                                        ({{ $mockPercent }}% Selesai)
                                     </small>
                                 </a>
                             @empty
@@ -278,21 +290,36 @@
             <!-- Kanan: Table Monitoring Peserta -->
             <div class="col-md-9">
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                    <div class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3 gap-md-4">
-                        <h5 class="fw-bold mb-0 text-nowrap flex-shrink-0"><i class="bi bi-people-fill text-primary me-2"></i> Monitoring Peserta Ujian</h5>
+                    <div
+                        class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3 gap-md-4">
+                        <h5 class="fw-bold mb-0 text-nowrap flex-shrink-0"><i
+                                class="bi bi-people-fill text-primary me-2"></i> Monitoring Peserta Ujian</h5>
                         <div class="row g-2 w-100 w-lg-auto ms-lg-auto m-0 justify-content-lg-end">
                             <div class="col-12 col-sm-7 col-lg-auto p-0 pe-sm-2">
-                                <input type="text" id="searchParticipantInput" class="form-control form-control-sm search-input rounded-pill w-100" style="min-width: 200px;" placeholder="Cari peserta (NIM/Nama)...">
+                                <input type="text" id="searchParticipantInput"
+                                    class="form-control form-control-sm search-input rounded-pill w-100"
+                                    style="min-width: 200px;" placeholder="Cari peserta (NIM/Nama)...">
                             </div>
                             <div class="col-12 col-sm-5 col-lg-auto p-0 ps-sm-2">
                                 <div class="dropdown w-100">
-                                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm dropdown-toggle d-flex align-items-center justify-content-center gap-1 w-100" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="bi bi-funnel-fill"></i> <span id="activeFilterText">Urutkan: Normal</span>
+                                    <button
+                                        class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm dropdown-toggle d-flex align-items-center justify-content-center gap-1 w-100"
+                                        type="button" id="filterDropdown" data-bs-toggle="dropdown"
+                                        aria-expanded="false">
+                                        <i class="bi bi-funnel-fill"></i> <span id="activeFilterText">Urutkan:
+                                            Normal</span>
                                     </button>
-                                    <ul class="dropdown-menu dropdown-menu-end shadow rounded-4 border-0" aria-labelledby="filterDropdown">
-                                        <li><a class="dropdown-item filter-option active" href="#" data-sort="normal"><i class="bi bi-sort-numeric-down me-2 text-primary"></i> Normal (Skor Tertinggi)</a></li>
-                                        <li><a class="dropdown-item filter-option" href="#" data-sort="terbaru"><i class="bi bi-clock-history me-2 text-success"></i> Submission Terakhir</a></li>
-                                        <li><a class="dropdown-item filter-option" href="#" data-sort="terlama"><i class="bi bi-clock me-2 text-warning"></i> Submission Terlama</a></li>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow rounded-4 border-0"
+                                        aria-labelledby="filterDropdown">
+                                        <li><a class="dropdown-item filter-option active" href="#"
+                                                data-sort="normal"><i
+                                                    class="bi bi-sort-numeric-down me-2 text-primary"></i> Normal (Skor
+                                                Tertinggi)</a></li>
+                                        <li><a class="dropdown-item filter-option" href="#" data-sort="terbaru"><i
+                                                    class="bi bi-clock-history me-2 text-success"></i> Submission
+                                                Terakhir</a></li>
+                                        <li><a class="dropdown-item filter-option" href="#" data-sort="terlama"><i
+                                                    class="bi bi-clock me-2 text-warning"></i> Submission Terlama</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -315,9 +342,13 @@
                                     @forelse($participants as $p)
                                         @php
                                             $latestSub = $p->submissions->sortByDesc('created_at')->first();
-                                            $latestTime = $latestSub ? \Carbon\Carbon::parse($latestSub->created_at)->timestamp : 0;
+                                            $latestTime = $latestSub
+                                                ? \Carbon\Carbon::parse($latestSub->created_at)->timestamp
+                                                : 0;
                                         @endphp
-                                        <tr class="participant-row" data-nim="{{ $p->nim_username }}" data-nama="{{ $p->name }}" data-skor="{{ $p->total_skor ?? 0 }}" data-waktu="{{ $latestTime }}">
+                                        <tr class="participant-row" data-nim="{{ $p->nim_username }}"
+                                            data-nama="{{ $p->name }}" data-skor="{{ $p->total_skor ?? 0 }}"
+                                            data-waktu="{{ $latestTime }}">
                                             <td class="ps-4">{{ $p->nim_username }}</td>
                                             <td class="fw-semibold">{{ $p->name }}</td>
                                             <td>
@@ -338,9 +369,15 @@
                                                     @php
                                                         $threshold = config('judge.plagiarism_threshold', 0.75) * 100;
                                                         $warnThreshold = $threshold / 2;
-                                                        $pColor = $p->highest_similarity >= $threshold ? 'danger' : ($p->highest_similarity >= $warnThreshold ? 'warning text-dark' : 'success');
+                                                        $pColor =
+                                                            $p->highest_similarity >= $threshold
+                                                                ? 'danger'
+                                                                : ($p->highest_similarity >= $warnThreshold
+                                                                    ? 'warning text-dark'
+                                                                    : 'success');
                                                     @endphp
-                                                    <span class="badge bg-{{ $pColor }}">{{ round($p->highest_similarity, 2) }}%</span>
+                                                    <span
+                                                        class="badge bg-{{ $pColor }}">{{ round($p->highest_similarity, 2) }}%</span>
                                                 @else
                                                     <span class="text-muted small">-</span>
                                                 @endif
@@ -364,22 +401,43 @@
                                                         class="card card-body border-0 bg-light rounded-0 border-start border-4 border-primary m-3 shadow-sm">
                                                         <!-- Status Kesempatan per Soal (di atas) -->
                                                         <div class="mb-3">
-                                                            <h6 class="fw-bold mb-2"><i class="bi bi-clock-history text-primary me-2"></i>Status Kesempatan per Soal</h6>
+                                                            <h6 class="fw-bold mb-2"><i
+                                                                    class="bi bi-clock-history text-primary me-2"></i>Status
+                                                                Kesempatan per Soal</h6>
                                                             <div class="d-flex flex-wrap gap-2">
-                                                                @foreach($exam->soals as $soal)
+                                                                @foreach ($exam->soals as $soal)
                                                                     @php
-                                                                        $soalSubmissions = $p->submissions->where('soal_id', $soal->soal_id)->where('is_reset', false);
+                                                                        $soalSubmissions = $p->submissions
+                                                                            ->where('soal_id', $soal->soal_id)
+                                                                            ->where('is_reset', false);
                                                                         $attemptsUsed = $soalSubmissions->count();
-                                                                        $badgeColor = $attemptsUsed >= $exam->max_attempt ? 'danger' : ($attemptsUsed > 0 ? 'warning text-dark' : 'secondary');
+                                                                        $badgeColor =
+                                                                            $attemptsUsed >= $exam->max_attempt
+                                                                                ? 'danger'
+                                                                                : ($attemptsUsed > 0
+                                                                                    ? 'warning text-dark'
+                                                                                    : 'secondary');
                                                                     @endphp
-                                                                    <div class="d-flex align-items-center gap-2 bg-white border rounded-pill px-3 py-1 shadow-sm" style="font-size: 0.85rem;">
-                                                                        <span class="fw-semibold text-dark text-truncate" style="max-width: 150px;">{{ $soal->nama_soal }}</span>
-                                                                        <span class="badge bg-{{ $badgeColor }} rounded-pill">{{ $attemptsUsed }} / {{ $exam->max_attempt }}</span>
+                                                                    <div class="d-flex align-items-center gap-2 bg-white border rounded-pill px-3 py-1 shadow-sm"
+                                                                        style="font-size: 0.85rem;">
+                                                                        <span class="fw-semibold text-dark text-truncate"
+                                                                            style="max-width: 150px;">{{ $soal->nama_soal }}</span>
+                                                                        <span
+                                                                            class="badge bg-{{ $badgeColor }} rounded-pill">{{ $attemptsUsed }}
+                                                                            / {{ $exam->max_attempt }}</span>
                                                                         @if ($attemptsUsed > 0)
-                                                                            <form action="{{ route('pengawas.ujian.peserta.reset-attempts', ['examId' => $exam->ujian_id, 'userId' => $p->user_id, 'soalId' => $soal->soal_id]) }}" method="POST" class="d-inline reset-attempts-form" data-confirm-text="Apakah Anda yakin ingin mereset kesempatan submit mahasiswa ini untuk soal {{ $soal->nama_soal }}?">
+                                                                            <form
+                                                                                action="{{ route('pengawas.ujian.peserta.reset-attempts', ['examId' => $exam->ujian_id, 'userId' => $p->user_id, 'soalId' => $soal->soal_id]) }}"
+                                                                                method="POST"
+                                                                                class="d-inline reset-attempts-form"
+                                                                                data-confirm-text="Apakah Anda yakin ingin mereset kesempatan submit mahasiswa ini untuk soal {{ $soal->nama_soal }}?">
                                                                                 @csrf
-                                                                                <button type="submit" class="btn btn-xs btn-outline-danger py-0 px-2 rounded-pill" style="font-size: 0.7rem;">
-                                                                                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                                                                                <button type="submit"
+                                                                                    class="btn btn-xs btn-outline-danger py-0 px-2 rounded-pill"
+                                                                                    style="font-size: 0.7rem;">
+                                                                                    <i
+                                                                                        class="bi bi-arrow-counterclockwise"></i>
+                                                                                    Reset
                                                                                 </button>
                                                                             </form>
                                                                         @endif
@@ -390,58 +448,83 @@
 
                                                         <!-- Riwayat Submission (di bawah) -->
                                                         <div>
-                                                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                                                <h6 class="fw-bold mb-0"><i class="bi bi-table text-primary me-2"></i>Riwayat Submission</h6>
-                                                                <select class="form-select form-select-sm w-auto" onchange="window.filterSubmissions('{{ $p->user_id }}', this.value)">
+                                                            <div
+                                                                class="d-flex justify-content-between align-items-center mb-3">
+                                                                <h6 class="fw-bold mb-0"><i
+                                                                        class="bi bi-table text-primary me-2"></i>Riwayat
+                                                                    Submission</h6>
+                                                                <select class="form-select form-select-sm w-auto"
+                                                                    onchange="window.filterSubmissions('{{ $p->user_id }}', this.value)">
                                                                     <option value="">Semua Soal</option>
-                                                                    @foreach($exam->soals as $soal)
-                                                                        <option value="{{ $soal->soal_id }}">{{ $soal->nama_soal }}</option>
+                                                                    @foreach ($exam->soals as $soal)
+                                                                        <option value="{{ $soal->soal_id }}">
+                                                                            {{ $soal->nama_soal }}</option>
                                                                     @endforeach
                                                                 </select>
                                                             </div>
-                                                            <table id="table-sub-{{ $p->user_id }}" class="table table-sm table-bordered mb-0 submission-table">
+                                                            <table id="table-sub-{{ $p->user_id }}"
+                                                                class="table table-sm table-bordered mb-0 submission-table">
                                                                 <thead class="table-secondary">
-                                                                        <tr>
-                                                                            <th>Waktu</th>
-                                                                            <th>Soal</th>
-                                                                            <th>Status</th>
-                                                                            <th>Skor</th>
-                                                                            <th>Similarity</th>
-                                                                            <th>Catatan</th>
-                                                                            <th>Aksi</th>
-                                                                        </tr>
+                                                                    <tr>
+                                                                        <th>Waktu</th>
+                                                                        <th>Soal</th>
+                                                                        <th>Status</th>
+                                                                        <th>Skor</th>
+                                                                        <th>Similarity</th>
+                                                                        <th>Catatan</th>
+                                                                        <th>Aksi</th>
+                                                                    </tr>
                                                                 </thead>
                                                                 <tbody>
                                                                     @forelse($p->submissions as $s)
-                                                                        <tr class="submission-row" data-soal="{{ $s->soal_id }}">
+                                                                        <tr class="submission-row"
+                                                                            data-soal="{{ $s->soal_id }}">
                                                                             <td class="text-nowrap">
                                                                                 {{ \Carbon\Carbon::parse($s->created_at)->format('d M Y, H:i') }}
                                                                             </td>
                                                                             <td>{{ $s->nama_soal }}</td>
                                                                             <td>
                                                                                 @if ($s->status == 'Accepted')
-                                                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">Accepted</span>
+                                                                                    <span
+                                                                                        class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">Accepted</span>
                                                                                 @elseif($s->status == 'Wrong Answer')
-                                                                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">Wrong Answer</span>
+                                                                                    <span
+                                                                                        class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">Wrong
+                                                                                        Answer</span>
                                                                                 @elseif($s->status == 'Time Limit Exceeded')
-                                                                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">Time Limit Exceeded</span>
+                                                                                    <span
+                                                                                        class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">Time
+                                                                                        Limit Exceeded</span>
                                                                                 @elseif($s->status == 'Compilation Error')
-                                                                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">Compilation Error</span>
+                                                                                    <span
+                                                                                        class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">Compilation
+                                                                                        Error</span>
                                                                                 @elseif($s->status == 'Runtime Error')
-                                                                                    <span class="badge border border-opacity-25" style="color: #a855f7; background-color: rgba(168,85,247,0.15); border-color: rgba(168,85,247,0.3);">Runtime Error</span>
+                                                                                    <span
+                                                                                        class="badge border border-opacity-25"
+                                                                                        style="color: #a855f7; background-color: rgba(168,85,247,0.15); border-color: rgba(168,85,247,0.3);">Runtime
+                                                                                        Error</span>
                                                                                 @else
-                                                                                    <span class="badge bg-dark bg-opacity-10 text-dark border border-dark border-opacity-25">{{ $s->status }}</span>
+                                                                                    <span
+                                                                                        class="badge bg-dark bg-opacity-10 text-dark border border-dark border-opacity-25">{{ $s->status }}</span>
                                                                                 @endif
                                                                             </td>
                                                                             <td>{{ $s->skor }}</td>
                                                                             <td>
                                                                                 @if ($s->similarity_index !== null)
                                                                                     @php
+                                                                                        $threshold =
+                                                                                            config(
+                                                                                                'judge.plagiarism_threshold',
+                                                                                                0.75,
+                                                                                            ) * 100;
+                                                                                        $warnThreshold = $threshold / 2;
                                                                                         $sColor =
-                                                                                            $s->similarity_index >= 70
+                                                                                            $s->similarity_index >=
+                                                                                            $threshold
                                                                                                 ? 'danger'
                                                                                                 : ($s->similarity_index >=
-                                                                                                40
+                                                                                                $warnThreshold
                                                                                                     ? 'warning text-dark'
                                                                                                     : 'success');
                                                                                     @endphp
@@ -453,7 +536,8 @@
                                                                             </td>
                                                                             <td>
                                                                                 @if ($s->justification_note)
-                                                                                    <span class="text-muted small" title="{{ $s->justification_note }}">
+                                                                                    <span class="text-muted small"
+                                                                                        title="{{ $s->justification_note }}">
                                                                                         {{ \Illuminate\Support\Str::limit($s->justification_note, 30) }}
                                                                                     </span>
                                                                                 @else
@@ -462,16 +546,34 @@
                                                                             </td>
                                                                             <td>
                                                                                 <div class="d-flex gap-2">
-                                                                                    <button class="btn btn-sm btn-outline-secondary py-0 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" data-bs-toggle="modal" data-bs-target="#codeModal{{ $s->submission_id }}" title="Lihat Kode">
+                                                                                    <button
+                                                                                        class="btn btn-sm btn-outline-secondary py-0 d-inline-flex align-items-center justify-content-center"
+                                                                                        style="width: 32px; height: 32px;"
+                                                                                        data-bs-toggle="modal"
+                                                                                        data-bs-target="#codeModal{{ $s->submission_id }}"
+                                                                                        title="Lihat Kode">
                                                                                         <i class="bi bi-code-slash"></i>
                                                                                     </button>
-                                                                                    <button class="btn btn-sm btn-warning py-0 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" data-bs-toggle="modal" data-bs-target="#overrideModal{{ $s->submission_id }}" title="Override Skor">
+                                                                                    <button
+                                                                                        class="btn btn-sm btn-warning py-0 d-inline-flex align-items-center justify-content-center"
+                                                                                        style="width: 32px; height: 32px;"
+                                                                                        data-bs-toggle="modal"
+                                                                                        data-bs-target="#overrideModal{{ $s->submission_id }}"
+                                                                                        title="Override Skor">
                                                                                         <i class="bi bi-pencil-square"></i>
                                                                                     </button>
-                                                                                    <form action="{{ route('pengawas.submission.destroy', $s->submission_id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus submisi ini?');" class="d-inline">
+                                                                                    <form
+                                                                                        action="{{ route('pengawas.submission.destroy', $s->submission_id) }}"
+                                                                                        method="POST"
+                                                                                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus submisi ini?');"
+                                                                                        class="d-inline">
                                                                                         @csrf
                                                                                         @method('DELETE')
-                                                                                        <button type="submit" class="btn btn-sm btn-outline-danger btn-icon-only py-0 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Hapus Submisi" data-icon-only>
+                                                                                        <button type="submit"
+                                                                                            class="btn btn-sm btn-outline-danger btn-icon-only py-0 d-inline-flex align-items-center justify-content-center"
+                                                                                            style="width: 32px; height: 32px;"
+                                                                                            title="Hapus Submisi"
+                                                                                            data-icon-only>
                                                                                             <i class="bi bi-trash"></i>
                                                                                         </button>
                                                                                     </form>
@@ -480,7 +582,8 @@
                                                                         </tr>
                                                                     @empty
                                                                         <tr class="no-submissions-row">
-                                                                            <td colspan="7" class="text-center text-muted">
+                                                                            <td colspan="7"
+                                                                                class="text-center text-muted">
                                                                                 Belum ada submission.</td>
                                                                         </tr>
                                                                     @endforelse
@@ -491,58 +594,81 @@
                                                 </div>
 
                                                 @push('modals')
-                                                <!-- Modals for source code -->
-                                                @foreach ($p->submissions as $s)
-                                                    <div class="modal fade" id="codeModal{{ $s->submission_id }}"
-                                                        tabindex="-1" aria-hidden="true">
-                                                        <div class="modal-dialog modal-lg modal-dialog-centered">
-                                                            <div class="modal-content rounded-4 border-0 shadow">
-                                                                <div class="modal-header border-0 pb-0">
-                                                                    <h5 class="modal-title fw-bold"><i
-                                                                            class="bi bi-file-earmark-code text-primary me-2"></i>Source
-                                                                        Code</h5>
-                                                                    <button type="button" class="btn-close"
-                                                                        data-bs-dismiss="modal"></button>
-                                                                </div>
-                                                                <div class="modal-body">
-                                                                    <pre class="bg-dark text-light p-3 rounded mt-2" style="max-height: 400px; overflow-y: auto;"><code>{{ $s->source_code }}</code></pre>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <!-- Override Modal -->
-                                                    <div class="modal fade" id="overrideModal{{ $s->submission_id }}" tabindex="-1" aria-hidden="true">
-                                                        <div class="modal-dialog modal-dialog-centered">
-                                                            <div class="modal-content rounded-4 border-0 shadow">
-                                                                <div class="modal-header border-0 pb-0">
-                                                                    <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-warning me-2"></i>Override Skor</h5>
-                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                                </div>
-                                                                <form action="{{ route('pengawas.submission.override', $s->submission_id) }}" method="POST">
-                                                                    @csrf
+                                                    <!-- Modals for source code -->
+                                                    @foreach ($p->submissions as $s)
+                                                        <div class="modal fade" id="codeModal{{ $s->submission_id }}"
+                                                            tabindex="-1" aria-hidden="true">
+                                                            <div class="modal-dialog modal-lg modal-dialog-centered">
+                                                                <div class="modal-content rounded-4 border-0 shadow">
+                                                                    <div class="modal-header border-0 pb-0">
+                                                                        <h5 class="modal-title fw-bold"><i
+                                                                                class="bi bi-file-earmark-code text-primary me-2"></i>Source
+                                                                            Code</h5>
+                                                                        <button type="button" class="btn-close"
+                                                                            data-bs-dismiss="modal"></button>
+                                                                    </div>
                                                                     <div class="modal-body">
-                                                                        <p class="mb-2">Soal: <strong>{{ $s->nama_soal }}</strong></p>
-                                                                        <p class="mb-3 small text-muted">Ubah skor submisi apabila Anda merasa persentase similarity wajar dan tidak mengindikasikan kecurangan.</p>
-                                                                        <div class="mb-3">
-                                                                            <label class="form-label fw-semibold">Skor Baru</label>
-                                                                            <input type="number" step="1" max="{{ $s->bobot_nilai }}" min="0" name="skor" class="form-control" value="{{ $s->skor }}" required>
-                                                                            <small class="text-muted">Maksimal: {{ $s->bobot_nilai }}</small>
-                                                                        </div>
-                                                                        <div class="mb-3">
-                                                                            <label class="form-label fw-semibold">Justification Note (Alasan)</label>
-                                                                            <textarea name="justification_note" class="form-control" rows="3" placeholder="Contoh: Kode mirip karena menggunakan boilerplate dari soal..." required>{{ $s->justification_note ?? '' }}</textarea>
-                                                                        </div>
+                                                                        <pre class="bg-dark text-light p-3 rounded mt-2" style="max-height: 400px; overflow-y: auto;"><code>{{ $s->source_code }}</code></pre>
                                                                     </div>
-                                                                    <div class="modal-footer border-0 pt-0">
-                                                                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
-                                                                        <button type="submit" class="btn btn-warning rounded-pill px-4 fw-bold">Simpan Perubahan</button>
-                                                                    </div>
-                                                                </form>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                @endforeach
+
+                                                        <!-- Override Modal -->
+                                                        <div class="modal fade" id="overrideModal{{ $s->submission_id }}"
+                                                            tabindex="-1" aria-hidden="true">
+                                                            <div class="modal-dialog modal-dialog-centered">
+                                                                <div class="modal-content rounded-4 border-0 shadow">
+                                                                    <div class="modal-header border-0 pb-0">
+                                                                        <h5 class="modal-title fw-bold"><i
+                                                                                class="bi bi-pencil-square text-warning me-2"></i>Override
+                                                                            Skor</h5>
+                                                                        <button type="button" class="btn-close"
+                                                                            data-bs-dismiss="modal"></button>
+                                                                    </div>
+                                                                    <form
+                                                                        action="{{ route('pengawas.submission.override', $s->submission_id) }}"
+                                                                        method="POST">
+                                                                        @csrf
+                                                                        <div class="modal-body">
+                                                                            <p class="mb-2">Soal:
+                                                                                <strong>{{ $s->nama_soal }}</strong>
+                                                                            </p>
+                                                                            <p class="mb-3 small text-muted">Ubah skor submisi
+                                                                                apabila Anda merasa persentase similarity wajar
+                                                                                dan tidak mengindikasikan kecurangan.</p>
+                                                                            <div class="mb-3">
+                                                                                <label class="form-label fw-semibold">Skor
+                                                                                    Baru</label>
+                                                                                <input type="number" step="1"
+                                                                                    max="{{ $s->bobot_nilai }}"
+                                                                                    min="0" name="skor"
+                                                                                    class="form-control"
+                                                                                    value="{{ $s->skor }}" required>
+                                                                                <small class="text-muted">Maksimal:
+                                                                                    {{ $s->bobot_nilai }}</small>
+                                                                            </div>
+                                                                            <div class="mb-3">
+                                                                                <label
+                                                                                    class="form-label fw-semibold">Justification
+                                                                                    Note (Alasan)</label>
+                                                                                <textarea name="justification_note" class="form-control" rows="3"
+                                                                                    placeholder="Contoh: Kode mirip karena menggunakan boilerplate dari soal..." required>{{ $s->justification_note ?? '' }}</textarea>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="modal-footer border-0 pt-0">
+                                                                            <button type="button"
+                                                                                class="btn btn-secondary rounded-pill px-4"
+                                                                                data-bs-dismiss="modal">Batal</button>
+                                                                            <button type="submit"
+                                                                                class="btn btn-warning rounded-pill px-4 fw-bold">Simpan
+                                                                                Perubahan</button>
+                                                                        </div>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
                                                 @endpush
                                             </td>
                                         </tr>
@@ -564,88 +690,92 @@
     </div>
 
     @push('modals')
-    <!-- Start Exam Modal -->
-    <div class="modal fade" id="startExamModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4 border-0 shadow">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-play-circle-fill text-primary me-2"></i>Mulai Ujian?
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="mb-0">Yakin ingin memulai ujian <strong>{{ $exam->judul }}</strong>?</p>
-                    <p class="text-muted small mt-2 mb-0"><i class="bi bi-info-circle me-1"></i>Token akan dibuat otomatis
-                        dan diperbarui setiap 1 menit.</p>
-                </div>
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-secondary rounded-pill px-4"
-                        data-bs-dismiss="modal">Batal</button>
-                    <form method="POST" action="{{ route('pengawas.ujian.start', $exam->ujian_id) }}">
-                        @csrf
-                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">
-                            <i class="bi bi-play-fill me-1"></i>Ya, Mulai Ujian
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Pause Exam Modal -->
-    <div class="modal fade" id="endExamModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4 border-0 shadow">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-pause-circle-fill text-warning me-2"></i>Pause
-                        Ujian?</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="mb-0">Yakin ingin mem-pause ujian <strong>{{ $exam->judul }}</strong>?</p>
-                    <p class="text-muted small mt-2 mb-0"><i class="bi bi-info-circle me-1"></i>Token akan dinonaktifkan sementara. Anda bisa memulai ujian kembali nanti.</p>
-                </div>
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-secondary rounded-pill px-4"
-                        data-bs-dismiss="modal">Batal</button>
-                    <form method="POST" action="{{ route('pengawas.ujian.end', $exam->ujian_id) }}">
-                        @csrf
-                        <button type="submit" class="btn btn-warning rounded-pill px-4 fw-bold">
-                            <i class="bi bi-pause-fill me-1"></i>Ya, Pause Ujian
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Finish Exam Modal (Permanent) -->
-    <div class="modal fade" id="finishExamModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4 border-0 shadow">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Akhiri Ujian Permanen?</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="mb-0">Yakin ingin <strong>mengakhiri</strong> ujian <strong>{{ $exam->judul }}</strong> secara permanen?</p>
-                    <div class="alert alert-danger small mt-3 mb-0">
-                        <i class="bi bi-exclamation-diamond-fill me-1"></i> <strong>Perhatian:</strong> Setelah diakhiri, ujian ini tidak bisa dimulai kembali. Pastikan semua peserta sudah selesai mengerjakan.
+        <!-- Start Exam Modal -->
+        <div class="modal fade" id="startExamModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-4 border-0 shadow">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title fw-bold"><i class="bi bi-play-circle-fill text-primary me-2"></i>Mulai Ujian?
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-0">Yakin ingin memulai ujian <strong>{{ $exam->judul }}</strong>?</p>
+                        <p class="text-muted small mt-2 mb-0"><i class="bi bi-info-circle me-1"></i>Token akan dibuat otomatis
+                            dan diperbarui setiap 1 menit.</p>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-secondary rounded-pill px-4"
+                            data-bs-dismiss="modal">Batal</button>
+                        <form method="POST" action="{{ route('pengawas.ujian.start', $exam->ujian_id) }}">
+                            @csrf
+                            <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">
+                                <i class="bi bi-play-fill me-1"></i>Ya, Mulai Ujian
+                            </button>
+                        </form>
                     </div>
                 </div>
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-secondary rounded-pill px-4"
-                        data-bs-dismiss="modal">Batal</button>
-                    <form method="POST" action="{{ route('pengawas.ujian.finish', $exam->ujian_id) }}">
-                        @csrf
-                        <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">
-                            <i class="bi bi-stop-fill me-1"></i>Ya, Akhiri Permanen
-                        </button>
-                    </form>
+            </div>
+        </div>
+
+        <!-- Pause Exam Modal -->
+        <div class="modal fade" id="endExamModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-4 border-0 shadow">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title fw-bold"><i class="bi bi-pause-circle-fill text-warning me-2"></i>Pause
+                            Ujian?</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-0">Yakin ingin mem-pause ujian <strong>{{ $exam->judul }}</strong>?</p>
+                        <p class="text-muted small mt-2 mb-0"><i class="bi bi-info-circle me-1"></i>Token akan dinonaktifkan
+                            sementara. Anda bisa memulai ujian kembali nanti.</p>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-secondary rounded-pill px-4"
+                            data-bs-dismiss="modal">Batal</button>
+                        <form method="POST" action="{{ route('pengawas.ujian.end', $exam->ujian_id) }}">
+                            @csrf
+                            <button type="submit" class="btn btn-warning rounded-pill px-4 fw-bold">
+                                <i class="bi bi-pause-fill me-1"></i>Ya, Pause Ujian
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+
+        <!-- Finish Exam Modal (Permanent) -->
+        <div class="modal fade" id="finishExamModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-4 border-0 shadow">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Akhiri
+                            Ujian Permanen?</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-0">Yakin ingin <strong>mengakhiri</strong> ujian <strong>{{ $exam->judul }}</strong>
+                            secara permanen?</p>
+                        <div class="alert alert-danger small mt-3 mb-0">
+                            <i class="bi bi-exclamation-diamond-fill me-1"></i> <strong>Perhatian:</strong> Setelah diakhiri,
+                            ujian ini tidak bisa dimulai kembali. Pastikan semua peserta sudah selesai mengerjakan.
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-secondary rounded-pill px-4"
+                            data-bs-dismiss="modal">Batal</button>
+                        <form method="POST" action="{{ route('pengawas.ujian.finish', $exam->ujian_id) }}">
+                            @csrf
+                            <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">
+                                <i class="bi bi-stop-fill me-1"></i>Ya, Akhiri Permanen
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     @endpush
 @endsection
 
@@ -658,14 +788,14 @@
 
             // Token toggle visibility state
             let tokenHidden = true;
-            let currentTokenVal = '{{ $activeToken ? $activeToken->kode_token : "" }}';
+            let currentTokenVal = '{{ $activeToken ? $activeToken->kode_token : '' }}';
 
             window.toggleToken = function() {
                 tokenHidden = !tokenHidden;
                 const tokenDisplay = document.getElementById('tokenDisplay');
                 const eyeIcon = document.getElementById('eyeIcon');
                 if (!tokenDisplay || !eyeIcon) return;
-                
+
                 if (tokenHidden) {
                     tokenDisplay.textContent = '••••••';
                     eyeIcon.className = 'bi bi-eye-slash';
@@ -882,7 +1012,8 @@
                     const emptyRow = document.createElement('tr');
                     emptyRow.className = 'empty-state-row';
                     const colCount = table.querySelector('thead tr').children.length;
-                    emptyRow.innerHTML = `<td colspan="${colCount}" class="text-center text-muted">Tidak ada submission untuk soal ini.</td>`;
+                    emptyRow.innerHTML =
+                        `<td colspan="${colCount}" class="text-center text-muted">Tidak ada submission untuk soal ini.</td>`;
                     tbody.appendChild(emptyRow);
                     return;
                 }
@@ -905,7 +1036,8 @@
                 const totalPages = Math.ceil(totalRows / rowsPerPage);
 
                 const paginationContainer = document.createElement('div');
-                paginationContainer.className = 'd-flex flex-column flex-md-row justify-content-between align-items-center mt-2 px-2';
+                paginationContainer.className =
+                    'd-flex flex-column flex-md-row justify-content-between align-items-center mt-2 px-2';
                 paginationContainer.id = tableId + '-pagination';
                 table.parentNode.insertBefore(paginationContainer, table.nextSibling);
 
@@ -930,7 +1062,8 @@
 
                     const summarySpan = document.createElement('span');
                     summarySpan.className = 'text-muted small fw-semibold mb-2 mb-md-0';
-                    summarySpan.innerText = `Menampilkan ${startItem} hingga ${endItem} dari ${totalRows} submisi`;
+                    summarySpan.innerText =
+                        `Menampilkan ${startItem} hingga ${endItem} dari ${totalRows} submisi`;
                     paginationContainer.appendChild(summarySpan);
 
                     const nav = document.createElement('nav');
@@ -939,10 +1072,14 @@
 
                     const prevLi = document.createElement('li');
                     prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
-                    prevLi.innerHTML = `<a class="page-link" href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>`;
+                    prevLi.innerHTML =
+                        `<a class="page-link" href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>`;
                     prevLi.onclick = (e) => {
                         e.preventDefault();
-                        if (currentPage > 1) { currentPage--; renderTable(); }
+                        if (currentPage > 1) {
+                            currentPage--;
+                            renderTable();
+                        }
                     };
                     ul.appendChild(prevLi);
 
@@ -965,10 +1102,14 @@
 
                     const nextLi = document.createElement('li');
                     nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
-                    nextLi.innerHTML = `<a class="page-link" href="#" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>`;
+                    nextLi.innerHTML =
+                        `<a class="page-link" href="#" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>`;
                     nextLi.onclick = (e) => {
                         e.preventDefault();
-                        if (currentPage < totalPages) { currentPage++; renderTable(); }
+                        if (currentPage < totalPages) {
+                            currentPage++;
+                            renderTable();
+                        }
                     };
                     ul.appendChild(nextLi);
 
@@ -1011,13 +1152,15 @@
                 let currentSort = 'normal';
 
                 const paginationContainer = document.createElement('div');
-                paginationContainer.className = 'd-flex flex-column flex-md-row justify-content-between align-items-center mt-3 px-3 pb-3';
+                paginationContainer.className =
+                    'd-flex flex-column flex-md-row justify-content-between align-items-center mt-3 px-3 pb-3';
                 paginationContainer.id = 'participantTable-pagination';
                 table.parentNode.insertBefore(paginationContainer, table.nextSibling);
 
                 function updateTable() {
                     let filteredItems = allRows.filter(item => {
-                        return item.nim.includes(currentSearchTerm) || item.nama.includes(currentSearchTerm);
+                        return item.nim.includes(currentSearchTerm) || item.nama.includes(
+                            currentSearchTerm);
                     });
 
                     filteredItems.sort((a, b) => {
@@ -1043,8 +1186,8 @@
                     const start = (currentPage - 1) * rowsPerPage;
                     const end = start + rowsPerPage;
 
-                    allRows.forEach(item => { 
-                        item.mainRow.style.display = 'none'; 
+                    allRows.forEach(item => {
+                        item.mainRow.style.display = 'none';
                         if (item.collapseRow) item.collapseRow.style.display = 'none';
                     });
 
@@ -1084,10 +1227,14 @@
 
                     const prevLi = document.createElement('li');
                     prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
-                    prevLi.innerHTML = `<a class="page-link" href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>`;
+                    prevLi.innerHTML =
+                        `<a class="page-link" href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>`;
                     prevLi.onclick = (e) => {
                         e.preventDefault();
-                        if (currentPage > 1) { currentPage--; updateTable(); }
+                        if (currentPage > 1) {
+                            currentPage--;
+                            updateTable();
+                        }
                     };
                     ul.appendChild(prevLi);
 
@@ -1110,10 +1257,14 @@
 
                     const nextLi = document.createElement('li');
                     nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
-                    nextLi.innerHTML = `<a class="page-link" href="#" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>`;
+                    nextLi.innerHTML =
+                        `<a class="page-link" href="#" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>`;
                     nextLi.onclick = (e) => {
                         e.preventDefault();
-                        if (currentPage < totalPages) { currentPage++; updateTable(); }
+                        if (currentPage < totalPages) {
+                            currentPage++;
+                            updateTable();
+                        }
                     };
                     ul.appendChild(nextLi);
 
@@ -1132,13 +1283,16 @@
                 document.querySelectorAll('.filter-option').forEach(option => {
                     option.addEventListener('click', function(e) {
                         e.preventDefault();
-                        document.querySelectorAll('.filter-option').forEach(opt => opt.classList.remove('active'));
+                        document.querySelectorAll('.filter-option').forEach(opt => opt.classList
+                            .remove('active'));
                         this.classList.add('active');
                         currentSort = this.getAttribute('data-sort');
                         const activeText = document.getElementById('activeFilterText');
                         if (activeText) {
-                            if (currentSort === 'terbaru') activeText.innerText = 'Urutkan: Terbaru';
-                            else if (currentSort === 'terlama') activeText.innerText = 'Urutkan: Terlama';
+                            if (currentSort === 'terbaru') activeText.innerText =
+                                'Urutkan: Terbaru';
+                            else if (currentSort === 'terlama') activeText.innerText =
+                                'Urutkan: Terlama';
                             else activeText.innerText = 'Urutkan: Normal';
                         }
                         currentPage = 1;
@@ -1158,7 +1312,8 @@
 
                 e.preventDefault();
 
-                const confirmText = form.getAttribute('data-confirm-text') || 'Apakah Anda yakin ingin mereset kesempatan submit mahasiswa ini?';
+                const confirmText = form.getAttribute('data-confirm-text') ||
+                    'Apakah Anda yakin ingin mereset kesempatan submit mahasiswa ini?';
                 if (!confirm(confirmText)) {
                     return;
                 }
@@ -1170,59 +1325,61 @@
                 const submitBtn = form.querySelector('button[type="submit"]');
                 if (submitBtn) {
                     submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" style="width: 0.7rem; height: 0.7rem;" role="status" aria-hidden="true"></span>';
+                    submitBtn.innerHTML =
+                        '<span class="spinner-border spinner-border-sm" style="width: 0.7rem; height: 0.7rem;" role="status" aria-hidden="true"></span>';
                 }
 
                 fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': token,
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Server error');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        // Find the badge inside the parent container and update it
-                        const container = form.closest('.d-flex');
-                        if (container) {
-                            const badge = container.querySelector('.badge');
-                            if (badge) {
-                                badge.textContent = `0 / {{ $exam->max_attempt }}`;
-                                badge.className = 'badge bg-secondary rounded-pill';
-                            }
-                            // Remove the form
-                            form.remove();
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': token,
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
                         }
-                    } else {
-                        alert('Gagal mereset kesempatan: ' + (data.message || 'Terjadi kesalahan'));
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Server error');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            // Find the badge inside the parent container and update it
+                            const container = form.closest('.d-flex');
+                            if (container) {
+                                const badge = container.querySelector('.badge');
+                                if (badge) {
+                                    badge.textContent = `0 / {{ $exam->max_attempt }}`;
+                                    badge.className = 'badge bg-secondary rounded-pill';
+                                }
+                                // Remove the form
+                                form.remove();
+                            }
+                        } else {
+                            alert('Gagal mereset kesempatan: ' + (data.message || 'Terjadi kesalahan'));
+                            if (submitBtn) {
+                                submitBtn.disabled = false;
+                                submitBtn.innerHTML =
+                                    '<i class="bi bi-arrow-counterclockwise"></i> Reset';
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Terjadi kesalahan koneksi.');
                         if (submitBtn) {
                             submitBtn.disabled = false;
                             submitBtn.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> Reset';
                         }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Terjadi kesalahan koneksi.');
-                    if (submitBtn) {
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> Reset';
-                    }
-                });
+                    });
             });
         });
     </script>
 
     <style>
         /* Sembunyikan teks bahasa Inggris bawaan Laravel dari pagination */
-        .pagination-sm nav div.d-sm-flex > div:first-child,
+        .pagination-sm nav div.d-sm-flex>div:first-child,
         .pagination-sm p.small.text-muted {
             display: none !important;
         }

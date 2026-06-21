@@ -5,9 +5,16 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Ujian;
 use App\Models\Token;
+use App\Services\PlagiarismService;
 
 class MahasiswaUjianController extends Controller
 {
+    protected $plagiarismService;
+
+    public function __construct(PlagiarismService $plagiarismService)
+    {
+        $this->plagiarismService = $plagiarismService;
+    }
     /**
      * Tampilkan dashboard Mahasiswa dengan daftar ujian yang tersedia.
      * 
@@ -281,63 +288,79 @@ class MahasiswaUjianController extends Controller
      */
     public function submitCode(Request $request, $examId, $soalId)
     {
+        // 1. VALIDASI INPUT MAHASISWA
+        // Memastikan payload request yang masuk memiliki parameter 'code' (source code) dan 'language' (bahasa pemrograman)
         $request->validate([
             'code' => 'required|string',
             'language' => 'required|string'
         ]);
 
+        // 2. PENGECEKAN STATUS UJIAN
+        // Mengambil data ujian berdasarkan ID dan memanggil checkTimeout() untuk mengecek apakah batas durasi ujian sudah habis.
+        // Jika status ujian sudah tidak aktif (karena waktu habis atau di-close), pengiriman jawaban akan langsung ditolak.
         $exam = Ujian::findOrFail($examId);
         $exam->checkTimeout();
         if ($exam->status !== 'active') {
             return response()->json(['success' => false, 'message' => 'Ujian tidak aktif atau sudah ditutup karena waktu habis.']);
         }
 
-        // Count active attempts
+        // 3. PENGHITUNGAN JUMLAH PERCOBAAN (ATTEMPTS) MAHASISWA
+        // Menghitung berapa kali mahasiswa tersebut telah mengirimkan jawaban untuk soal terkait dalam ujian ini (yang is_reset = false).
         $attemptsUsed = \Illuminate\Support\Facades\DB::table('submissions')
             ->where('soal_id', $soalId)
             ->where('user_id', \Illuminate\Support\Facades\Auth::id())
             ->where('is_reset', false)
             ->count();
 
+        // Jika jumlah percobaan yang telah dilakukan melebihi batas maksimal percobaan yang diizinkan pada ujian ini,
+        // maka submit code dibatalkan dan mengembalikan pesan error.
         if ($attemptsUsed >= $exam->max_attempt) {
             return response()->json(['success' => false, 'message' => 'Batas submit maksimal (' . $exam->max_attempt . ' kali) telah tercapai untuk soal ini.']);
         }
 
+        // 4. PENGAMBILAN DATA SOAL & TEST CASES
+        // Mengambil data soal beserta seluruh Test Case (input & output pembanding) yang ada di database.
         $soal = \App\Models\Soal::with('testCases')->where('ujian_id', $examId)->findOrFail($soalId);
         $testCases = $soal->testCases;
 
+        // Jika soal tidak memiliki test case, submit code tidak bisa diproses.
         if ($testCases->count() === 0) {
             return response()->json(['success' => false, 'message' => 'Tidak ada test case untuk soal ini.']);
         }
 
+        // 5. PEMETAAN BAHASA KE ID PADA JUDGE0
+        // Memetakan input string bahasa pemrograman dari frontend ke ID spesifik bahasa di Judge0 API.
         $langMap = [
             'python' => 71,
             'cpp' => 54,
             'java' => 62,
-            'dart' => 90 // Dart 2.19.2 di Judge0 CE v1.13.0+
+            'dart' => 90 // Dart 2.19.2 pada Judge0 CE v1.13.0+
         ];
         $languageId = $langMap[$request->language] ?? 71;
 
-        // === Perbaikan #1: Timeout yang aman dari nilai 0 ===
+        // 6. KONFIGURASI BATAS WAKTU (TIMEOUT) EKSEKUSI
+        // Memuat batas waktu eksekusi kode mahasiswa dari file konfigurasi/env.
         $judgeConfig = config('judge');
         $languageSettings = $judgeConfig['language_settings'][$request->language] ?? [];
         $rawTimeout = (float) ($languageSettings['timeout'] ?? 0);
 
-        // Jika env kosong atau tidak valid, fallback ke execution_time_limit global
+        // Fallback jika nilainya tidak valid, menggunakan timeout global (default 5 detik)
         if ($rawTimeout <= 0 || !is_finite($rawTimeout)) {
             $rawTimeout = (float) ($judgeConfig['execution_time_limit'] ?? 5);
         }
-
-        // Pastikan minimal 1 detik agar Judge0 tidak menolak dengan status 0
+        // Minimal 1.0 detik agar Judge0 tidak error karena limit terlalu kecil
         $executionTimeout = max(1.0, $rawTimeout);
 
-        // === Perbaikan #3: Memory limit dalam KB ===
+        // 7. KONFIGURASI BATAS MEMORI (MEMORY LIMIT) EKSEKUSI
+        // Memuat limit memori eksekusi dalam MegaBytes (MB), lalu mengubahnya ke KiloBytes (KB) untuk dikirim ke Judge0.
         $rawMemoryMB = (float) ($languageSettings['memory_limit'] ?? $judgeConfig['memory_limit'] ?? 256);
         if ($rawMemoryMB <= 0 || !is_finite($rawMemoryMB)) {
             $rawMemoryMB = 256.0;
         }
-        $memoryLimitKB = max(32768, (int) ($rawMemoryMB * 1024)); // Minimal 32 MB = 32768 KB
+        // Minimal 32 MB = 32768 KB
+        $memoryLimitKB = max(32768, (int) ($rawMemoryMB * 1024));
 
+        // 8. AUTOGRADER: EKSEKUSI KODE PADA API JUDGE0 UNTUK SETIAP TEST CASE
         $judge0Url = 'https://judge0-ce.p.rapidapi.com';
         $rapidApiKey = env('RAPIDAPI_JUDGE0_KEY');
 
@@ -348,15 +371,17 @@ class MahasiswaUjianController extends Controller
             ]);
         }
         
-        $allPassed = true;
-        $finalStatus = 'Accepted';
-        $timeTaken = 0;
-        $memoryUsed = 0;
-        $testCaseResults = [];
-        $judge0StatusId = null;
-        $judge0StatusDescription = null;
+        $allPassed = true; // Flag penanda apakah semua test case berhasil lulus (Accepted)
+        $finalStatus = 'Accepted'; // Status akhir kompilasi & eksekusi submisi
+        $timeTaken = 0; // Durasi eksekusi tertinggi di antara semua test case (dalam detik)
+        $memoryUsed = 0; // Penggunaan memori tertinggi di antara semua test case (dalam KB)
+        $testCaseResults = []; // Menyimpan log hasil evaluasi masing-masing test case
+        $judge0StatusId = null; // Menyimpan ID status Judge0 secara keseluruhan
+        $judge0StatusDescription = null; // Menyimpan deskripsi status Judge0 secara keseluruhan
 
+        // Melakukan perulangan untuk mengevaluasi source code terhadap setiap test case satu per satu
         foreach ($testCases as $idx => $tc) {
+            // Menyusun payload data yang di-encode ke Base64 (sesuai standard Judge0 untuk menghindari masalah karakter khusus)
             $payload = [
                 'source_code' => base64_encode($request->code),
                 'language_id' => $languageId,
@@ -373,10 +398,11 @@ class MahasiswaUjianController extends Controller
             $tcJudge0StatusDesc = '';
 
             try {
+                // Mengirim HTTP POST request ke server Judge0 CE dengan parameter wait=true agar eksekusi sinkronus langsung selesai
                 $response = \Illuminate\Support\Facades\Http::withoutVerifying()
                     ->withOptions([
                         'curl' => [
-                            CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+                            CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4, // Memaksa cURL menggunakan IPv4 untuk kestabilan koneksi
                         ]
                     ])
                     ->withHeaders([
@@ -386,7 +412,7 @@ class MahasiswaUjianController extends Controller
                     ])->timeout((int) $judgeConfig['submission_timeout'] ?? 30)
                       ->post("{$judge0Url}/submissions?base64_encoded=true&wait=true", $payload);
 
-                // Cek apakah response HTTP sukses (2xx)
+                // Jika respons dari server Judge0 tidak sukses (HTTP Status != 2xx)
                 if (!$response->successful()) {
                     $httpStatus = $response->status();
                     $httpBody = $response->body();
@@ -407,6 +433,7 @@ class MahasiswaUjianController extends Controller
 
                 $result = $response->json();
 
+                // Cek apakah response JSON memiliki field status
                 if (!isset($result['status'])) {
                     $finalStatus = 'Runtime Error';
                     $tcStatus = 'Runtime Error';
@@ -416,30 +443,32 @@ class MahasiswaUjianController extends Controller
                     $tcJudge0StatusId = (int) $result['status']['id'];
                     $tcJudge0StatusDesc = $result['status']['description'] ?? '';
 
-                    // Simpan status Judge0 dari test case pertama (atau yang terburuk)
+                    // Set status pertama sebagai status referensi global jika masih kosong
                     if ($judge0StatusId === null) {
                         $judge0StatusId = $tcJudge0StatusId;
                         $judge0StatusDescription = $tcJudge0StatusDesc;
                     }
 
+                    // Decode output (stdout, stderr, compile_output) dari Base64 ke string biasa
                     $stdout = isset($result['stdout']) ? base64_decode($result['stdout']) : '';
                     $stderr = isset($result['stderr']) ? base64_decode($result['stderr']) : '';
                     $compile_output = isset($result['compile_output']) ? base64_decode($result['compile_output']) : '';
 
-                    // Normalisasi stdout (hapus trailing newline di baris terakhir)
+                    // Normalisasi output untuk membersihkan whitespace dan newline di baris terakhir
                     $stdout = $this->normalizeOutput($stdout);
 
-                    // Gabungkan compile_output ke stderr jika stderr kosong
+                    // Gabungkan pesan error kompilasi ke stderr jika stderr biasa kosong
                     if (trim($stderr) === '' && trim($compile_output) !== '') {
                         $stderr = trim($compile_output);
                     } else {
                         $stderr = trim($stderr);
                     }
 
+                    // Catat statistik waktu & memori maksimal yang dikonsumsi
                     $timeTaken = max($timeTaken, floatval($result['time'] ?? 0));
                     $memoryUsed = max($memoryUsed, floatval($result['memory'] ?? 0));
 
-                    // Resolve status via helper
+                    // Memanggil helper resolveJudge0StatusForEvalcode() untuk mengonversi status ID Judge0 ke kategori status EvalCode
                     $resolvedStatus = $this->resolveJudge0StatusForEvalcode(
                         $tcJudge0StatusId,
                         $tcJudge0StatusDesc,
@@ -447,8 +476,9 @@ class MahasiswaUjianController extends Controller
                         $stderr
                     );
 
+                    // Pengecekan status kelulusan pada masing-masing test case
                     if ($resolvedStatus === 'Accepted') {
-                        // Double-check: manual comparison stdout vs expected_output
+                        // Verifikasi manual tambahan: mencocokkan stdout hasil eksekusi dengan expected output soal
                         $expected = $this->normalizeOutput($tc->expected_output ?? '');
                         if ($stdout !== $expected) {
                             $allPassed = false;
@@ -457,7 +487,6 @@ class MahasiswaUjianController extends Controller
                                 $finalStatus = 'Wrong Answer';
                             }
                         }
-                        // else: tetap Accepted
                     } elseif ($resolvedStatus === 'Wrong Answer') {
                         $allPassed = false;
                         $tcStatus = 'Wrong Answer';
@@ -475,11 +504,11 @@ class MahasiswaUjianController extends Controller
                         $tcStatus = 'Compilation Error';
                         $finalStatus = 'Compilation Error';
 
-                        // Update judge0 status info untuk CE
+                        // Mengoverride status global ke Compilation Error agar tampil konsisten
                         $judge0StatusId = $tcJudge0StatusId;
                         $judge0StatusDescription = $tcJudge0StatusDesc;
                     } else {
-                        // Runtime Error
+                        // Status default: Runtime Error
                         $allPassed = false;
                         $tcStatus = 'Runtime Error';
                         $finalStatus = 'Runtime Error';
@@ -489,6 +518,7 @@ class MahasiswaUjianController extends Controller
                     }
                 }
             } catch (\Exception $e) {
+                // Logging error jika terjadi exception saat memanggil endpoint API
                 \Log::error('Judge0 Error: ' . $e->getMessage());
                 $finalStatus = 'Runtime Error';
                 $tcStatus = 'Runtime Error';
@@ -496,6 +526,7 @@ class MahasiswaUjianController extends Controller
                 $stderr = 'Gagal menghubungi server eksekusi Judge0: ' . $e->getMessage();
             }
 
+            // Memasukkan log detail per test case ke array hasil
             $testCaseResults[] = [
                 'index' => $idx + 1,
                 'status' => $tcStatus,
@@ -506,21 +537,27 @@ class MahasiswaUjianController extends Controller
             ];
         }
 
+        // 9. PENENTUAN SKOR AKHIR SUBMISI
+        // Jika seluruh test case lulus (allPassed = true), berikan skor penuh sesuai bobot nilai soal.
+        // Jika ada test case yang gagal, maka skor akhir submisi ini adalah 0.
         $skor = $allPassed ? $soal->bobot_nilai : 0;
         $similarityIndex = null;
 
+        // 10. DETEKSI PLAGIARISME DENGAN ALGORITMA JACCARD SIMILARITY
+        // Deteksi plagiarisme hanya dilakukan apabila source code mahasiswa lulus (Accepted) dan fitur plagiarism detection diaktifkan.
         if ($allPassed && config('judge.enable_plagiarism_detection', true)) {
             $similarityIndex = $this->calculatePlagiarism($request->code, $soalId);
         }
 
-        // Save submission
+        // 11. PENYIMPANAN LOG SUBMISI KE DATABASE
+        // Menyimpan riwayat hasil pengerjaan mahasiswa ke tabel 'submissions'
         \Illuminate\Support\Facades\DB::table('submissions')->insert([
             'user_id' => \Illuminate\Support\Facades\Auth::id(),
             'soal_id' => $soalId,
             'source_code' => $request->code,
             'skor' => $skor,
             'status' => $finalStatus,
-            'similarity_index' => $similarityIndex,
+            'similarity_index' => $similarityIndex, // Nilai persentase kesamaan/plagiarisme
             'execution_time' => $timeTaken . 's',
             'memory' => $memoryUsed . ' KB',
             'is_reset' => false,
@@ -528,7 +565,8 @@ class MahasiswaUjianController extends Controller
             'updated_at' => now()
         ]);
 
-        // === Perbaikan #5: Struktur output lengkap untuk frontend ===
+        // 12. MENGEMBALIKAN HASIL EVALUASI DALAM FORMAT JSON
+        // Data ini akan dikonsumsi oleh frontend (workspace coding mahasiswa) untuk menampilkan feedback langsung.
         return response()->json([
             'success' => true,
             'status' => $finalStatus,
@@ -556,18 +594,11 @@ class MahasiswaUjianController extends Controller
         }
 
         $maxSimilarity = 0;
-        $tokens1 = $this->tokenizeCode($newCode);
 
         foreach ($otherSubmissions as $sub) {
-            $tokens2 = $this->tokenizeCode($sub->source_code);
-            $intersection = count(array_intersect($tokens1, $tokens2));
-            $union = count(array_unique(array_merge($tokens1, $tokens2)));
-            
-            if ($union > 0) {
-                $similarity = ($intersection / $union) * 100;
-                if ($similarity > $maxSimilarity) {
-                    $maxSimilarity = $similarity;
-                }
+            $similarity = $this->plagiarismService->calculateSimilarity($newCode, $sub->source_code);
+            if ($similarity > $maxSimilarity) {
+                $maxSimilarity = $similarity;
             }
         }
 
@@ -589,18 +620,5 @@ class MahasiswaUjianController extends Controller
             'status' => $exam->status,
             'remainingSeconds' => $exam->getRemainingSeconds()
         ]);
-    }
-
-    private function tokenizeCode($code)
-    {
-        // Trimming comments
-        $code = preg_replace('!/\*.*?\*/!s', '', $code); // multi line comments
-        $code = preg_replace('/#.*/', '', $code); // python comments
-        $code = preg_replace('![ \t]*//.*[ \t]*[\r\n]!', '', $code); // single line comments
-
-        // Tokenize by word characters and some symbols
-        preg_match_all('/[a-zA-Z0-9_]+|[{}\[\]()=+\-*\/<>;.]/', $code, $matches);
-        
-        return array_unique($matches[0]);
     }
 }
