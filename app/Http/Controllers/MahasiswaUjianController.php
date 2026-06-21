@@ -362,7 +362,7 @@ class MahasiswaUjianController extends Controller
 
         // 8. AUTOGRADER: EKSEKUSI KODE PADA API JUDGE0 UNTUK SETIAP TEST CASE
         $judge0Url = 'https://judge0-ce.p.rapidapi.com';
-        $rapidApiKey = env('RAPIDAPI_JUDGE0_KEY');
+        $rapidApiKey = config('services.judge0.key');
 
         if (empty($rapidApiKey)) {
             return response()->json([

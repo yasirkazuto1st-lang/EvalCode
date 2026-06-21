@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'judge0' => [
+        'key' => env('RAPIDAPI_JUDGE0_KEY'),
+    ],
+
 ];
