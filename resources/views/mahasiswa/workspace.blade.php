@@ -19,7 +19,8 @@
         base_workspace_url: "{{ url('ujian/'.$exam->ujian_id.'/soal') }}",
         attemptsUsed: {{ $attemptsUsed }},
         maxAttempt: {{ $maxAttempt }},
-        remainingSeconds: {{ $remainingSeconds }}
+        remainingSeconds: {{ $remainingSeconds }},
+        hasAccepted: @json($hasAccepted)
     };
 </script>
 @endsection

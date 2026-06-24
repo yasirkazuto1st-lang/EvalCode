@@ -1,5 +1,6 @@
 import './bootstrap';
 import * as bootstrap from 'bootstrap';
+window.bootstrap = bootstrap;
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';

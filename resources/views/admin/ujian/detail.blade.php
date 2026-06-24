@@ -27,10 +27,13 @@
         <a href="{{ route('admin.ujian.index') }}" class="btn btn-sm btn-back mb-3"><i class="bi bi-arrow-left"></i></a>
 
         @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show rounded-4" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    if (window.showToast) {
+                        window.showToast("{{ session('success') }}", 'success');
+                    }
+                });
+            </script>
         @endif
 
         @if ($errors->any())
@@ -92,7 +95,7 @@
                                 </thead>
                                 <tbody>
                                     @forelse($questions as $index => $q)
-                                        <tr>
+                                        <tr id="soal-row-{{ $q->soal_id }}">
                                             <td class="ps-4">{{ $index + 1 }}</td>
                                             <td>{{ $q->nama_soal }}</td>
                                             <td>{{ $q->bobot_nilai }}</td>
@@ -120,7 +123,7 @@
                                                     </div>
                                                     <form method="POST"
                                                         action="{{ route('admin.soal.update', ['examId' => $exam->ujian_id, 'soalId' => $q->soal_id]) }}"
-                                                        enctype="multipart/form-data">
+                                                        enctype="multipart/form-data" class="update-soal-form">
                                                         @csrf
                                                         <div class="modal-body">
                                                             <div class="mb-3"><label class="form-label">Nama
@@ -155,7 +158,7 @@
                                                         <h5 class="modal-title">Hapus Soal?</h5>
                                                     </div>
                                                     <form method="POST"
-                                                        action="{{ route('admin.soal.destroy', ['examId' => $exam->ujian_id, 'soalId' => $q->soal_id]) }}">
+                                                        action="{{ route('admin.soal.destroy', ['examId' => $exam->ujian_id, 'soalId' => $q->soal_id]) }}" class="destroy-soal-form">
                                                         @csrf @method('DELETE')
                                                         <div class="modal-body">Hapus soal
                                                             <strong>{{ $q->nama_soal }}</strong>? Semua test case di
@@ -252,8 +255,7 @@
                                                     type="button" data-bs-toggle="collapse"
                                                     data-bs-target="#collapseSubmissions{{ $p->user_id }}"
                                                     aria-expanded="false"
-                                                    aria-controls="collapseSubmissions{{ $p->user_id }}"
-                                                    onclick="this.querySelector('.bi-chevron-down').classList.toggle('rotate-180')">
+                                                    aria-controls="collapseSubmissions{{ $p->user_id }}">
                                                     Detail <i class="bi bi-chevron-down ms-1"
                                                         style="transition: transform 0.3s ease; display: inline-block;"></i>
                                                 </button>
@@ -731,6 +733,130 @@
             }
 
             initParticipantTablePagination();
+
+            // Handle single open collapse and chevron rotation dynamically
+            const participantTable = document.getElementById('participantTable');
+            if (participantTable) {
+                participantTable.addEventListener('show.bs.collapse', function(e) {
+                    const activeCollapse = e.target;
+                    
+                    // Hide all other collapses under the participantTable
+                    const allCollapses = participantTable.querySelectorAll('.collapse.show');
+                    allCollapses.forEach(collapseEl => {
+                        if (collapseEl !== activeCollapse) {
+                            const bsCollapse = bootstrap.Collapse.getInstance(collapseEl) || new bootstrap.Collapse(collapseEl, { toggle: false });
+                            bsCollapse.hide();
+                        }
+                    });
+
+                    // Rotate the chevron of the opened collapse
+                    const triggerBtn = document.querySelector(`[data-bs-target="#${activeCollapse.id}"]`);
+                    if (triggerBtn) {
+                        const icon = triggerBtn.querySelector('.bi-chevron-down');
+                        if (icon) {
+                            icon.classList.add('rotate-180');
+                        }
+                    }
+                });
+
+                participantTable.addEventListener('hide.bs.collapse', function(e) {
+                    const hiddenCollapse = e.target;
+                    // Reset the chevron rotation
+                    const triggerBtn = document.querySelector(`[data-bs-target="#${hiddenCollapse.id}"]`);
+                    if (triggerBtn) {
+                        const icon = triggerBtn.querySelector('.bi-chevron-down');
+                        if (icon) {
+                            icon.classList.remove('rotate-180');
+                        }
+                    }
+                });
+            }
+
+            // Handle AJAX update/delete soal
+            document.addEventListener('submit', function(e) {
+                const form = e.target.closest('.update-soal-form, .destroy-soal-form');
+                if (!form) return;
+
+                e.preventDefault();
+
+                const isUpdate = form.classList.contains('update-soal-form');
+                const isDestroy = form.classList.contains('destroy-soal-form');
+                const url = form.getAttribute('action');
+                const formData = new FormData(form);
+
+                const modalEl = form.closest('.modal');
+                let modalInstance = null;
+                if (modalEl && typeof bootstrap !== 'undefined') {
+                    modalInstance = bootstrap.Modal.getInstance(modalEl);
+                }
+
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                }
+
+                fetch(url, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => { throw err; });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            try {
+                                if (isDestroy) {
+                                    const row = document.getElementById('soal-row-' + data.soal_id);
+                                    if (row) {
+                                        row.remove();
+                                    }
+                                } else if (isUpdate) {
+                                    const row = document.getElementById('soal-row-' + data.soal.soal_id);
+                                    if (row && row.cells && row.cells.length >= 3) {
+                                        row.cells[1].textContent = data.soal.nama_soal;
+                                        row.cells[2].textContent = data.soal.bobot_nilai;
+                                    }
+                                }
+                            } catch (domErr) {
+                                console.error('DOM update error:', domErr);
+                            }
+
+                            try {
+                                if (modalEl) {
+                                    const closeBtn = modalEl.querySelector('[data-bs-dismiss="modal"]');
+                                    if (closeBtn) {
+                                        closeBtn.click();
+                                    } else if (modalInstance) {
+                                        modalInstance.hide();
+                                    }
+                                }
+                            } catch (modalErr) {
+                                console.error('Modal hide error:', modalErr);
+                            }
+                            
+                            if (window.showToast) window.showToast(data.message, 'success');
+                        } else {
+                            if (window.showToast) window.showToast(data.message || 'Gagal memproses data.', 'danger');
+                        }
+                        if (window.resetFormSubmitState) window.resetFormSubmitState(form);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        if (error.errors) {
+                            if (window.showToast) window.showToast(Object.values(error.errors).flat().join('\n'), 'danger');
+                        } else {
+                            if (window.showToast) window.showToast('Terjadi kesalahan koneksi.', 'danger');
+                        }
+                        if (window.resetFormSubmitState) window.resetFormSubmitState(form);
+                    });
+            });
         });
     </script>
 

@@ -141,16 +141,33 @@ class AdminController extends Controller
 
         $exam->save();
 
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Ujian berhasil diperbarui.',
+                'exam' => [
+                    'ujian_id' => $exam->ujian_id,
+                    'judul' => $exam->judul,
+                    'deskripsi' => \Illuminate\Support\Str::limit($exam->deskripsi, 50),
+                    'durasi' => $exam->durasi,
+                    'passing_grade' => $exam->passing_grade,
+                    'max_attempt' => $exam->max_attempt,
+                    'status' => $exam->status
+                ]
+            ]);
+        }
+
         return redirect()->route('admin.ujian.index')->with('success', 'Ujian berhasil diperbarui.');
     }
 
     /**
      * Hapus data Ujian secara permanen beserta file PDF soal yang terlampir.
      * 
+     * @param Request $request
      * @param int $id ID Ujian
-     * @return \Illuminate\Http\RedirectResponse
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
-    public function destroyExam($id)
+    public function destroyExam(Request $request, $id)
     {
         $exam = Ujian::findOrFail($id);
         // Delete associated soal PDFs from storage
@@ -160,6 +177,15 @@ class AdminController extends Controller
             }
         }
         $exam->delete();
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Ujian berhasil dihapus.',
+                'ujian_id' => $id
+            ]);
+        }
+
         return redirect()->back()->with('success', 'Ujian berhasil dihapus.');
     }
 
@@ -443,23 +469,45 @@ class AdminController extends Controller
             ->where('status', 'Accepted')
             ->update(['skor' => $request->bobot_nilai]);
 
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Soal berhasil diperbarui.',
+                'soal' => [
+                    'soal_id' => $soal->soal_id,
+                    'nama_soal' => $soal->nama_soal,
+                    'bobot_nilai' => $soal->bobot_nilai,
+                    'soal_pdf_url' => Storage::url($soal->soal_pdf)
+                ]
+            ]);
+        }
+
         return redirect()->route('admin.ujian.detail', $examId)->with('success', 'Soal berhasil diperbarui.');
     }
 
     /**
      * Hapus soal secara permanen, sekaligus menghapus file PDF fisiknya dari storage.
      * 
+     * @param Request $request
      * @param int $examId ID Ujian
      * @param int $soalId ID Soal
-     * @return \Illuminate\Http\RedirectResponse
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
-    public function destroySoal($examId, $soalId)
+    public function destroySoal(Request $request, $examId, $soalId)
     {
         $soal = Soal::findOrFail($soalId);
         if ($soal->soal_pdf) {
             Storage::disk('public')->delete($soal->soal_pdf);
         }
         $soal->delete();
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Soal berhasil dihapus.',
+                'soal_id' => $soalId
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Soal berhasil dihapus.');
     }
@@ -536,21 +584,42 @@ class AdminController extends Controller
             'expected_output' => $request->expected_output,
         ]);
 
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Test case berhasil diperbarui.',
+                'test_case' => [
+                    'test_case_id' => $tc->test_case_id,
+                    'input' => $tc->input,
+                    'expected_output' => $tc->expected_output
+                ]
+            ]);
+        }
+
         return redirect()->route('admin.ujian.soal.detail', [$examId, $soalId])->with('success', 'Test case berhasil diperbarui.');
     }
 
     /**
      * Hapus sebuah Test Case secara permanen.
      * 
+     * @param Request $request
      * @param int $examId ID Ujian
      * @param int $soalId ID Soal
      * @param int $tcId ID Test Case
-     * @return \Illuminate\Http\RedirectResponse
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
-    public function destroyTestCase($examId, $soalId, $tcId)
+    public function destroyTestCase(Request $request, $examId, $soalId, $tcId)
     {
         $tc = TestCase::findOrFail($tcId);
         $tc->delete();
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Test case berhasil dihapus.',
+                'test_case_id' => $tcId
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Test case berhasil dihapus.');
     }
@@ -654,24 +723,55 @@ class AdminController extends Controller
         $user->save();
 
         $tab = strtolower($request->role);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'User berhasil diperbarui.',
+                'user' => [
+                    'id' => $user->user_id,
+                    'name' => $user->name,
+                    'nim_username' => $user->nim_username,
+                    'role' => $user->role,
+                ],
+                'tab' => $tab
+            ]);
+        }
+
         return redirect()->route('admin.users', ['tab' => $tab])->with('success', 'User berhasil diperbarui.');
     }
 
     /**
      * Hapus akun User secara permanen (Admin tidak bisa menghapus akunnya sendiri).
      * 
+     * @param Request $request
      * @param int $id ID User
-     * @return \Illuminate\Http\RedirectResponse
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
-    public function destroyUser($id)
+    public function destroyUser(Request $request, $id)
     {
         if ($id == \Illuminate\Support\Facades\Auth::id()) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak dapat menghapus akun Anda sendiri.'
+                ], 400);
+            }
             return back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
         }
 
         $user = User::findOrFail($id);
         $tab = strtolower($user->role);
         $user->delete();
+        
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'User berhasil dihapus.',
+                'user_id' => $id,
+                'tab' => $tab
+            ]);
+        }
         
         return redirect()->route('admin.users', ['tab' => $tab])->with('success', 'User berhasil dihapus.');
     }

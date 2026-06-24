@@ -79,10 +79,13 @@
         </div>
 
         @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show rounded-4" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    if (window.showToast) {
+                        window.showToast("{{ session('success') }}", 'success');
+                    }
+                });
+            </script>
         @endif
 
         @if ($errors->any())
@@ -156,7 +159,7 @@
                                 </thead>
                                 <tbody id="adminTableBody">
                                     @forelse($admins as $u)
-                                        <tr class="admin-row" data-nim="{{ $u->nim_username }}"
+                                        <tr class="admin-row" id="user-row-{{ $u->user_id }}" data-nim="{{ $u->nim_username }}"
                                             data-nama="{{ $u->name }}">
                                             <td>{{ $u->nim_username }}</td>
                                             <td class="fw-semibold">{{ $u->name }}</td>
@@ -219,7 +222,7 @@
                                 </thead>
                                 <tbody id="pengawasTableBody">
                                     @forelse($pengawas as $u)
-                                        <tr class="pengawas-row" data-nim="{{ $u->nim_username }}"
+                                        <tr class="pengawas-row" id="user-row-{{ $u->user_id }}" data-nim="{{ $u->nim_username }}"
                                             data-nama="{{ $u->name }}">
                                             <td>{{ $u->nim_username }}</td>
                                             <td class="fw-semibold">{{ $u->name }}</td>
@@ -278,7 +281,7 @@
                                 </thead>
                                 <tbody id="mahasiswaTableBody">
                                     @forelse($mahasiswa as $u)
-                                        <tr class="mahasiswa-row" data-nim="{{ $u->nim_username }}"
+                                        <tr class="mahasiswa-row" id="user-row-{{ $u->user_id }}" data-nim="{{ $u->nim_username }}"
                                             data-nama="{{ $u->name }}">
                                             <td>{{ $u->nim_username }}</td>
                                             <td class="fw-semibold">{{ $u->name }}</td>
@@ -865,6 +868,97 @@
                     }
                     currentTabIndex = index;
                 });
+            });
+
+            // Handle AJAX update/delete user
+            document.addEventListener('submit', function(e) {
+                const form = e.target;
+                const action = form.getAttribute('action');
+                if (!action) return;
+
+                const isUserUpdate = action.includes('/admin/users/') && form.querySelector('input[name="_method"]')?.value === 'PUT';
+                const isUserDestroy = action.includes('/admin/users/') && form.querySelector('input[name="_method"]')?.value === 'DELETE';
+
+                if (isUserUpdate || isUserDestroy) {
+                    e.preventDefault();
+
+                    const url = action;
+                    const formData = new FormData(form);
+                    const modalEl = form.closest('.modal');
+                    let modalInstance = null;
+                    if (modalEl && typeof bootstrap !== 'undefined') {
+                        modalInstance = bootstrap.Modal.getInstance(modalEl);
+                    }
+
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                    }
+
+                    fetch(url, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(err => { throw err; });
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                try {
+                                    if (isUserDestroy) {
+                                        const row = document.getElementById('user-row-' + data.user_id);
+                                        if (row) {
+                                            row.remove();
+                                        }
+                                    } else if (isUserUpdate) {
+                                        const row = document.getElementById('user-row-' + data.user.id);
+                                        if (row && row.cells && row.cells.length >= 2) {
+                                            row.cells[0].textContent = data.user.nim_username;
+                                            row.cells[1].textContent = data.user.name;
+                                            row.setAttribute('data-nim', data.user.nim_username);
+                                            row.setAttribute('data-nama', data.user.name);
+                                        }
+                                    }
+                                } catch (domErr) {
+                                    console.error('DOM update error:', domErr);
+                                }
+
+                                try {
+                                    if (modalEl) {
+                                        const closeBtn = modalEl.querySelector('[data-bs-dismiss="modal"]');
+                                        if (closeBtn) {
+                                            closeBtn.click();
+                                        } else if (modalInstance) {
+                                            modalInstance.hide();
+                                        }
+                                    }
+                                } catch (modalErr) {
+                                    console.error('Modal hide error:', modalErr);
+                                }
+                                
+                                if (window.showToast) window.showToast(data.message, 'success');
+                            } else {
+                                if (window.showToast) window.showToast(data.message || 'Gagal memproses data.', 'danger');
+                            }
+                            if (window.resetFormSubmitState) window.resetFormSubmitState(form);
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            if (error.errors) {
+                                if (window.showToast) window.showToast(Object.values(error.errors).flat().join('\n'), 'danger');
+                            } else {
+                                if (window.showToast) window.showToast('Terjadi kesalahan koneksi.', 'danger');
+                            }
+                            if (window.resetFormSubmitState) window.resetFormSubmitState(form);
+                        });
+                }
             });
         });
     </script>

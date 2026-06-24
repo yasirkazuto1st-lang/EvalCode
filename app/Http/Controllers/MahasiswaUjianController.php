@@ -168,7 +168,14 @@ class MahasiswaUjianController extends Controller
 
         $maxAttempt = $exam->max_attempt;
 
-        return view('mahasiswa.workspace', compact('exam', 'soal', 'attemptsUsed', 'remainingSeconds', 'maxAttempt'));
+        // Check if user already has an Accepted submission
+        $hasAccepted = \Illuminate\Support\Facades\DB::table('submissions')
+            ->where('soal_id', $soalId)
+            ->where('user_id', \Illuminate\Support\Facades\Auth::id())
+            ->where('status', 'Accepted')
+            ->exists();
+
+        return view('mahasiswa.workspace', compact('exam', 'soal', 'attemptsUsed', 'remainingSeconds', 'maxAttempt', 'hasAccepted'));
     }
 
     /**
@@ -302,6 +309,18 @@ class MahasiswaUjianController extends Controller
         $exam->checkTimeout();
         if ($exam->status !== 'active') {
             return response()->json(['success' => false, 'message' => 'Ujian tidak aktif atau sudah ditutup karena waktu habis.']);
+        }
+
+        // 2b. PENGECEKAN JAWABAN SUDAH BENAR (ACCEPTED)
+        // Jika mahasiswa sudah memiliki submisi berstatus 'Accepted', maka tidak boleh submit lagi.
+        $hasAccepted = \Illuminate\Support\Facades\DB::table('submissions')
+            ->where('soal_id', $soalId)
+            ->where('user_id', \Illuminate\Support\Facades\Auth::id())
+            ->where('status', 'Accepted')
+            ->exists();
+
+        if ($hasAccepted) {
+            return response()->json(['success' => false, 'message' => 'Anda sudah menyelesaikan soal ini dengan status Accepted (Benar). Tidak perlu submit lagi.']);
         }
 
         // 3. PENGHITUNGAN JUMLAH PERCOBAAN (ATTEMPTS) MAHASISWA

@@ -21,10 +21,13 @@
     <div class="container-fluid py-4">
 
         @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show rounded-4" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    if (window.showToast) {
+                        window.showToast("{{ session('success') }}", 'success');
+                    }
+                });
+            </script>
         @endif
 
         @if ($errors->any())
@@ -68,7 +71,7 @@
                         </thead>
                         <tbody id="ujianTableBody">
                             @forelse($exams as $index => $exam)
-                                <tr class="ujian-row" data-judul="{{ $exam->judul }}">
+                                <tr class="ujian-row" id="exam-row-{{ $exam->ujian_id }}" data-judul="{{ $exam->judul }}">
                                     <td>{{ $index + 1 }}</td>
                                     <td>{{ $exam->judul }}</td>
                                     <td>{{ Str::limit($exam->deskripsi, 50) }}</td>
@@ -113,7 +116,7 @@
                                                     class="btn-close" data-bs-dismiss="modal"></button>
                                             </div>
                                             <form method="POST"
-                                                action="{{ route('admin.ujian.update', $exam->ujian_id) }}">
+                                                action="{{ route('admin.ujian.update', $exam->ujian_id) }}" class="update-exam-form">
                                                 @csrf @method('PUT')
                                                 <div class="modal-body">
                                                     <div class="mb-3"><label class="form-label">Judul</label><input
@@ -167,7 +170,7 @@
                                                 <h5 class="modal-title">Hapus Ujian?</h5>
                                             </div>
                                             <form method="POST"
-                                                action="{{ route('admin.ujian.destroy', $exam->ujian_id) }}">
+                                                action="{{ route('admin.ujian.destroy', $exam->ujian_id) }}" class="destroy-exam-form">
                                                 @csrf @method('DELETE')
                                                 <div class="modal-body">Hapus ujian <strong>{{ $exam->judul }}</strong>?
                                                     Semua soal dan test case akan ikut terhapus.</div>
@@ -340,6 +343,116 @@
             }
 
             updateTable();
+
+            // Handle AJAX update/delete exam
+            document.addEventListener('submit', function(e) {
+                const form = e.target.closest('.update-exam-form, .destroy-exam-form');
+                if (!form) return;
+
+                e.preventDefault();
+
+                const isUpdate = form.classList.contains('update-exam-form');
+                const isDestroy = form.classList.contains('destroy-exam-form');
+                const url = form.getAttribute('action');
+                const formData = new FormData(form);
+
+                const modalEl = form.closest('.modal');
+                let modalInstance = null;
+                if (modalEl && typeof bootstrap !== 'undefined') {
+                    modalInstance = bootstrap.Modal.getInstance(modalEl);
+                }
+
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                }
+
+                fetch(url, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => { throw err; });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            try {
+                                if (isDestroy) {
+                                    const row = document.getElementById('exam-row-' + data.ujian_id);
+                                    if (row) {
+                                        row.remove();
+                                        // Update local allRows array and refresh pagination
+                                        const idx = allRows.findIndex(r => r.id === 'exam-row-' + data.ujian_id);
+                                        if (idx !== -1) {
+                                            allRows.splice(idx, 1);
+                                        }
+                                        updateTable();
+                                    }
+                                } else if (isUpdate) {
+                                    const row = document.getElementById('exam-row-' + data.exam.ujian_id);
+                                    if (row && row.cells && row.cells.length >= 7) {
+                                        row.cells[1].textContent = data.exam.judul;
+                                        row.cells[2].textContent = data.exam.deskripsi;
+                                        row.cells[3].textContent = data.exam.durasi;
+                                        row.cells[4].textContent = data.exam.passing_grade;
+                                        row.cells[5].textContent = data.exam.max_attempt;
+                                        
+                                        // Update data attribute for search filter
+                                        row.setAttribute('data-judul', data.exam.judul);
+                                        
+                                        // Update status badge
+                                        const badgeCell = row.cells[6];
+                                        let statusHtml = '';
+                                        if (data.exam.status === 'active') {
+                                            statusHtml = '<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill"><i class="bi bi-play-circle-fill small me-1"></i>Berjalan</span>';
+                                        } else if (data.exam.status === 'finished') {
+                                            statusHtml = '<span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 rounded-pill"><i class="bi bi-check-circle-fill small me-1"></i>Selesai</span>';
+                                        } else {
+                                            statusHtml = '<span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill"><i class="bi bi-pause-circle-fill small me-1"></i>Belum Dimulai</span>';
+                                        }
+                                        badgeCell.innerHTML = statusHtml;
+                                    }
+                                }
+                            } catch (domErr) {
+                                console.error('DOM update error:', domErr);
+                            }
+
+                            try {
+                                if (modalEl) {
+                                    const closeBtn = modalEl.querySelector('[data-bs-dismiss="modal"]');
+                                    if (closeBtn) {
+                                        closeBtn.click();
+                                    } else if (modalInstance) {
+                                        modalInstance.hide();
+                                    }
+                                }
+                            } catch (modalErr) {
+                                console.error('Modal hide error:', modalErr);
+                            }
+                            
+                            if (window.showToast) window.showToast(data.message, 'success');
+                        } else {
+                            if (window.showToast) window.showToast(data.message || 'Gagal memproses data.', 'danger');
+                        }
+                        if (window.resetFormSubmitState) window.resetFormSubmitState(form);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        if (error.errors) {
+                            if (window.showToast) window.showToast(Object.values(error.errors).flat().join('\n'), 'danger');
+                        } else {
+                            if (window.showToast) window.showToast('Terjadi kesalahan koneksi.', 'danger');
+                        }
+                        if (window.resetFormSubmitState) window.resetFormSubmitState(form);
+                    });
+            });
         });
     </script>
 @endsection

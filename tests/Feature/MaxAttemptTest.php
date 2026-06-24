@@ -99,6 +99,36 @@ class MaxAttemptTest extends TestCase
         $this->assertStringContainsString('3', $response->json('message'));
     }
 
+    public function test_rejects_submission_when_already_has_accepted_submission()
+    {
+        $env = $this->createExamEnvironment(3);
+
+        // Sisipkan 1 submisi berstatus 'Accepted'
+        DB::table('submissions')->insert([
+            'user_id' => $env['student']->user_id,
+            'soal_id' => $env['soal']->soal_id,
+            'source_code' => 'print("correct code")',
+            'status' => 'Accepted',
+            'skor' => 100,
+            'is_reset' => false,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Coba submit kode baru → harus ditolak oleh validasi 'Accepted'
+        $response = $this->actingAs($env['student'])
+            ->postJson("/ujian/{$env['exam']->ujian_id}/soal/{$env['soal']->soal_id}/workspace/submit", [
+                'code' => 'print("another code")',
+                'language' => 'python',
+            ]);
+
+        $response->assertOk();
+        $response->assertJson([
+            'success' => false,
+            'message' => 'Anda sudah menyelesaikan soal ini dengan status Accepted (Benar). Tidak perlu submit lagi.'
+        ]);
+    }
+
     public function test_accepts_submission_when_max_attempt_is_5_and_only_3_used()
     {
         $env = $this->createExamEnvironment(5);

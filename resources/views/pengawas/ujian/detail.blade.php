@@ -387,8 +387,7 @@
                                                     type="button" data-bs-toggle="collapse"
                                                     data-bs-target="#collapseSubmissions{{ $p->user_id }}"
                                                     aria-expanded="false"
-                                                    aria-controls="collapseSubmissions{{ $p->user_id }}"
-                                                    onclick="this.querySelector('.bi-chevron-down').classList.toggle('rotate-180')">
+                                                    aria-controls="collapseSubmissions{{ $p->user_id }}">
                                                     Detail <i class="bi bi-chevron-down ms-1"
                                                         style="transition: transform 0.3s ease; display: inline-block;"></i>
                                                 </button>
@@ -477,7 +476,7 @@
                                                                 </thead>
                                                                 <tbody>
                                                                     @forelse($p->submissions as $s)
-                                                                        <tr class="submission-row"
+                                                                        <tr class="submission-row" id="sub-row-{{ $s->submission_id }}"
                                                                             data-soal="{{ $s->soal_id }}">
                                                                             <td class="text-nowrap">
                                                                                 {{ \Carbon\Carbon::parse($s->created_at)->format('d M Y, H:i') }}
@@ -562,21 +561,15 @@
                                                                                         title="Override Skor">
                                                                                         <i class="bi bi-pencil-square"></i>
                                                                                     </button>
-                                                                                    <form
-                                                                                        action="{{ route('pengawas.submission.destroy', $s->submission_id) }}"
-                                                                                        method="POST"
-                                                                                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus submisi ini?');"
-                                                                                        class="d-inline">
-                                                                                        @csrf
-                                                                                        @method('DELETE')
-                                                                                        <button type="submit"
-                                                                                            class="btn btn-sm btn-outline-danger btn-icon-only py-0 d-inline-flex align-items-center justify-content-center"
-                                                                                            style="width: 32px; height: 32px;"
-                                                                                            title="Hapus Submisi"
-                                                                                            data-icon-only>
-                                                                                            <i class="bi bi-trash"></i>
-                                                                                        </button>
-                                                                                    </form>
+                                                                                    <button type="button"
+                                                                                        class="btn btn-sm btn-outline-danger btn-icon-only py-0 d-inline-flex align-items-center justify-content-center"
+                                                                                        style="width: 32px; height: 32px;"
+                                                                                        data-bs-toggle="modal"
+                                                                                        data-bs-target="#deleteSubmissionModal{{ $s->submission_id }}"
+                                                                                        title="Hapus Submisi"
+                                                                                        data-icon-only>
+                                                                                        <i class="bi bi-trash"></i>
+                                                                                    </button>
                                                                                 </div>
                                                                             </td>
                                                                         </tr>
@@ -628,7 +621,8 @@
                                                                     </div>
                                                                     <form
                                                                         action="{{ route('pengawas.submission.override', $s->submission_id) }}"
-                                                                        method="POST">
+                                                                        method="POST"
+                                                                        class="override-score-form">
                                                                         @csrf
                                                                         <div class="modal-body">
                                                                             <p class="mb-2">Soal:
@@ -663,6 +657,39 @@
                                                                             <button type="submit"
                                                                                 class="btn btn-warning rounded-pill px-4 fw-bold">Simpan
                                                                                 Perubahan</button>
+                                                                        </div>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Delete Submission Modal -->
+                                                        <div class="modal fade" id="deleteSubmissionModal{{ $s->submission_id }}"
+                                                            tabindex="-1" aria-hidden="true">
+                                                            <div class="modal-dialog">
+                                                                <div class="modal-content rounded-4 border-0 shadow">
+                                                                    <div class="modal-header border-0 pb-0">
+                                                                        <h5 class="modal-title fw-bold"><i
+                                                                                class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Hapus Submisi?</h5>
+                                                                        <button type="button" class="btn-close"
+                                                                            data-bs-dismiss="modal"></button>
+                                                                    </div>
+                                                                    <form
+                                                                        action="{{ route('pengawas.submission.destroy', $s->submission_id) }}"
+                                                                        method="POST"
+                                                                        class="destroy-submission-form">
+                                                                        @csrf
+                                                                        @method('DELETE')
+                                                                        <div class="modal-body">
+                                                                            <p class="mb-2">Yakin ingin menghapus submisi dari <strong>{{ $p->name }}</strong> untuk soal <strong>{{ $s->nama_soal }}</strong>?</p>
+                                                                            <p class="text-muted small mb-0"><i class="bi bi-info-circle me-1"></i>Tindakan ini tidak dapat dibatalkan.</p>
+                                                                        </div>
+                                                                        <div class="modal-footer border-0 pt-0">
+                                                                            <button type="button"
+                                                                                class="btn btn-secondary rounded-pill px-4"
+                                                                                data-bs-dismiss="modal">Batal</button>
+                                                                            <button type="submit"
+                                                                                class="btn btn-danger rounded-pill px-4 fw-bold">Hapus</button>
                                                                         </div>
                                                                     </form>
                                                                 </div>
@@ -784,7 +811,7 @@
         (function() {
             const examId = {{ $exam->ujian_id }};
             const isActive = {{ $exam->status === 'active' ? 'true' : 'false' }};
-            const REFRESH_INTERVAL = 60; // seconds
+            const REFRESH_INTERVAL = 180; // seconds
 
             // Token toggle visibility state
             let tokenHidden = true;
@@ -1018,7 +1045,11 @@
                     return;
                 }
 
+                // Ambil halaman saat ini dari dataset jika ada, jika tidak default 1
                 let currentPage = 1;
+                if (table.dataset.currentPage) {
+                    currentPage = parseInt(table.dataset.currentPage) || 1;
+                }
 
                 if (totalRows <= rowsPerPage) {
                     rows.forEach(row => {
@@ -1030,10 +1061,16 @@
                             row.style.display = 'none';
                         }
                     });
+                    table.dataset.currentPage = 1;
                     return;
                 }
 
                 const totalPages = Math.ceil(totalRows / rowsPerPage);
+                // Pastikan currentPage tidak melampaui total halaman baru setelah penghapusan
+                if (currentPage > totalPages) {
+                    currentPage = Math.max(1, totalPages);
+                }
+                table.dataset.currentPage = currentPage;
 
                 const paginationContainer = document.createElement('div');
                 paginationContainer.className =
@@ -1078,6 +1115,7 @@
                         e.preventDefault();
                         if (currentPage > 1) {
                             currentPage--;
+                            table.dataset.currentPage = currentPage;
                             renderTable();
                         }
                     };
@@ -1095,6 +1133,7 @@
                         pageLi.onclick = (e) => {
                             e.preventDefault();
                             currentPage = i;
+                            table.dataset.currentPage = currentPage;
                             renderTable();
                         };
                         ul.appendChild(pageLi);
@@ -1108,6 +1147,7 @@
                         e.preventDefault();
                         if (currentPage < totalPages) {
                             currentPage++;
+                            table.dataset.currentPage = currentPage;
                             renderTable();
                         }
                     };
@@ -1121,7 +1161,12 @@
             }
 
             window.filterSubmissions = function(userId, soalId) {
-                window.paginateTable('table-sub-' + userId, 5, soalId);
+                const tableId = 'table-sub-' + userId;
+                const table = document.getElementById(tableId);
+                if (table) {
+                    table.dataset.currentPage = 1;
+                }
+                window.paginateTable(tableId, 5, soalId);
             }
 
             document.querySelectorAll('.submission-table').forEach(table => {
@@ -1305,6 +1350,44 @@
 
             initParticipantTablePagination();
 
+            // Handle single open collapse and chevron rotation dynamically
+            const participantTable = document.getElementById('participantTable');
+            if (participantTable) {
+                participantTable.addEventListener('show.bs.collapse', function(e) {
+                    const activeCollapse = e.target;
+                    
+                    // Hide all other collapses under the participantTable
+                    const allCollapses = participantTable.querySelectorAll('.collapse.show');
+                    allCollapses.forEach(collapseEl => {
+                        if (collapseEl !== activeCollapse) {
+                            const bsCollapse = bootstrap.Collapse.getInstance(collapseEl) || new bootstrap.Collapse(collapseEl, { toggle: false });
+                            bsCollapse.hide();
+                        }
+                    });
+
+                    // Rotate the chevron of the opened collapse
+                    const triggerBtn = document.querySelector(`[data-bs-target="#${activeCollapse.id}"]`);
+                    if (triggerBtn) {
+                        const icon = triggerBtn.querySelector('.bi-chevron-down');
+                        if (icon) {
+                            icon.classList.add('rotate-180');
+                        }
+                    }
+                });
+
+                participantTable.addEventListener('hide.bs.collapse', function(e) {
+                    const hiddenCollapse = e.target;
+                    // Reset the chevron rotation
+                    const triggerBtn = document.querySelector(`[data-bs-target="#${hiddenCollapse.id}"]`);
+                    if (triggerBtn) {
+                        const icon = triggerBtn.querySelector('.bi-chevron-down');
+                        if (icon) {
+                            icon.classList.remove('rotate-180');
+                        }
+                    }
+                });
+            }
+
             // Handle AJAX reset attempts
             document.addEventListener('submit', function(e) {
                 const form = e.target.closest('.reset-attempts-form');
@@ -1315,6 +1398,7 @@
                 const confirmText = form.getAttribute('data-confirm-text') ||
                     'Apakah Anda yakin ingin mereset kesempatan submit mahasiswa ini?';
                 if (!confirm(confirmText)) {
+                    if (window.resetFormSubmitState) window.resetFormSubmitState(form);
                     return;
                 }
 
@@ -1356,22 +1440,181 @@
                                 // Remove the form
                                 form.remove();
                             }
+                            if (window.showToast) window.showToast('Kesempatan submit berhasil direset.', 'success');
                         } else {
-                            alert('Gagal mereset kesempatan: ' + (data.message || 'Terjadi kesalahan'));
-                            if (submitBtn) {
-                                submitBtn.disabled = false;
-                                submitBtn.innerHTML =
-                                    '<i class="bi bi-arrow-counterclockwise"></i> Reset';
-                            }
+                            if (window.showToast) window.showToast('Gagal mereset kesempatan: ' + (data.message || 'Terjadi kesalahan'), 'danger');
+                            if (window.resetFormSubmitState) window.resetFormSubmitState(form);
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        alert('Terjadi kesalahan koneksi.');
-                        if (submitBtn) {
-                            submitBtn.disabled = false;
-                            submitBtn.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> Reset';
+                        if (window.showToast) window.showToast('Terjadi kesalahan koneksi.', 'danger');
+                        if (window.resetFormSubmitState) window.resetFormSubmitState(form);
+                    });
+            });
+
+            // Handle AJAX delete submission
+            document.addEventListener('submit', function(e) {
+                const form = e.target.closest('.destroy-submission-form');
+                if (!form) return;
+
+                e.preventDefault();
+
+                const url = form.getAttribute('action');
+                const csrfTokenInput = form.querySelector('input[name="_token"]');
+                const token = csrfTokenInput ? csrfTokenInput.value : '';
+
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                }
+
+                fetch(url, {
+                        method: 'POST',
+                        body: new FormData(form),
+                        headers: {
+                            'X-CSRF-TOKEN': token,
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
                         }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Server error');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            try {
+                                const row = document.getElementById('sub-row-' + data.submission_id);
+                                if (row) {
+                                    const table = row.closest('table');
+                                    const userId = table.id.replace('table-sub-', '');
+                                    row.remove();
+                                    
+                                    // Get current filter value from the select
+                                    const collapseDiv = document.getElementById('collapseSubmissions' + userId);
+                                    let filterVal = '';
+                                    if (collapseDiv) {
+                                        const select = collapseDiv.querySelector('select');
+                                        if (select) {
+                                            filterVal = select.value;
+                                        }
+                                    }
+                                    
+                                    // Re-run pagination
+                                    if (window.paginateTable) {
+                                        window.paginateTable(table.id, 5, filterVal);
+                                    }
+                                }
+                            } catch (domErr) {
+                                console.error('DOM remove error:', domErr);
+                            }
+
+                            try {
+                                const modalEl = form.closest('.modal');
+                                if (modalEl) {
+                                    const closeBtn = modalEl.querySelector('[data-bs-dismiss="modal"]');
+                                    if (closeBtn) {
+                                        closeBtn.click();
+                                    }
+                                }
+                            } catch (modalErr) {
+                                console.error('Modal hide error:', modalErr);
+                            }
+
+                            if (window.showToast) window.showToast(data.message, 'success');
+                        } else {
+                            if (window.showToast) window.showToast(data.message || 'Gagal menghapus submisi.', 'danger');
+                            if (window.resetFormSubmitState) window.resetFormSubmitState(form);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        if (window.showToast) window.showToast('Terjadi kesalahan koneksi.', 'danger');
+                        if (window.resetFormSubmitState) window.resetFormSubmitState(form);
+                    });
+            });
+
+            // Handle AJAX override score
+            document.addEventListener('submit', function(e) {
+                const form = e.target.closest('.override-score-form');
+                if (!form) return;
+
+                e.preventDefault();
+
+                const url = form.getAttribute('action');
+                const csrfTokenInput = form.querySelector('input[name="_token"]');
+                const token = csrfTokenInput ? csrfTokenInput.value : '';
+
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                }
+
+                const formData = new FormData(form);
+
+                fetch(url, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': token,
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => { throw err; });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            try {
+                                const subId = data.submission_id;
+                                const row = document.getElementById('sub-row-' + subId);
+                                if (row && row.cells && row.cells.length >= 6) {
+                                    const newSkor = formData.get('skor');
+                                    row.cells[3].textContent = newSkor;
+                                    
+                                    const note = formData.get('justification_note') || '';
+                                    const justificationCell = row.cells[5];
+                                    if (justificationCell) {
+                                        justificationCell.innerHTML = note ? `<span class="text-muted small" title="${note}">${note.substring(0, 30)}${note.length > 30 ? '...' : ''}</span>` : '<span class="text-muted small">-</span>';
+                                    }
+                                }
+                            } catch (domErr) {
+                                console.error('DOM update error:', domErr);
+                            }
+                            
+                            try {
+                                const modalEl = form.closest('.modal');
+                                if (modalEl) {
+                                    const closeBtn = modalEl.querySelector('[data-bs-dismiss="modal"]');
+                                    if (closeBtn) {
+                                        closeBtn.click();
+                                    }
+                                }
+                            } catch (modalErr) {
+                                console.error('Modal hide error:', modalErr);
+                            }
+                            
+                            if (window.showToast) window.showToast(data.message, 'success');
+                        } else {
+                            if (window.showToast) window.showToast(data.message || 'Gagal mengubah skor.', 'danger');
+                        }
+                        if (window.resetFormSubmitState) window.resetFormSubmitState(form);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        if (error.errors) {
+                            if (window.showToast) window.showToast(Object.values(error.errors).flat().join('\n'), 'danger');
+                        } else {
+                            if (window.showToast) window.showToast('Terjadi kesalahan koneksi.', 'danger');
+                        }
+                        if (window.resetFormSubmitState) window.resetFormSubmitState(form);
                     });
             });
         });

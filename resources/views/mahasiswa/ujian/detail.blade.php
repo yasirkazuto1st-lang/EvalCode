@@ -37,7 +37,9 @@
                     <!-- Box 2: Status Kelulusan -->
                     @php
                         $isPassed = $myTotalScore >= $exam->passing_grade;
-                        $statusBg = $isPassed ? 'bg-success bg-opacity-25 border-success' : 'bg-danger bg-opacity-25 border-danger';
+                        $statusBg = $isPassed
+                            ? 'bg-success bg-opacity-25 border-success'
+                            : 'bg-danger bg-opacity-25 border-danger';
                         $statusText = $isPassed ? 'LULUS' : 'TIDAK LULUS';
                         $statusIcon = $isPassed ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger';
                     @endphp
@@ -57,7 +59,8 @@
                         <span class="small opacity-75 d-block text-uppercase fw-semibold mb-1 text-white"
                             style="letter-spacing: 1px; font-size: 10px;">Sisa Waktu Ujian</span>
                         <h4 id="studentTimerDisplay" class="fw-bold mb-0 text-white"
-                            style="font-family: 'Courier New', monospace; letter-spacing: 1px; font-size: 1.5rem;">--:--:--</h4>
+                            style="font-family: 'Courier New', monospace; letter-spacing: 1px; font-size: 1.5rem;">--:--:--
+                        </h4>
                     </div>
                 </div>
             </div>
@@ -73,7 +76,8 @@
                     </div>
                     <div class="card-body p-3 mt-2 position-relative d-flex flex-column">
                         <!-- Scrollable Leaderboard List (Max 5 items view) -->
-                        <div id="leaderboardScrollContainer" class="leaderboard-scroll pe-2 mb-1" style="max-height: 340px; overflow-y: auto;">
+                        <div id="leaderboardScrollContainer" class="leaderboard-scroll pe-2 mb-1"
+                            style="max-height: 340px; overflow-y: auto;">
                             <ul class="list-group list-group-flush pb-2">
                                 @forelse($leaderboard as $idx => $lb)
                                     @php
@@ -90,7 +94,7 @@
                                             $badgeClass = 'bg-warning text-dark shadow-sm';
                                             $icon = '<i class="bi bi-trophy-fill me-1"></i>';
                                             $borderClass = 'border border-warning border-opacity-50';
-                                        } 
+                                        }
                                         // Juara 2: Perak (Silver)
                                         elseif ($idx == 1) {
                                             $bgClass = 'bg-secondary bg-opacity-10';
@@ -98,7 +102,7 @@
                                             $badgeClass = 'bg-secondary text-white shadow-sm';
                                             $icon = '<i class="bi bi-award-fill me-1"></i>';
                                             $borderClass = 'border border-secondary border-opacity-50';
-                                        } 
+                                        }
                                         // Juara 3: Perunggu (Bronze)
                                         elseif ($idx == 2) {
                                             $bgClass = 'bg-danger bg-opacity-10';
@@ -108,7 +112,7 @@
                                             $borderClass = 'border border-danger border-opacity-50';
                                         }
 
-                                        $isMe = ($lb->user_id == Auth::id());
+                                        $isMe = $lb->user_id == Auth::id();
                                         if ($isMe) {
                                             $borderClass = 'border border-2 border-primary';
                                             if ($idx > 2) {
@@ -118,17 +122,21 @@
                                             }
                                         }
                                     @endphp
-                                    <li @if($isMe) id="myLeaderboardListItem" @endif class="list-group-item d-flex justify-content-between align-items-center py-3 {{ $borderClass }} {{ $bgClass }} rounded mb-2 shadow-sm">
+                                    <li @if ($isMe) id="myLeaderboardListItem" @endif
+                                        class="list-group-item d-flex justify-content-between align-items-center py-3 {{ $borderClass }} {{ $bgClass }} rounded mb-2 shadow-sm">
                                         <div class="d-flex align-items-center me-3" style="min-width: 0;">
-                                            <span class="badge {{ $badgeClass }} rounded-pill me-2 px-2 py-1 fs-6 flex-shrink-0">
+                                            <span
+                                                class="badge {{ $badgeClass }} rounded-pill me-2 px-2 py-1 fs-6 flex-shrink-0">
                                                 {!! $icon !!}{{ $idx + 1 }}
                                             </span>
-                                            <span class="fw-semibold me-1 text-nowrap text-truncate">{{ $lb->name }}</span>
-                                            @if($isMe)
+                                            <span
+                                                class="fw-semibold me-1 text-nowrap text-truncate">{{ $lb->name }}</span>
+                                            @if ($isMe)
                                                 <span class="badge bg-primary ms-1 small flex-shrink-0">Anda</span>
                                             @endif
                                         </div>
-                                        <span class="fw-bold {{ $textClass }} flex-shrink-0">{{ $lb->total_skor }} Pts</span>
+                                        <span class="fw-bold {{ $textClass }} flex-shrink-0">{{ $lb->total_skor }}
+                                            Pts</span>
                                     </li>
                                 @empty
                                     <li class="list-group-item text-center text-muted py-4 border-0">
@@ -142,7 +150,7 @@
                         @php
                             $myRankIndex = null;
                             $myLeaderboardItem = null;
-                            foreach($leaderboard as $idx => $lb) {
+                            foreach ($leaderboard as $idx => $lb) {
                                 if ($lb->user_id == Auth::id()) {
                                     $myRankIndex = $idx;
                                     $myLeaderboardItem = $lb;
@@ -151,7 +159,7 @@
                             }
                         @endphp
 
-                        @if($myLeaderboardItem)
+                        @if ($myLeaderboardItem)
                             @php
                                 $myBgClass = 'bg-light';
                                 $myTextClass = 'text-secondary';
@@ -187,53 +195,64 @@
                                     $myBadgeClass = 'bg-primary text-white';
                                 }
                             @endphp
-                            <div id="floatingMyRankBar" class="position-absolute" style="left: 1rem; right: 1.5rem; bottom: 1rem; z-index: 10; transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; transform: translateY(15px); pointer-events: none;" title="Klik untuk melihat posisi Anda">
-                                <div class="list-group-item d-flex justify-content-between align-items-center py-3 px-3 {{ $myBorderClass }} {{ $myBgClass }} rounded mb-0 shadow-lg" style="cursor: pointer; backdrop-filter: blur(8px); background-color: rgba(255,255,255,0.92);">
+                            <div id="floatingMyRankBar" class="position-absolute"
+                                style="left: 1rem; right: 1.5rem; bottom: 1rem; z-index: 10; transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; transform: translateY(15px); pointer-events: none;"
+                                title="Klik untuk melihat posisi Anda">
+                                <div class="list-group-item d-flex justify-content-between align-items-center py-3 px-3 {{ $myBorderClass }} {{ $myBgClass }} rounded mb-0 shadow-lg"
+                                    style="cursor: pointer; backdrop-filter: blur(8px); background-color: rgba(255,255,255,0.92);">
                                     <div class="d-flex align-items-center me-3" style="min-width: 0;">
-                                        <span class="badge {{ $myBadgeClass }} rounded-pill me-2 px-2 py-1 fs-6 flex-shrink-0">
+                                        <span
+                                            class="badge {{ $myBadgeClass }} rounded-pill me-2 px-2 py-1 fs-6 flex-shrink-0">
                                             {!! $myIcon !!}{{ $myRankIndex + 1 }}
                                         </span>
-                                        <span class="fw-semibold me-1 text-nowrap text-truncate">{{ $myLeaderboardItem->name }}</span>
+                                        <span
+                                            class="fw-semibold me-1 text-nowrap text-truncate">{{ $myLeaderboardItem->name }}</span>
                                         <span class="badge bg-primary ms-1 small flex-shrink-0">Anda</span>
                                     </div>
-                                    <span class="fw-bold {{ $myTextClass }} flex-shrink-0">{{ $myLeaderboardItem->total_skor }} Pts</span>
+                                    <span
+                                        class="fw-bold {{ $myTextClass }} flex-shrink-0">{{ $myLeaderboardItem->total_skor }}
+                                        Pts</span>
                                 </div>
                             </div>
 
                             <script>
-                            document.addEventListener('DOMContentLoaded', function () {
-                                const listItem = document.getElementById('myLeaderboardListItem');
-                                const floatingBar = document.getElementById('floatingMyRankBar');
-                                const scrollContainer = document.getElementById('leaderboardScrollContainer');
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    const listItem = document.getElementById('myLeaderboardListItem');
+                                    const floatingBar = document.getElementById('floatingMyRankBar');
+                                    const scrollContainer = document.getElementById('leaderboardScrollContainer');
 
-                                if (listItem && floatingBar && scrollContainer) {
-                                    const checkVisibility = () => {
-                                        const containerRect = scrollContainer.getBoundingClientRect();
-                                        const itemRect = listItem.getBoundingClientRect();
+                                    if (listItem && floatingBar && scrollContainer) {
+                                        const checkVisibility = () => {
+                                            const containerRect = scrollContainer.getBoundingClientRect();
+                                            const itemRect = listItem.getBoundingClientRect();
 
-                                        // Toleransi 5px
-                                        const isVisible = (itemRect.top >= containerRect.top - 5) && (itemRect.bottom <= containerRect.bottom + 5);
+                                            // Toleransi 5px
+                                            const isVisible = (itemRect.top >= containerRect.top - 5) && (itemRect.bottom <=
+                                                containerRect.bottom + 5);
 
-                                        if (isVisible) {
-                                            floatingBar.style.opacity = '0';
-                                            floatingBar.style.transform = 'translateY(15px)';
-                                            floatingBar.style.pointerEvents = 'none';
-                                        } else {
-                                            floatingBar.style.opacity = '1';
-                                            floatingBar.style.transform = 'translateY(0)';
-                                            floatingBar.style.pointerEvents = 'auto';
-                                        }
-                                    };
+                                            if (isVisible) {
+                                                floatingBar.style.opacity = '0';
+                                                floatingBar.style.transform = 'translateY(15px)';
+                                                floatingBar.style.pointerEvents = 'none';
+                                            } else {
+                                                floatingBar.style.opacity = '1';
+                                                floatingBar.style.transform = 'translateY(0)';
+                                                floatingBar.style.pointerEvents = 'auto';
+                                            }
+                                        };
 
-                                    scrollContainer.addEventListener('scroll', checkVisibility);
-                                    window.addEventListener('resize', checkVisibility);
-                                    setTimeout(checkVisibility, 150);
+                                        scrollContainer.addEventListener('scroll', checkVisibility);
+                                        window.addEventListener('resize', checkVisibility);
+                                        setTimeout(checkVisibility, 150);
 
-                                    floatingBar.addEventListener('click', function() {
-                                        listItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                    });
-                                }
-                            });
+                                        floatingBar.addEventListener('click', function() {
+                                            listItem.scrollIntoView({
+                                                behavior: 'smooth',
+                                                block: 'center'
+                                            });
+                                        });
+                                    }
+                                });
                             </script>
                         @endif
                     </div>
@@ -243,9 +262,12 @@
             <!-- Kanan: Daftar Soal -->
             <div class="col-12 col-xl-8">
                 <div class="card border-0 shadow-sm rounded-4 h-100">
-                    <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+                    <div
+                        class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold mb-0"><i class="bi bi-list-task text-primary me-2"></i> Daftar Soal</h5>
-                        <button class="btn btn-sm btn-outline-warning rounded-pill px-3 d-xl-none fw-bold" type="button" data-bs-toggle="offcanvas" data-bs-target="#leaderboardOffcanvas" aria-controls="leaderboardOffcanvas">
+                        <button class="btn btn-sm btn-outline-warning rounded-pill px-3 d-xl-none fw-bold" type="button"
+                            data-bs-toggle="offcanvas" data-bs-target="#leaderboardOffcanvas"
+                            aria-controls="leaderboardOffcanvas">
                             <i class="bi bi-trophy-fill me-1 text-warning"></i> Leaderboard
                         </button>
                     </div>
@@ -267,7 +289,8 @@
                                             $cardClass = 'soal-card-re border-2';
                                         }
                                     @endphp
-                                    <div class="border rounded-4 p-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center shadow-sm hover-shadow transition-all {{ $cardClass }}">
+                                    <div
+                                        class="border rounded-4 p-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center shadow-sm hover-shadow transition-all {{ $cardClass }}">
                                         <div class="mb-3 mb-md-0">
                                             <h6 class="fw-bold mb-1 text-dark">{{ $index + 1 }}. {{ $soal->nama_soal }}
                                             </h6>
@@ -275,7 +298,8 @@
                                                 <span><i class="bi bi-star-fill text-warning me-1"></i>Bobot:
                                                     {{ $soal->bobot_nilai }}</span>
 
-                                                <span><i class="bi bi-send me-1"></i>Submit: {{ $soal->attempts_used }} / {{ $exam->max_attempt }}</span>
+                                                <span><i class="bi bi-send me-1"></i>Submit: {{ $soal->attempts_used }} /
+                                                    {{ $exam->max_attempt }}</span>
 
                                                 @php
                                                     $statusStyle = 'color: #6c757d;';
@@ -300,13 +324,21 @@
                                                 </span>
                                             </div>
                                         </div>
-                                        @if ($soal->attempts_used >= $exam->max_attempt)
-                                            <button class="btn btn-sm btn-secondary rounded-pill px-4 shadow-sm" disabled style="cursor: not-allowed;">
-                                                <i class="bi bi-x-circle me-1"></i> Batas Submit ({{ $exam->max_attempt }}/{{ $exam->max_attempt }})
+                                        @if ($soal->status_pengerjaan == 'Accepted')
+                                            <a href="{{ route('workspace', ['examId' => $exam->ujian_id, 'soalId' => $soal->soal_id]) }}"
+                                                class="btn btn-sm btn-outline-success rounded-pill px-4 shadow-sm">
+                                                <i class="bi bi-check-circle-fill me-1"></i> Selesai
+                                            </a>
+                                        @elseif ($soal->attempts_used >= $exam->max_attempt)
+                                            <button class="btn btn-sm btn-secondary rounded-pill px-4 shadow-sm" disabled
+                                                style="cursor: not-allowed;">
+                                                <i class="bi bi-x-circle me-1"></i> Batas Submit
+                                                ({{ $exam->max_attempt }}/{{ $exam->max_attempt }})
                                             </button>
                                         @else
                                             <a href="{{ route('workspace', ['examId' => $exam->ujian_id, 'soalId' => $soal->soal_id]) }}"
-                                                class="btn btn-sm btn-primary rounded-pill px-4 shadow-sm">Mulai Kerjakan</a>
+                                                class="btn btn-sm btn-primary rounded-pill px-4 shadow-sm">Mulai
+                                                Kerjakan</a>
                                         @endif
                                     </div>
                                 </div>
@@ -328,22 +360,27 @@
             background-color: rgba(25, 135, 84, 0.1);
             border-color: #198754 !important;
         }
+
         .soal-card-wrong {
             background-color: rgba(220, 53, 69, 0.1);
             border-color: #dc3545 !important;
         }
+
         .soal-card-tle {
             background-color: rgba(255, 193, 7, 0.1);
             border-color: #ffc107 !important;
         }
+
         .soal-card-ce {
             background-color: rgba(108, 117, 125, 0.1);
             border-color: #6c757d !important;
         }
+
         .soal-card-re {
             background-color: rgba(168, 85, 247, 0.08);
             border-color: rgba(168, 85, 247, 0.4) !important;
         }
+
         .soal-card-default {
             background-color: #ffffff;
             border-color: var(--bs-border-color-translucent) !important;
@@ -435,14 +472,17 @@
             }
 
             let connWarningDiv = null;
+
             function showConnectionWarning(show) {
                 if (show) {
                     if (!connWarningDiv) {
                         connWarningDiv = document.createElement('div');
                         connWarningDiv.id = 'connection-warning-alert';
-                        connWarningDiv.className = 'alert alert-warning position-fixed top-0 start-50 translate-middle-x mt-3 z-3 rounded-4 shadow-sm';
+                        connWarningDiv.className =
+                            'alert alert-warning position-fixed top-0 start-50 translate-middle-x mt-3 z-3 rounded-4 shadow-sm';
                         connWarningDiv.style.zIndex = '9999';
-                        connWarningDiv.innerHTML = '<i class="bi bi-wifi-off me-2"></i><strong>Koneksi Bermasalah.</strong> Menghubungkan kembali ke server...';
+                        connWarningDiv.innerHTML =
+                            '<i class="bi bi-wifi-off me-2"></i><strong>Koneksi Bermasalah.</strong> Menghubungkan kembali ke server...';
                         document.body.appendChild(connWarningDiv);
                     }
                 } else {
@@ -464,7 +504,8 @@
                 if (isPollingStatus) return;
                 isPollingStatus = true;
                 try {
-                    const response = await fetchWithRetry("{{ route('ujian.status', $exam->ujian_id) }}", {}, 2, 1000);
+                    const response = await fetchWithRetry(
+                        "{{ route('ujian.status', $exam->ujian_id) }}", {}, 2, 1000);
                     const data = await response.json();
                     showConnectionWarning(false); // Hide warning if request succeeds
                     if (data.status !== 'active') {
@@ -489,7 +530,8 @@
     </script>
 
     <!-- Offcanvas Leaderboard for Screen sizes < 1200px (Laptop S and down) -->
-    <div class="offcanvas offcanvas-start d-xl-none leaderboard-offcanvas-drawer" tabindex="-1" id="leaderboardOffcanvas" aria-labelledby="leaderboardOffcanvasLabel">
+    <div class="offcanvas offcanvas-start d-xl-none leaderboard-offcanvas-drawer" tabindex="-1"
+        id="leaderboardOffcanvas" aria-labelledby="leaderboardOffcanvasLabel">
         <div class="offcanvas-header border-bottom bg-white">
             <h5 class="offcanvas-title fw-bold" id="leaderboardOffcanvasLabel">
                 <i class="bi bi-trophy text-warning me-2"></i> Leaderboard
@@ -527,7 +569,7 @@
                                 $borderClass = 'border border-danger border-opacity-50';
                             }
 
-                            $isMe = ($lb->user_id == Auth::id());
+                            $isMe = $lb->user_id == Auth::id();
                             if ($isMe) {
                                 $borderClass = 'border border-2 border-primary';
                                 if ($idx > 2) {
@@ -537,13 +579,14 @@
                                 }
                             }
                         @endphp
-                        <li class="list-group-item d-flex justify-content-between align-items-center py-3 {{ $borderClass }} {{ $bgClass }} rounded mb-2 shadow-sm">
+                        <li
+                            class="list-group-item d-flex justify-content-between align-items-center py-3 {{ $borderClass }} {{ $bgClass }} rounded mb-2 shadow-sm">
                             <div class="d-flex align-items-center me-3" style="min-width: 0;">
                                 <span class="badge {{ $badgeClass }} rounded-pill me-2 px-2 py-1 fs-6 flex-shrink-0">
                                     {!! $icon !!}{{ $idx + 1 }}
                                 </span>
                                 <span class="fw-semibold me-1 text-nowrap text-truncate">{{ $lb->name }}</span>
-                                @if($isMe)
+                                @if ($isMe)
                                     <span class="badge bg-primary ms-1 small flex-shrink-0">Anda</span>
                                 @endif
                             </div>

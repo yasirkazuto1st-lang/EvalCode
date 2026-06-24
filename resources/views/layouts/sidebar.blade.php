@@ -207,6 +207,84 @@
                 font-size: 1rem;
             }
         }
+
+        /* Floating Toast Notification CSS */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1080;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .custom-toast {
+            min-width: 250px;
+            max-width: 380px;
+            background-color: var(--bs-body-bg, #fff);
+            border: 1px solid var(--bs-border-color, #dee2e6);
+            border-radius: 12px;
+            box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            pointer-events: auto;
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .custom-toast.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .custom-toast-success {
+            border-left: 4px solid #198754;
+        }
+
+        .custom-toast-danger {
+            border-left: 4px solid #dc3545;
+        }
+
+        .custom-toast-warning {
+            border-left: 4px solid #ffc107;
+        }
+
+        .custom-toast-info {
+            border-left: 4px solid #0dcaf0;
+        }
+
+        .custom-toast-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .custom-toast-content {
+            flex-grow: 1;
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        .custom-toast-close {
+            background: none;
+            border: none;
+            padding: 0;
+            font-size: 1.25rem;
+            line-height: 1;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+
+        .custom-toast-close:hover {
+            opacity: 0.8;
+        }
     </style>
 </head>
 
@@ -351,6 +429,57 @@
 
     <!-- Global Double-Submit Prevention -->
     <script>
+        window.showToast = function(message, type = 'success') {
+            let container = document.getElementById('global-toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'global-toast-container';
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = `custom-toast custom-toast-${type}`;
+
+            let iconClass = 'bi-check-circle-fill text-success';
+            if (type === 'danger') iconClass = 'bi-x-circle-fill text-danger';
+            else if (type === 'warning') iconClass = 'bi-exclamation-triangle-fill text-warning';
+            else if (type === 'info') iconClass = 'bi-info-circle-fill text-info';
+
+            toast.innerHTML = `
+                <i class="bi ${iconClass} custom-toast-icon"></i>
+                <div class="custom-toast-content text-body">${message}</div>
+                <button type="button" class="custom-toast-close text-body" onclick="this.parentElement.remove()">&times;</button>
+            `;
+
+            container.appendChild(toast);
+
+            // Trigger animation
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+
+            // Auto dismiss after 3.5 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3500);
+        };
+
+        window.resetFormSubmitState = function(form) {
+            if (!form) return;
+            form.classList.remove('is-submitting');
+            const submitButtons = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+            submitButtons.forEach(btn => {
+                btn.disabled = false;
+                if (btn.dataset.originalText) {
+                    btn.innerHTML = btn.dataset.originalText;
+                }
+            });
+        };
+
         document.addEventListener('submit', function(e) {
             const form = e.target;
 

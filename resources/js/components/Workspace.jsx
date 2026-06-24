@@ -188,9 +188,16 @@ const Workspace = ({ initialData }) => {
     const { exam, soal, soal_pdf_url } = initialData || {};
     
     const [language, setLanguage] = useState('python');
-    const [output, setOutput] = useState(null);
+    const [hasAccepted, setHasAccepted] = useState(initialData?.hasAccepted || false);
+    const [output, setOutput] = useState(
+        (initialData?.hasAccepted)
+            ? { status: 'Accepted', message: 'Anda telah menyelesaikan soal ini dengan benar. Pengiriman jawaban baru tidak diizinkan.' }
+            : null
+    );
     const [isRunning, setIsRunning] = useState(false);
-    const [examMode, setExamMode] = useState(false);
+    const [examMode, setExamMode] = useState(() => {
+        return localStorage.getItem('examMode') === 'true';
+    });
     
     const [remainingTime, setRemainingTime] = useState(initialData?.remainingSeconds || 0);
     const [attemptsUsed, setAttemptsUsed] = useState(initialData?.attemptsUsed || 0);
@@ -256,6 +263,26 @@ const Workspace = ({ initialData }) => {
         return () => clearInterval(timer);
     }, [remainingTime]);
 
+    // Sync navbar visibility based on examMode
+    useEffect(() => {
+        const nav = document.querySelector('.navbar');
+        if (nav) {
+            nav.style.display = examMode ? 'none' : 'flex';
+        }
+    }, [examMode]);
+
+    // Scroll console and expand panel on execution output change
+    useEffect(() => {
+        if (output) {
+            if (consoleScrollRef.current) {
+                consoleScrollRef.current.scrollTop = 0;
+            }
+            if (window.innerWidth >= 992) {
+                setViewerTopHeight(prev => prev > 50 ? 50 : prev);
+            }
+        }
+    }, [output]);
+
     // Polling for exam status and remaining time sync
     React.useEffect(() => {
         if (!exam || !exam.ujian_id) return;
@@ -289,6 +316,7 @@ const Workspace = ({ initialData }) => {
     const editorRef = useRef(null);
     const monacoRef = useRef(null);
     const splitContainerRef = useRef(null);
+    const consoleScrollRef = useRef(null);
 
     // State untuk ukuran panel (dalam persentase)
     const [editorWidth, setEditorWidth] = useState(50); // Lebar kolom kiri (20% - 80%)
@@ -435,6 +463,10 @@ const Workspace = ({ initialData }) => {
                     similarity: data.similarity
                 });
 
+                if (data.status === 'Accepted') {
+                    setHasAccepted(true);
+                }
+
                 if (data.attempts_used !== undefined) {
                     setAttemptsUsed(data.attempts_used);
                 }
@@ -465,14 +497,9 @@ const Workspace = ({ initialData }) => {
     };
 
     const toggleExamMode = () => {
-        setExamMode(!examMode);
-        if (!examMode) {
-            const nav = document.querySelector('.navbar');
-            if (nav) nav.style.display = 'none';
-        } else {
-            const nav = document.querySelector('.navbar');
-            if (nav) nav.style.display = 'flex';
-        }
+        const nextMode = !examMode;
+        setExamMode(nextMode);
+        localStorage.setItem('examMode', nextMode ? 'true' : 'false');
     };
 
     return (
@@ -596,9 +623,9 @@ const Workspace = ({ initialData }) => {
                                     <button 
                                         className="btn btn-sm btn-unsulbar fw-semibold w-100 text-truncate"
                                         onClick={handleRunCode}
-                                        disabled={isRunning || attemptsUsed >= maxAttempt}
+                                        disabled={isRunning || attemptsUsed >= maxAttempt || hasAccepted}
                                     >
-                                        {attemptsUsed >= maxAttempt ? `Batas (${maxAttempt}/${maxAttempt})` : (isRunning ? 'Running...' : 'Submit Code')}
+                                        {hasAccepted ? 'Sudah Benar' : (attemptsUsed >= maxAttempt ? `Batas (${maxAttempt}/${maxAttempt})` : (isRunning ? 'Running...' : 'Submit Code'))}
                                     </button>
                                 </div>
                             </div>
@@ -647,9 +674,9 @@ const Workspace = ({ initialData }) => {
                             <button 
                                 className="btn btn-sm btn-unsulbar px-4 fw-semibold"
                                 onClick={handleRunCode}
-                                disabled={isRunning || attemptsUsed >= maxAttempt}
+                                disabled={isRunning || attemptsUsed >= maxAttempt || hasAccepted}
                             >
-                                {attemptsUsed >= maxAttempt ? `Batas Tercapai (${maxAttempt}/${maxAttempt})` : (isRunning ? 'Running...' : 'Submit Code')}
+                                {hasAccepted ? 'Sudah Benar' : (attemptsUsed >= maxAttempt ? `Batas Tercapai (${maxAttempt}/${maxAttempt})` : (isRunning ? 'Running...' : 'Submit Code'))}
                             </button>
                         </div>
                     </div>
@@ -747,7 +774,7 @@ const Workspace = ({ initialData }) => {
                                 <span className="badge border border-opacity-25" style={{ color: '#a855f7', backgroundColor: 'rgba(168,85,247,0.15)', borderColor: 'rgba(168,85,247,0.3)' }}>Runtime Error (RTE)</span>
                             )}
                         </div>
-                        <div className="p-3 overflow-auto flex-grow-1 font-monospace small bg-dark text-light">
+                        <div ref={consoleScrollRef} className="p-3 overflow-auto flex-grow-1 font-monospace small bg-dark text-light">
                             {!output ? (
                                 <span className="text-secondary">Menunggu submission...</span>
                             ) : (
@@ -763,6 +790,12 @@ const Workspace = ({ initialData }) => {
                                             Status Akhir: {output.status}
                                         </strong>
                                     </div>
+                                    
+                                    {output.message && (
+                                        <div className="mt-3 mb-3">
+                                            <pre className={`p-3 border rounded text-light ${output.status === 'Accepted' ? 'bg-success bg-opacity-10 border-success border-opacity-25' : 'bg-secondary bg-opacity-10 border-secondary border-opacity-25'}`} style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{output.message}</pre>
+                                        </div>
+                                    )}
                                     
                                     {output.time && (
                                         <div className="text-secondary mb-3 pb-2 border-bottom border-secondary border-opacity-50">
@@ -937,6 +970,12 @@ const Workspace = ({ initialData }) => {
                                     </strong>
                                 </div>
                                 
+                                {output.message && (
+                                    <div className="mt-3 mb-3">
+                                        <pre className={`p-3 border rounded text-light ${output.status === 'Accepted' ? 'bg-success bg-opacity-10 border-success border-opacity-25' : 'bg-secondary bg-opacity-10 border-secondary border-opacity-25'}`} style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{output.message}</pre>
+                                    </div>
+                                )}
+
                                 {output.time && (
                                     <div className="text-secondary mb-3 pb-2 border-bottom border-secondary border-opacity-50">
                                         Waktu Eksekusi Total: {output.time} | Memori Maks: {output.memory}

@@ -166,18 +166,35 @@ class PengawasUjianController extends Controller
             'justification_note' => $request->justification_note,
         ]);
 
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Skor submisi berhasil di-override.',
+                'submission_id' => $submissionId
+            ]);
+        }
+
         return back()->with('success', 'Skor submisi berhasil di-override.');
     }
 
     /**
      * Hapus submisi peserta ujian.
      * 
+     * @param Request $request
      * @param int $submissionId ID Submisi
-     * @return \Illuminate\Http\RedirectResponse
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
-    public function destroySubmission($submissionId)
+    public function destroySubmission(Request $request, $submissionId)
     {
         \Illuminate\Support\Facades\DB::table('submissions')->where('submission_id', $submissionId)->delete();
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Submisi berhasil dihapus.',
+                'submission_id' => $submissionId
+            ]);
+        }
 
         return back()->with('success', 'Submisi berhasil dihapus.');
     }

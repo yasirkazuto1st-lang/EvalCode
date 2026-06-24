@@ -24,10 +24,13 @@
         </a>
 
         @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show rounded-4" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    if (window.showToast) {
+                        window.showToast("{{ session('success') }}", 'success');
+                    }
+                });
+            </script>
         @endif
 
         <div class="row">
@@ -62,28 +65,28 @@
                             <!-- Canvases generated dynamically -->
                         </div>
                     </div>
-
+ 
                     <script>
                     document.addEventListener('DOMContentLoaded', function() {
                         const url = '{{ asset('storage/' . $question->soal_pdf) }}';
                         let pdfDoc = null;
                         const scaleStep = 0.2;
                         let scale = 1.0;
-
+ 
                         const container = document.getElementById('pdf-scroll-container');
-
+ 
                         const renderAllPages = () => {
                             container.innerHTML = '';
-
+ 
                             for (let num = 1; num <= pdfDoc.numPages; num++) {
                                 const canvas = document.createElement('canvas');
                                 canvas.id = 'pdf-canvas-' + num;
                                 canvas.className = 'shadow-sm bg-white rounded mb-3 d-block mx-auto';
                                 canvas.style.height = 'auto';
                                 container.appendChild(canvas);
-
+ 
                                 const ctx = canvas.getContext('2d');
-
+ 
                                 pdfDoc.getPage(num).then(page => {
                                     const dpr = window.devicePixelRatio || 1;
                                     // Render at high resolution (min scale 1.5) to keep text sharp when zoomed out
@@ -92,25 +95,25 @@
                                     
                                     canvas.width = renderViewport.width * dpr;
                                     canvas.height = renderViewport.height * dpr;
-
+ 
                                     // Set responsive percentage width based on scale zoom factor
                                     canvas.style.width = (scale * 100) + '%';
                                     canvas.style.height = 'auto';
-
+ 
                                     ctx.scale(dpr, dpr);
-
+ 
                                     const renderCtx = {
                                         canvasContext: ctx,
                                         viewport: renderViewport
                                     };
-
+ 
                                     page.render(renderCtx);
                                 });
                             }
                             
                             document.getElementById('zoom-percent').textContent = Math.round(scale * 100) + '%';
                         };
-
+ 
                         pdfjsLib.getDocument(url).promise.then(pdfDoc_ => {
                             pdfDoc = pdfDoc_;
                             document.getElementById('page-count').textContent = pdfDoc.numPages;
@@ -119,12 +122,12 @@
                             console.error('PDF.js Error loading PDF:', err);
                             container.innerHTML = `<div class="alert alert-danger m-3"><i class="bi bi-exclamation-triangle-fill me-2"></i>Gagal memuat file PDF soal.</div>`;
                         });
-
+ 
                         document.getElementById('zoom-in').addEventListener('click', () => {
                             scale = Math.min(scale + scaleStep, 2.5);
                             renderAllPages();
                         });
-
+ 
                         document.getElementById('zoom-out').addEventListener('click', () => {
                             scale = Math.max(scale - scaleStep, 0.3);
                             renderAllPages();
@@ -138,7 +141,7 @@
                     </div>
                 @endif
             </div>
-
+ 
             <!-- Right column: Test Cases -->
             <div class="col-md-6">
                 <div class="card border-0 shadow-sm rounded-4 h-100">
@@ -163,7 +166,7 @@
                                 </thead>
                                 <tbody>
                                     @forelse($testCases as $index => $tc)
-                                        <tr>
+                                        <tr id="tc-row-{{ $tc->test_case_id }}">
                                             <td class="text-center align-top pt-3">{{ $index + 1 }}</td>
                                             <td>
                                                 <pre class="mb-0 p-2 bg-light rounded border">{{ $tc->input }}</pre>
@@ -180,7 +183,7 @@
                                                         class="bi bi-trash"></i></button>
                                             </td>
                                         </tr>
-
+ 
                                         @push('modals')
                                         <!-- Edit Test Case Modal -->
                                         <div class="modal fade" id="editTestCaseModal{{ $tc->test_case_id }}"
@@ -192,7 +195,7 @@
                                                             class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
                                                     <form method="POST"
-                                                        action="{{ route('admin.testcase.update', [$exam->ujian_id, $question->soal_id, $tc->test_case_id]) }}">
+                                                        action="{{ route('admin.testcase.update', [$exam->ujian_id, $question->soal_id, $tc->test_case_id]) }}" class="update-tc-form">
                                                         @csrf @method('PUT')
                                                         <div class="modal-body">
                                                             <div class="mb-3"><label class="form-label">Input</label>
@@ -212,7 +215,7 @@
                                                 </div>
                                             </div>
                                         </div>
-
+ 
                                         <!-- Delete Test Case Modal -->
                                         <div class="modal fade" id="deleteTestCaseModal{{ $tc->test_case_id }}"
                                             tabindex="-1" aria-hidden="true">
@@ -222,7 +225,7 @@
                                                         <h5 class="modal-title">Hapus Test Case?</h5>
                                                     </div>
                                                     <form method="POST"
-                                                        action="{{ route('admin.testcase.destroy', [$exam->ujian_id, $question->soal_id, $tc->test_case_id]) }}">
+                                                        action="{{ route('admin.testcase.destroy', [$exam->ujian_id, $question->soal_id, $tc->test_case_id]) }}" class="destroy-tc-form">
                                                         @csrf @method('DELETE')
                                                         <div class="modal-body">Hapus test case No {{ $index + 1 }}?
                                                         </div>
@@ -281,4 +284,100 @@
         </div>
     </div>
     @endpush
+@endsection
+
+@section('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Handle AJAX update/delete testcase
+            document.addEventListener('submit', function(e) {
+                const form = e.target.closest('.update-tc-form, .destroy-tc-form');
+                if (!form) return;
+
+                e.preventDefault();
+
+                const isUpdate = form.classList.contains('update-tc-form');
+                const isDestroy = form.classList.contains('destroy-tc-form');
+                const url = form.getAttribute('action');
+                const formData = new FormData(form);
+
+                const modalEl = form.closest('.modal');
+                let modalInstance = null;
+                if (modalEl && typeof bootstrap !== 'undefined') {
+                    modalInstance = bootstrap.Modal.getInstance(modalEl);
+                }
+
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                }
+
+                fetch(url, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => { throw err; });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            try {
+                                if (isDestroy) {
+                                    const row = document.getElementById('tc-row-' + data.test_case_id);
+                                    if (row) {
+                                        row.remove();
+                                    }
+                                } else if (isUpdate) {
+                                    const row = document.getElementById('tc-row-' + data.test_case.test_case_id);
+                                    if (row && row.cells && row.cells.length >= 3) {
+                                        // Update inputs in preview tags
+                                        const inputPre = row.cells[1].querySelector('pre');
+                                        if (inputPre) inputPre.textContent = data.test_case.input;
+                                        
+                                        const outputPre = row.cells[2].querySelector('pre');
+                                        if (outputPre) outputPre.textContent = data.test_case.expected_output;
+                                    }
+                                }
+                            } catch (domErr) {
+                                console.error('DOM update error:', domErr);
+                            }
+
+                            try {
+                                if (modalEl) {
+                                    const closeBtn = modalEl.querySelector('[data-bs-dismiss="modal"]');
+                                    if (closeBtn) {
+                                        closeBtn.click();
+                                    } else if (modalInstance) {
+                                        modalInstance.hide();
+                                    }
+                                }
+                            } catch (modalErr) {
+                                console.error('Modal hide error:', modalErr);
+                            }
+                            
+                            if (window.showToast) window.showToast(data.message, 'success');
+                        } else {
+                            if (window.showToast) window.showToast(data.message || 'Gagal memproses data.', 'danger');
+                        }
+                        if (window.resetFormSubmitState) window.resetFormSubmitState(form);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        if (error.errors) {
+                            if (window.showToast) window.showToast(Object.values(error.errors).flat().join('\n'), 'danger');
+                        } else {
+                            if (window.showToast) window.showToast('Terjadi kesalahan koneksi.', 'danger');
+                        }
+                        if (window.resetFormSubmitState) window.resetFormSubmitState(form);
+                    });
+            });
+        });
+    </script>
 @endsection
