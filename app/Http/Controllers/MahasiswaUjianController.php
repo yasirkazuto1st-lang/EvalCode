@@ -172,7 +172,7 @@ class MahasiswaUjianController extends Controller
         $hasAccepted = \Illuminate\Support\Facades\DB::table('submissions')
             ->where('soal_id', $soalId)
             ->where('user_id', \Illuminate\Support\Facades\Auth::id())
-            ->where('status', 'Accepted')
+            ->whereIn('status', ['Accepted', 'accepted'])
             ->exists();
 
         return view('mahasiswa.workspace', compact('exam', 'soal', 'attemptsUsed', 'remainingSeconds', 'maxAttempt', 'hasAccepted'));
@@ -316,7 +316,7 @@ class MahasiswaUjianController extends Controller
         $hasAccepted = \Illuminate\Support\Facades\DB::table('submissions')
             ->where('soal_id', $soalId)
             ->where('user_id', \Illuminate\Support\Facades\Auth::id())
-            ->where('status', 'Accepted')
+            ->whereIn('status', ['Accepted', 'accepted'])
             ->exists();
 
         if ($hasAccepted) {

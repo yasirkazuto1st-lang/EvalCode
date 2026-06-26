@@ -11,11 +11,15 @@ use App\Http\Controllers\PengawasUjianController;
 use Illuminate\Support\Facades\Artisan;
 
 Route::get('/deploy-clear-cache', function () {
+    Illuminate\Support\Facades\Artisan::call('optimize:clear');
     Illuminate\Support\Facades\Artisan::call('config:clear');
     Illuminate\Support\Facades\Artisan::call('route:clear');
     Illuminate\Support\Facades\Artisan::call('view:clear');
     Illuminate\Support\Facades\Artisan::call('cache:clear');
-    return 'Semua cache berhasil dihapus!';
+    if (function_exists('opcache_reset')) {
+        opcache_reset();
+    }
+    return 'Semua cache dan OPcache berhasil dihapus!';
 });
 
 
