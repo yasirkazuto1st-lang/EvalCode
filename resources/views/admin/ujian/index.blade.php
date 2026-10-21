@@ -65,6 +65,7 @@
                                 <th>Durasi (menit)</th>
                                 <th>Passing Grade (Pts)</th>
                                 <th>Maks. Submit</th>
+                                <th>Interval Token</th>
                                 <th>Status</th>
                                 <th>Aksi</th>
                             </tr>
@@ -78,6 +79,7 @@
                                     <td>{{ $exam->durasi }}</td>
                                     <td>{{ $exam->passing_grade }}</td>
                                     <td>{{ $exam->max_attempt }}</td>
+                                    <td>{{ $exam->token_interval ?? 3 }} mnt</td>
                                     <td>
                                         @if ($exam->status === 'active')
                                             <span
@@ -125,17 +127,44 @@
                                                     <div class="mb-3"><label class="form-label">Deskripsi</label>
                                                         <textarea name="deskripsi" class="form-control" rows="3">{{ $exam->deskripsi }}</textarea>
                                                     </div>
-                                                    <div class="mb-3"><label class="form-label">Durasi
-                                                            (menit)
-                                                        </label><input type="number" name="durasi" class="form-control"
+                                                    <div class="mb-3"><label class="form-label">Durasi (menit)</label><input type="number" name="durasi" class="form-control"
                                                             value="{{ $exam->durasi }}" required min="1"></div>
-                                                    <div class="mb-3"><label class="form-label">Passing Grade
-                                                            (Pts)</label><input type="number" name="passing_grade"
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Masa Berlaku / Refresh Token (menit)</label>
+                                                        <input type="number" name="token_interval" class="form-control"
+                                                            value="{{ $exam->token_interval ?? 3 }}" required min="1">
+                                                        <div class="form-text small">Interval pergantian kode token secara otomatis selama ujian berlangsung.</div>
+                                                    </div>
+                                                    <div class="mb-3"><label class="form-label">Passing Grade (Pts)</label><input type="number" name="passing_grade"
                                                             class="form-control" value="{{ $exam->passing_grade }}"
                                                             required min="0"></div>
                                                     <div class="mb-3"><label class="form-label">Maks. Submit per Soal</label><input type="number" name="max_attempt"
                                                             class="form-control" value="{{ $exam->max_attempt }}"
                                                             required min="1"></div>
+                                                    @php
+                                                        $allowedLangs = $exam->getAllowedLanguages();
+                                                    @endphp
+                                                    <div class="mb-3">
+                                                        <label class="form-label d-block fw-semibold">Bahasa Pemrograman Diizinkan</label>
+                                                        <div class="d-flex flex-wrap gap-3 pt-1">
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" name="bahasa_pemrograman[]" value="python" id="editLangPython{{ $exam->ujian_id }}" {{ in_array('python', $allowedLangs) ? 'checked' : '' }}>
+                                                                <label class="form-check-label" for="editLangPython{{ $exam->ujian_id }}">Python</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" name="bahasa_pemrograman[]" value="cpp" id="editLangCpp{{ $exam->ujian_id }}" {{ in_array('cpp', $allowedLangs) ? 'checked' : '' }}>
+                                                                <label class="form-check-label" for="editLangCpp{{ $exam->ujian_id }}">C++</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" name="bahasa_pemrograman[]" value="java" id="editLangJava{{ $exam->ujian_id }}" {{ in_array('java', $allowedLangs) ? 'checked' : '' }}>
+                                                                <label class="form-check-label" for="editLangJava{{ $exam->ujian_id }}">Java</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" name="bahasa_pemrograman[]" value="dart" id="editLangDart{{ $exam->ujian_id }}" {{ in_array('dart', $allowedLangs) ? 'checked' : '' }}>
+                                                                <label class="form-check-label" for="editLangDart{{ $exam->ujian_id }}">Dart</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                     <div class="mb-3">
                                                         <label class="form-label">Status</label>
                                                         <select name="status" class="form-select">
@@ -183,10 +212,10 @@
                                         </div>
                                     </div>
                                 </div>
-                               @endpush
+                                @endpush
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center py-5 text-muted">
+                                    <td colspan="9" class="text-center py-5 text-muted">
                                         <i class="bi bi-inbox fs-2 d-block mb-2"></i>
                                         Belum ada ujian yang dibuat.
                                     </td>
@@ -219,10 +248,36 @@
                         </div>
                         <div class="mb-3"><label class="form-label">Durasi (menit)</label><input type="number"
                                 name="durasi" class="form-control" placeholder="60" required min="1"></div>
+                        <div class="mb-3">
+                            <label class="form-label">Masa Berlaku / Refresh Token (menit)</label>
+                            <input type="number" name="token_interval" class="form-control" placeholder="3" required min="1" value="3">
+                            <div class="form-text small">Interval pergantian kode token secara otomatis selama ujian berlangsung.</div>
+                        </div>
                         <div class="mb-3"><label class="form-label">Passing Grade (Pts)</label><input type="number"
                                 name="passing_grade" class="form-control" placeholder="70" required min="0"></div>
                         <div class="mb-3"><label class="form-label">Maks. Submit per Soal</label><input type="number"
                                 name="max_attempt" class="form-control" placeholder="3" required min="1" value="3"></div>
+                        <div class="mb-3">
+                            <label class="form-label d-block fw-semibold">Bahasa Pemrograman Diizinkan</label>
+                            <div class="d-flex flex-wrap gap-3 pt-1">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="bahasa_pemrograman[]" value="python" id="addLangPython" checked>
+                                    <label class="form-check-label" for="addLangPython">Python</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="bahasa_pemrograman[]" value="cpp" id="addLangCpp" checked>
+                                    <label class="form-check-label" for="addLangCpp">C++</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="bahasa_pemrograman[]" value="java" id="addLangJava" checked>
+                                    <label class="form-check-label" for="addLangJava">Java</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="bahasa_pemrograman[]" value="dart" id="addLangDart" checked>
+                                    <label class="form-check-label" for="addLangDart">Dart</label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
@@ -397,18 +452,19 @@
                                     }
                                 } else if (isUpdate) {
                                     const row = document.getElementById('exam-row-' + data.exam.ujian_id);
-                                    if (row && row.cells && row.cells.length >= 7) {
+                                    if (row && row.cells && row.cells.length >= 8) {
                                         row.cells[1].textContent = data.exam.judul;
                                         row.cells[2].textContent = data.exam.deskripsi;
                                         row.cells[3].textContent = data.exam.durasi;
                                         row.cells[4].textContent = data.exam.passing_grade;
                                         row.cells[5].textContent = data.exam.max_attempt;
+                                        row.cells[6].textContent = (data.exam.token_interval || 3) + ' mnt';
                                         
                                         // Update data attribute for search filter
                                         row.setAttribute('data-judul', data.exam.judul);
                                         
                                         // Update status badge
-                                        const badgeCell = row.cells[6];
+                                        const badgeCell = row.cells[7];
                                         let statusHtml = '';
                                         if (data.exam.status === 'active') {
                                             statusHtml = '<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill"><i class="bi bi-play-circle-fill small me-1"></i>Berjalan</span>';

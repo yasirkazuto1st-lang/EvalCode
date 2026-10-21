@@ -37,8 +37,8 @@ Dokumen ini berfungsi sebagai panduan referensi sentral untuk memudahkan para _d
 
 1. Pengawas masuk ke menu **Monitoring Ujian**.
 2. Pengawas memilih ujian tertentu dan dapat mengubah status: **Start** (mulai), **Pause** (jeda), **Finish** (selesai).
-3. Ketika status ujian adalah _Active_, sistem akan **menerbitkan Token Ujian (6 karakter acak)** yang diperbarui secara _real-time_ (AJAX polling setiap 60 detik) dan menampilkan hitung mundur waktu ujian di samping kiri token secara horizontal.
-4. Pengawas dapat melihat nilai peserta secara real-time.
+3. Ketika status ujian adalah _Active_, sistem akan **menerbitkan Token Ujian (6 karakter acak)** yang diperbarui secara _real-time_ sesuai konfigurasi interval waktu ujian (`token_interval`, default: 3 menit / disetel bebas oleh Admin) dan menampilkan hitung mundur waktu ujian di samping kiri token secara horizontal.
+4. Pengawas dapat melihat nilai peserta secara real-time yang diurutkan berdasarkan total skor dan durasi pengerjaan resmi (tie-breaker).
 5. Pengawas dapat memantau **Status Kesempatan per Soal** (menampilkan badge jumlah percobaan `X / 3` per soal untuk tiap mahasiswa) dan melakukan **Reset Kesempatan** jika diperlukan untuk memberikan kesempatan mencoba lagi.
 6. Pengawas dapat melakukan **Override Skor** (memberikan nilai manual/kompensasi beserta catatan).
 7. Pengawas dapat melakukan **Penghapusan Submisi** tertentu secara permanen dari database. Tindakan ini akan secara otomatis memperbarui nilai total peserta, statistik soal, dan leaderboard ujian secara real-time.
@@ -48,7 +48,7 @@ Dokumen ini berfungsi sebagai panduan referensi sentral untuk memudahkan para _d
 1. Admin mengelola (CRUD) master **Ujian**. Jika status ujian diubah menjadi 'active' (berjalan) melalui panel edit Admin, sistem secara otomatis akan menginisialisasi parameter hitung mundur (countdown) dari durasi penuh dan menerbitkan token aktif baru.
 2. Di dalam setiap Ujian, Admin mengelola (CRUD) **Soal** (berupa lampiran file PDF dan _bobot nilai_).
 3. Di dalam setiap Soal, Admin mengelola (CRUD) **Test Case** (berupa _Input_ dan _Expected Output_).
-4. Admin dapat mengunduh **Laporan Excel** (_stacked layout_: Tabel Peserta + Tabel Statistik Soal). Submisi yang di-reset oleh pengawas tetap dihitung dalam leaderboard, statistik, dan ekspor excel (fitur reset hanya mengembalikan kuota percobaan agar mahasiswa mendapat kesempatan submit baru).
+4. Admin dapat mengunduh **Laporan Excel** (_stacked layout_: Tabel Peserta + Tabel Statistik Soal). Tabel peserta mencakup kolom waktu penyelesaian resmi peserta untuk mempermudah penentuan juara saat terjadi poin kembar. Submisi yang di-reset oleh pengawas tetap dihitung dalam leaderboard, statistik, dan ekspor excel.
 5. Admin dapat mengelola akun **User**.
 
 ## 4. Database Schema Overview (Skema Database)
@@ -56,7 +56,7 @@ Dokumen ini berfungsi sebagai panduan referensi sentral untuk memudahkan para _d
 Sistem menggunakan tipe penilaian berbasis **integer murni**.
 
 - `users`: Tabel akun (`user_id`, `name`, `nim_username`, `role`, `password`, `last_session_id`).
-- `ujians`: Tabel ujian (`ujian_id`, `judul`, `durasi`, `status`, `passing_grade` (integer), `max_attempt` (integer, default 3, batas maksimal submit per soal), `started_at` (timestamp, waktu mulai ujian aktif), `sisa_waktu` (integer, sisa waktu dalam detik)).
+- `ujians`: Tabel ujian (`ujian_id`, `judul`, `durasi`, `status`, `passing_grade` (integer), `max_attempt` (integer, default 3, batas maksimal submit per soal), `token_interval` (integer, default 3, interval pergantian token dalam menit), `bahasa_pemrograman` (json/array, pilihan bahasa yang diizinkan: python, cpp, java, dart), `started_at` (timestamp, waktu mulai ujian aktif), `sisa_waktu` (integer, sisa waktu dalam detik)).
 - `soals`: Tabel soal (`soal_id`, `ujian_id`, `nama_soal`, `soal_pdf`, `bobot_nilai` (integer)).
 - `test_cases`: Tabel skenario tes (`test_case_id`, `soal_id`, `input`, `expected_output`).
 - `tokens`: Tabel token _real-time_ (`token_id`, `ujian_id`, `kode_token`, `status_aktif`).
@@ -99,6 +99,17 @@ Sistem menggunakan tipe penilaian berbasis **integer murni**.
 - **Aksi Submisi Pengawas & Penghapusan Permanen**:
     - Pada tabel "Riwayat Submission" milik Pengawas, tombol aksi (**Lihat Kode**, **Override Skor**, dan **Hapus Submisi**) ditampilkan sebagai tombol ikon-saja minimalis ($32\times32$ px) dengan tooltip petunjuk guna menjaga kerapihan visual tabel.
     - Fitur **Hapus Submisi** memungkinkan pengawas menghapus rekaman jawaban tertentu secara permanen dari database. Ketika tombol hapus diklik, spinner pemrosesan kecil akan muncul di dalam tombol tanpa teks tambahan untuk mencegah pergeseran tata letak kolom tabel. Setelah terhapus, nilai total mahasiswa dan leaderboard akan disinkronisasikan ulang secara otomatis.
+- **Pengaturan Interval Token Ujian Dinamis (`token_interval`)**:
+    - Admin dapat mengatur frekuensi perputaran kode token (dalam menit, misalnya tiap 1, 3, 5 menit) saat membuat atau memperbarui ujian.
+    - Nilai default adalah 3 menit. Tampilan countdown pengawas dan rotasi otomatis token menyesuaikan dengan durasi `token_interval * 60` detik.
+- **Pemilihan Bahasa Pemrograman Per Ujian (`bahasa_pemrograman`)**:
+    - Admin dapat memilih kombinasi bahasa pemrograman yang diizinkan (Python, C++, Java, Dart) melalui checkbox pada formulir ujian.
+    - Sistem menerapkan validasi ganda: di sisi frontend Workspace React hanya menampilkan bahasa yang diizinkan dan otomatis memilih bahasa pertama yang tersedia, sedangkan di sisi backend (`MahasiswaUjianController@submitCode`) menolak kiriman submisi bila bahasa tidak tercantum dalam daftar izin ujian.
+- **Total Waktu Pengerjaan Resmi & Sistem Tie-Breaker**:
+    - Standar kompetisi: peringkat peserta dihitung berdasarkan `total_skor DESC`, lalu menggunakan **waktu pengerjaan tersingkat** (`total_waktu_detik ASC`) sebagai pemecah seri (_tie-breaker_), diikuti jumlah soal accepted (`accepted_count DESC`), dan nama mahasiswa secara alfabetis.
+    - Waktu pengerjaan resmi dihitung dari saat ujian resmi dimulai (`started_at`, atau submisi pertama jika belum disetel) hingga waktu submisi ber-skor terakhir (`last_scored_at` / `last_submission_at`).
+    - Peserta dengan skor 0 atau belum memiliki submisi ber-skor ditampilkan dengan tanda `-` dan ditempatkan di posisi paling belakang untuk skor tersebut.
+    - Total waktu terformat (`HH:MM:SS` atau `MM:SS`) ditampilkan di rekap peserta Admin, monitoring Pengawas, leaderboard Mahasiswa, dan laporan ekspor Excel.
 
 ## 7. Panduan Warna dan Label (UI Indicators)
 
@@ -165,6 +176,36 @@ Untuk mencegah penyalahgunaan kuota API dan menjaga keamanan kredensial, kunci A
 - **Wajib Konfigurasi `.env`**: Setiap _developer_ atau instansi yang melakukan _clone_ repositori wajib mendaftar di [RapidAPI Judge0 CE](https://rapidapi.com/judge0-official/api/judge0-ce) dan memasukkan kunci API mereka ke variabel `RAPIDAPI_JUDGE0_KEY` di dalam file `.env`.
 - **Penanganan Error**: Jika variabel `RAPIDAPI_JUDGE0_KEY` kosong saat mahasiswa melakukan _submit_ kode, sistem secara otomatis membatalkan eksekusi dan mengembalikan pesan error JSON yang informatif agar mahasiswa/pengawas segera melengkapi konfigurasi di `.env`.
 
+## 9. Fitur Kustomisasi Ujian & Tie-Breaker Ranking
+
+Sistem EvalCode mengimplementasikan tiga fitur baru untuk fleksibilitas pengaturan ujian dan penentuan pemenang kompetisi yang adil:
+
+1. **Interval Waktu Token Dinamis (`token_interval`)**:
+   - Admin dapat menentukan frekuensi perputaran/regenerasi token ujian (dalam satuan menit) saat membuat atau mengedit ujian.
+   - Nilai default adalah 3 menit (dapat diatur dari 1 sampai 60 menit).
+   - Pengawas dan background service mengikuti interval ini untuk memperbarui token aktif secara otomatis.
+
+2. **Pembatasan Bahasa Pemrograman per Ujian (`allowed_languages`)**:
+   - Admin dapat memilih bahasa pemrograman mana saja yang diizinkan untuk setiap ujian tertentu melalui checkbox (Python, C++, Java, Dart).
+   - Nilai disimpan dalam kolom JSON `allowed_languages` pada tabel `ujians`.
+   - Di Workspace mahasiswa (React Monaco Editor), dropdown bahasa hanya menampilkan bahasa yang diizinkan oleh ujian tersebut.
+   - Backend (`MahasiswaUjianController@submit`) melakukan validasi ketat sehingga submisi dengan bahasa di luar daftar yang diizinkan akan ditolak dengan pesan error yang jelas.
+
+3. **Total Waktu Pengerjaan & Tie-Breaker Ranking**:
+   - Untuk menentukan peringkat juara saat terdapat peserta dengan total skor yang sama, sistem menghitung durasi pengerjaan resmi peserta (`total_waktu_detik`).
+   - Rumus: Diambil dari waktu submisi benar pertama pada soal terakhir yang diselesaikan (`last_correct_at` = `MAX(first_correct_at)` tiap soal), dihitung terhadap waktu mulai sesi ujian yang relevan (`started_at` jika submisi terjadi pada sesi berjalan, atau `first_submission_at` jika berasal dari sesi pengerjaan mandiri/lampau).
+   - Pengaman Batas Maksimal & Multi-Sesi: Total waktu pengerjaan otomatis dibatasi (*capped*) maksimal sebesar durasi ujian (`durasi * 60` detik), sehingga data pengujian lama atau jeda antar sesi tidak akan menyebabkan bug lonjakan waktu hingga ratusan jam.
+   - Peserta diurutkan dengan aturan:
+     1. Total Skor tertinggi (`total_skor DESC`).
+     2. Jika skor sama, peserta yang menyelesaikan lebih cepat diprioritaskan (`total_waktu_detik ASC`).
+     3. Jika waktu pengerjaan juga sama, diurutkan berdasarkan nama mahasiswa (`name ASC`).
+   - Kolom "Waktu Pengerjaan" ditampilkan secara terformat (`MMm SSs` atau `HHj MMm SSs`) pada:
+     - Panel Rekapitulasi Detail Ujian Admin (`admin.ujian.detail`).
+     - Panel Monitoring Pengawas (`pengawas.ujian.detail`).
+     - Papan Peringkat / Leaderboard Mahasiswa (`mahasiswa.ujian.detail`).
+     - Ekspor Laporan Excel XLSX (`UjianExport`).
+
 ---
 
-_Dokumen ini diperbarui secara otomatis pada: 2026-05-22. Harap perbarui dokumen ini apabila ada perubahan arsitektur mayor pada masa mendatang._
+_Dokumen ini diperbarui secara otomatis pada: 2026-10-21. Harap perbarui dokumen ini apabila ada perubahan arsitektur mayor pada masa mendatang._
+

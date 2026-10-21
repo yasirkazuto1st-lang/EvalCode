@@ -184,10 +184,37 @@ const fetchWithRetry = async (url, options = {}, retries = 3, delay = 1000) => {
     }
 };
 
+const ALL_LANGUAGES = [
+    { id: 'python', name: 'Python' },
+    { id: 'cpp', name: 'C++' },
+    { id: 'java', name: 'Java' },
+    { id: 'dart', name: 'Dart' }
+];
+
+const BOILERPLATE = {
+    python: '# Tulis kode Python Anda di sini\n',
+    cpp: '#include <iostream>\nusing namespace std;\n\nint main() {\n    // Tulis kode C++ Anda di sini\n    return 0;\n}\n',
+    java: 'public class Main {\n    public static void main(String[] args) {\n        // Tulis kode Java Anda di sini\n    }\n}\n',
+    dart: 'void main() {\n  // Tulis kode Dart Anda di sini\n}\n'
+};
+
 const Workspace = ({ initialData }) => {
     const { exam, soal, soal_pdf_url } = initialData || {};
-    
-    const [language, setLanguage] = useState('python');
+
+    const rawAllowed = exam?.bahasa_pemrograman;
+    const allowedList = Array.isArray(rawAllowed)
+        ? rawAllowed
+        : (typeof rawAllowed === 'string' ? JSON.parse(rawAllowed || '[]') : ['python', 'cpp', 'java', 'dart']);
+
+    const languages = ALL_LANGUAGES.filter(lang =>
+        !allowedList || allowedList.length === 0 || allowedList.includes(lang.id)
+    );
+
+    const defaultLang = languages.some(l => l.id === 'python')
+        ? 'python'
+        : (languages[0]?.id || 'python');
+
+    const [language, setLanguage] = useState(defaultLang);
     const [hasAccepted, setHasAccepted] = useState(initialData?.hasAccepted || false);
     const [output, setOutput] = useState(
         (initialData?.hasAccepted)
@@ -212,14 +239,9 @@ const Workspace = ({ initialData }) => {
     const currentSoalTitle = soal ? `${soal.nama_soal}` : 'Soal Tidak Ditemukan';
     const currentSoalBobot = soal ? soal.bobot_nilai : 0;
 
-    const boilerplate = {
-        python: '# Tulis kode Python Anda di sini\n',
-        cpp: '#include <iostream>\nusing namespace std;\n\nint main() {\n    // Tulis kode C++ Anda di sini\n    return 0;\n}\n',
-        java: 'public class Main {\n    public static void main(String[] args) {\n        // Tulis kode Java Anda di sini\n    }\n}\n',
-        dart: 'void main() {\n  // Tulis kode Dart Anda di sini\n}\n'
-    };
+    const boilerplate = BOILERPLATE;
 
-    const [code, setCode] = useState(boilerplate.python);
+    const [code, setCode] = useState(boilerplate[defaultLang] || boilerplate.python);
     const [codeCache, setCodeCache] = useState({ ...boilerplate });
 
     // Format seconds to HH:MM:SS
@@ -421,13 +443,6 @@ const Workspace = ({ initialData }) => {
             }
         }
     };
-
-    const languages = [
-        { id: 'python', name: 'Python' },
-        { id: 'cpp', name: 'C++' },
-        { id: 'java', name: 'Java' },
-        { id: 'dart', name: 'Dart' }
-    ];
 
     const handleRunCode = async () => {
         setIsRunning(true);

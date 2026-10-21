@@ -70,8 +70,11 @@ class AdminController extends Controller
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'durasi' => 'required|integer|min:1',
+            'token_interval' => 'nullable|integer|min:1',
             'passing_grade' => 'required|integer|min:0',
             'max_attempt' => 'required|integer|min:1',
+            'bahasa_pemrograman' => 'nullable|array|min:1',
+            'bahasa_pemrograman.*' => 'in:python,cpp,java,dart',
         ]);
 
         Ujian::create([
@@ -79,8 +82,10 @@ class AdminController extends Controller
             'judul' => $request->judul,
             'deskripsi' => $request->deskripsi,
             'durasi' => $request->durasi,
+            'token_interval' => $request->token_interval ?: 3,
             'passing_grade' => $request->passing_grade,
             'max_attempt' => $request->max_attempt,
+            'bahasa_pemrograman' => !empty($request->bahasa_pemrograman) ? $request->bahasa_pemrograman : ['python', 'cpp', 'java', 'dart'],
         ]);
 
         return redirect()->route('admin.ujian.index')->with('success', 'Ujian berhasil ditambahkan.');
@@ -101,8 +106,11 @@ class AdminController extends Controller
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'durasi' => 'required|integer|min:1',
+            'token_interval' => 'nullable|integer|min:1',
             'passing_grade' => 'required|integer|min:0',
             'max_attempt' => 'required|integer|min:1',
+            'bahasa_pemrograman' => 'nullable|array|min:1',
+            'bahasa_pemrograman.*' => 'in:python,cpp,java,dart',
             'status' => 'nullable|in:active,closed,finished',
         ]);
 
@@ -112,8 +120,10 @@ class AdminController extends Controller
         $exam->judul = $request->judul;
         $exam->deskripsi = $request->deskripsi;
         $exam->durasi = $request->durasi;
+        $exam->token_interval = $request->token_interval ?: ($exam->token_interval ?: 3);
         $exam->passing_grade = $request->passing_grade;
         $exam->max_attempt = $request->max_attempt;
+        $exam->bahasa_pemrograman = !empty($request->bahasa_pemrograman) ? $request->bahasa_pemrograman : ($exam->bahasa_pemrograman ?: ['python', 'cpp', 'java', 'dart']);
         $exam->status = $newStatus;
 
         if ($newStatus !== $oldStatus) {
@@ -150,8 +160,10 @@ class AdminController extends Controller
                     'judul' => $exam->judul,
                     'deskripsi' => \Illuminate\Support\Str::limit($exam->deskripsi, 50),
                     'durasi' => $exam->durasi,
+                    'token_interval' => $exam->token_interval,
                     'passing_grade' => $exam->passing_grade,
                     'max_attempt' => $exam->max_attempt,
+                    'bahasa_pemrograman' => $exam->getAllowedLanguages(),
                     'status' => $exam->status
                 ]
             ]);
@@ -212,7 +224,10 @@ class AdminController extends Controller
                 'submissions.user_id', 
                 'submissions.soal_id', 
                 \Illuminate\Support\Facades\DB::raw('MAX(submissions.skor) as max_skor'), 
-                \Illuminate\Support\Facades\DB::raw("MAX(CASE WHEN submissions.status = 'Accepted' THEN 1 ELSE 0 END) as is_accepted")
+                \Illuminate\Support\Facades\DB::raw("MAX(CASE WHEN submissions.status = 'Accepted' THEN 1 ELSE 0 END) as is_accepted"),
+                \Illuminate\Support\Facades\DB::raw("MIN(CASE WHEN LOWER(submissions.status) = 'accepted' OR submissions.skor > 0 THEN submissions.created_at ELSE NULL END) as first_correct_at"),
+                \Illuminate\Support\Facades\DB::raw('MAX(submissions.created_at) as last_submission_at'),
+                \Illuminate\Support\Facades\DB::raw('MIN(submissions.created_at) as first_submission_at')
             )
             ->groupBy('submissions.user_id', 'submissions.soal_id');
 
@@ -225,11 +240,13 @@ class AdminController extends Controller
                 'users.nim_username', 
                 'users.user_id', 
                 \Illuminate\Support\Facades\DB::raw('SUM(sub.max_skor) as total_skor'), 
-                \Illuminate\Support\Facades\DB::raw('SUM(sub.is_accepted) as accepted_count')
+                \Illuminate\Support\Facades\DB::raw('SUM(sub.is_accepted) as accepted_count'),
+                \Illuminate\Support\Facades\DB::raw('MAX(sub.first_correct_at) as last_correct_at'),
+                \Illuminate\Support\Facades\DB::raw('MAX(sub.last_submission_at) as last_submission_at'),
+                \Illuminate\Support\Facades\DB::raw('MIN(sub.first_submission_at) as first_submission_at')
             );
 
         $participants = $query->groupBy('users.name', 'users.nim_username', 'users.user_id')
-            ->orderByDesc('total_skor')
             ->get();
 
         $totalSoal = $exam->soals->count();
@@ -245,13 +262,55 @@ class AdminController extends Controller
             ->get()
             ->groupBy('user_id');
 
-        // Tambahkan atribut persentase progres dan status kelulusan pada tiap peserta
+        $examStart = $exam->started_at ? \Carbon\Carbon::parse($exam->started_at) : null;
+        $maxDurationSeconds = (int) ($exam->durasi * 60);
+
+        // Tambahkan atribut persentase progres, status kelulusan, dan hitung waktu pengerjaan resmi untuk tie-breaker
         foreach ($participants as $p) {
             $p->progress_percentage = $totalSoal > 0 ? ($p->accepted_count / $totalSoal) * 100 : 0;
             $scorePercentage = $maxScore > 0 ? ($p->total_skor / $maxScore) * 100 : 0;
             $p->status = ($p->total_skor ?? 0) >= $passingGrade ? 'Lulus' : 'Tidak Lulus';
             $p->submissions = $allSubmissions->get($p->user_id) ?? collect([]);
+
+            if ($p->total_skor > 0) {
+                $lastTimeStr = $p->last_correct_at ?: $p->last_submission_at;
+                if ($lastTimeStr) {
+                    $lastTime = \Carbon\Carbon::parse($lastTimeStr);
+                    $startTime = ($examStart && $lastTime->gte($examStart))
+                        ? $examStart
+                        : ($p->first_submission_at ? \Carbon\Carbon::parse($p->first_submission_at) : $lastTime);
+                    $rawSeconds = (int) abs($lastTime->diffInSeconds($startTime));
+                    $p->total_waktu_detik = min($maxDurationSeconds, $rawSeconds);
+                    $p->total_waktu_formatted = \App\Models\Ujian::formatWaktuPengerjaan($p->total_waktu_detik);
+                } else {
+                    $p->total_waktu_detik = null;
+                    $p->total_waktu_formatted = '-';
+                }
+            } else {
+                $p->total_waktu_detik = null;
+                $p->total_waktu_formatted = '-';
+            }
         }
+
+        // Sorting Peringkat / Tie-Breaker:
+        // 1. Total Skor Tertinggi
+        // 2. Waktu Pengerjaan Tercepat (detik terendah)
+        // 3. Jumlah Accepted Terbanyak
+        // 4. Urutan Alfabet Nama
+        $participants = $participants->sort(function ($a, $b) {
+            if ($b->total_skor !== $a->total_skor) {
+                return $b->total_skor <=> $a->total_skor;
+            }
+            $wA = $a->total_waktu_detik ?? PHP_INT_MAX;
+            $wB = $b->total_waktu_detik ?? PHP_INT_MAX;
+            if ($wA !== $wB) {
+                return $wA <=> $wB;
+            }
+            if ($b->accepted_count !== $a->accepted_count) {
+                return $b->accepted_count <=> $a->accepted_count;
+            }
+            return strcmp($a->name, $b->name);
+        })->values();
 
         return view('admin.ujian.detail', [
             'exam' => $exam,
@@ -299,30 +358,85 @@ class AdminController extends Controller
         $subQuery = \Illuminate\Support\Facades\DB::table('submissions')
             ->join('soals', 'submissions.soal_id', '=', 'soals.soal_id')
             ->where('soals.ujian_id', $exam->ujian_id)
-            ->select('submissions.user_id', \Illuminate\Support\Facades\DB::raw('MAX(submissions.skor) as max_skor'))
+            ->select(
+                'submissions.user_id', 
+                'submissions.soal_id', 
+                \Illuminate\Support\Facades\DB::raw('MAX(submissions.skor) as max_skor'),
+                \Illuminate\Support\Facades\DB::raw("MAX(CASE WHEN submissions.status = 'Accepted' THEN 1 ELSE 0 END) as is_accepted"),
+                \Illuminate\Support\Facades\DB::raw("MIN(CASE WHEN LOWER(submissions.status) = 'accepted' OR submissions.skor > 0 THEN submissions.created_at ELSE NULL END) as first_correct_at"),
+                \Illuminate\Support\Facades\DB::raw('MAX(submissions.created_at) as last_submission_at'),
+                \Illuminate\Support\Facades\DB::raw('MIN(submissions.created_at) as first_submission_at')
+            )
             ->groupBy('submissions.user_id', 'submissions.soal_id');
 
         $participants = \Illuminate\Support\Facades\DB::table(\Illuminate\Support\Facades\DB::raw("({$subQuery->toSql()}) as sub"))
             ->mergeBindings($subQuery)
             ->join('users', 'sub.user_id', '=', 'users.user_id')
-            ->select('users.name', 'users.nim_username', \Illuminate\Support\Facades\DB::raw('SUM(sub.max_skor) as total_skor'))
+            ->select(
+                'users.name', 
+                'users.nim_username', 
+                \Illuminate\Support\Facades\DB::raw('SUM(sub.max_skor) as total_skor'),
+                \Illuminate\Support\Facades\DB::raw('SUM(sub.is_accepted) as accepted_count'),
+                \Illuminate\Support\Facades\DB::raw('MAX(sub.first_correct_at) as last_correct_at'),
+                \Illuminate\Support\Facades\DB::raw('MAX(sub.last_submission_at) as last_submission_at'),
+                \Illuminate\Support\Facades\DB::raw('MIN(sub.first_submission_at) as first_submission_at')
+            )
             ->where('users.role', 'mahasiswa')
             ->groupBy('users.name', 'users.nim_username', 'users.user_id')
-            ->orderByDesc('total_skor')
             ->get();
+
+        $examStart = $exam->started_at ? \Carbon\Carbon::parse($exam->started_at) : null;
+        $maxDurationSeconds = (int) ($exam->durasi * 60);
+
+        foreach ($participants as $p) {
+            if ($p->total_skor > 0) {
+                $lastTimeStr = $p->last_correct_at ?: $p->last_submission_at;
+                if ($lastTimeStr) {
+                    $lastTime = \Carbon\Carbon::parse($lastTimeStr);
+                    $startTime = ($examStart && $lastTime->gte($examStart))
+                        ? $examStart
+                        : ($p->first_submission_at ? \Carbon\Carbon::parse($p->first_submission_at) : $lastTime);
+                    $rawSeconds = (int) abs($lastTime->diffInSeconds($startTime));
+                    $p->total_waktu_detik = min($maxDurationSeconds, $rawSeconds);
+                    $p->total_waktu_formatted = \App\Models\Ujian::formatWaktuPengerjaan($p->total_waktu_detik);
+                } else {
+                    $p->total_waktu_detik = null;
+                    $p->total_waktu_formatted = '-';
+                }
+            } else {
+                $p->total_waktu_detik = null;
+                $p->total_waktu_formatted = '-';
+            }
+        }
+
+        // Sorting Tie-Breaker untuk ekspor
+        $participants = $participants->sort(function ($a, $b) {
+            if ($b->total_skor !== $a->total_skor) {
+                return $b->total_skor <=> $a->total_skor;
+            }
+            $wA = $a->total_waktu_detik ?? PHP_INT_MAX;
+            $wB = $b->total_waktu_detik ?? PHP_INT_MAX;
+            if ($wA !== $wB) {
+                return $wA <=> $wB;
+            }
+            if ($b->accepted_count !== $a->accepted_count) {
+                return $b->accepted_count <=> $a->accepted_count;
+            }
+            return strcmp($a->name, $b->name);
+        })->values();
 
         $maxScore = $exam->soals->sum('bobot_nilai');
         $passingGrade = $exam->passing_grade;
 
         $exportData = [];
         foreach ($participants as $p) {
-            $scorePercentage = $maxScore > 0 ? ($p->total_skor / $maxScore) * 100 : 0;
             $status = ($p->total_skor ?? 0) >= $passingGrade ? 'Lulus' : 'Tidak Lulus';
             
             $exportData[] = [
                 'NIM' => $p->nim_username,
                 'Nama Mahasiswa' => $p->name,
                 'Status' => $status,
+                'Waktu Pengerjaan' => $p->total_waktu_formatted ?? '-',
                 'Skor' => $p->total_skor ?? 0
             ];
         }

@@ -57,21 +57,74 @@ class MahasiswaUjianController extends Controller
             return redirect()->route('dashboard')->with('error', 'Ujian belum dimulai atau sudah ditutup.');
         }
 
-        // Leaderboard Calculation
+        // Leaderboard Calculation dengan Tie-Breaker
         $subQuery = \Illuminate\Support\Facades\DB::table('submissions')
             ->join('soals', 'submissions.soal_id', '=', 'soals.soal_id')
             ->where('soals.ujian_id', $exam->ujian_id)
-            ->select('submissions.user_id', 'submissions.soal_id', \Illuminate\Support\Facades\DB::raw('MAX(submissions.skor) as max_skor'))
+            ->select(
+                'submissions.user_id', 
+                'submissions.soal_id', 
+                \Illuminate\Support\Facades\DB::raw('MAX(submissions.skor) as max_skor'),
+                \Illuminate\Support\Facades\DB::raw("MAX(CASE WHEN submissions.status = 'Accepted' THEN 1 ELSE 0 END) as is_accepted"),
+                \Illuminate\Support\Facades\DB::raw("MIN(CASE WHEN LOWER(submissions.status) = 'accepted' OR submissions.skor > 0 THEN submissions.created_at ELSE NULL END) as first_correct_at"),
+                \Illuminate\Support\Facades\DB::raw('MAX(submissions.created_at) as last_submission_at'),
+                \Illuminate\Support\Facades\DB::raw('MIN(submissions.created_at) as first_submission_at')
+            )
             ->groupBy('submissions.user_id', 'submissions.soal_id');
 
-        $leaderboard = \Illuminate\Support\Facades\DB::table(\Illuminate\Support\Facades\DB::raw("({$subQuery->toSql()}) as sub"))
+        $leaderboardRaw = \Illuminate\Support\Facades\DB::table(\Illuminate\Support\Facades\DB::raw("({$subQuery->toSql()}) as sub"))
             ->mergeBindings($subQuery)
             ->join('users', 'sub.user_id', '=', 'users.user_id')
-            ->select('users.name', 'users.user_id', \Illuminate\Support\Facades\DB::raw('SUM(sub.max_skor) as total_skor'))
+            ->select(
+                'users.name', 
+                'users.user_id', 
+                \Illuminate\Support\Facades\DB::raw('SUM(sub.max_skor) as total_skor'),
+                \Illuminate\Support\Facades\DB::raw('SUM(sub.is_accepted) as accepted_count'),
+                \Illuminate\Support\Facades\DB::raw('MAX(sub.first_correct_at) as last_correct_at'),
+                \Illuminate\Support\Facades\DB::raw('MAX(sub.last_submission_at) as last_submission_at'),
+                \Illuminate\Support\Facades\DB::raw('MIN(sub.first_submission_at) as first_submission_at')
+            )
             ->groupBy('users.name', 'users.user_id')
-            ->orderByDesc('total_skor')
-            ->take(10)
             ->get();
+
+        $examStart = $exam->started_at ? \Carbon\Carbon::parse($exam->started_at) : null;
+        $maxDurationSeconds = (int) ($exam->durasi * 60);
+
+        foreach ($leaderboardRaw as $p) {
+            if ($p->total_skor > 0) {
+                $lastTimeStr = $p->last_correct_at ?: $p->last_submission_at;
+                if ($lastTimeStr) {
+                    $lastTime = \Carbon\Carbon::parse($lastTimeStr);
+                    $startTime = ($examStart && $lastTime->gte($examStart))
+                        ? $examStart
+                        : ($p->first_submission_at ? \Carbon\Carbon::parse($p->first_submission_at) : $lastTime);
+                    $rawSeconds = (int) abs($lastTime->diffInSeconds($startTime));
+                    $p->total_waktu_detik = min($maxDurationSeconds, $rawSeconds);
+                    $p->total_waktu_formatted = \App\Models\Ujian::formatWaktuPengerjaan($p->total_waktu_detik);
+                } else {
+                    $p->total_waktu_detik = null;
+                    $p->total_waktu_formatted = '-';
+                }
+            } else {
+                $p->total_waktu_detik = null;
+                $p->total_waktu_formatted = '-';
+            }
+        }
+
+        $leaderboard = $leaderboardRaw->sort(function ($a, $b) {
+            if ($b->total_skor !== $a->total_skor) {
+                return $b->total_skor <=> $a->total_skor;
+            }
+            $wA = $a->total_waktu_detik ?? PHP_INT_MAX;
+            $wB = $b->total_waktu_detik ?? PHP_INT_MAX;
+            if ($wA !== $wB) {
+                return $wA <=> $wB;
+            }
+            if ($b->accepted_count !== $a->accepted_count) {
+                return $b->accepted_count <=> $a->accepted_count;
+            }
+            return strcmp($a->name, $b->name);
+        })->take(10)->values();
 
         // Get current user's submissions for this exam to show status on each soal
         $userSubmissions = \Illuminate\Support\Facades\DB::table('submissions')
@@ -311,7 +364,16 @@ class MahasiswaUjianController extends Controller
             return response()->json(['success' => false, 'message' => 'Ujian tidak aktif atau sudah ditutup karena waktu habis.']);
         }
 
-        // 2b. PENGECEKAN JAWABAN SUDAH BENAR (ACCEPTED)
+        // 2b. VALIDASI BAHASA PEMROGRAMAN YANG DIIZINKAN
+        $allowedLanguages = $exam->getAllowedLanguages();
+        if (!in_array($request->language, $allowedLanguages)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bahasa pemrograman ' . strtoupper($request->language) . ' tidak diizinkan untuk ujian ini.'
+            ]);
+        }
+
+        // 2c. PENGECEKAN JAWABAN SUDAH BENAR (ACCEPTED)
         // Jika mahasiswa sudah memiliki submisi berstatus 'Accepted', maka tidak boleh submit lagi.
         $hasAccepted = \Illuminate\Support\Facades\DB::table('submissions')
             ->where('soal_id', $soalId)

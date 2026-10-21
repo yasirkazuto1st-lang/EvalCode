@@ -63,7 +63,9 @@
                     <p class="mb-2 opacity-75 fs-6">{{ $exam->deskripsi }}</p>
                     <div class="d-flex flex-wrap align-items-center gap-3 opacity-75 fs-6 mt-1">
                         <span><i class="bi bi-clock me-1"></i> Durasi: {{ $exam->durasi }} Menit</span>
+                        <span><i class="bi bi-key me-1"></i> Refresh Token: {{ $exam->token_interval ?? 3 }} Menit</span>
                         <span><i class="bi bi-check2-square me-1"></i> Passing Grade: {{ $exam->passing_grade }} Pts</span>
+                        <span><i class="bi bi-code-slash me-1"></i> Bahasa: {{ strtoupper(implode(', ', $exam->getAllowedLanguages())) }}</span>
                     </div>
                 </div>
             </div>
@@ -224,6 +226,7 @@
                                         <th class="ps-4 py-3">NIM</th>
                                         <th class="py-3">Nama Mahasiswa</th>
                                         <th class="py-3">Status</th>
+                                        <th class="py-3">Waktu</th>
                                         <th class="py-3">Skor</th>
                                         <th class="pe-4 py-3 text-center">Aksi</th>
                                     </tr>
@@ -234,7 +237,7 @@
                                             $latestSub = $p->submissions->sortByDesc('created_at')->first();
                                             $latestTime = $latestSub ? \Carbon\Carbon::parse($latestSub->created_at)->timestamp : 0;
                                         @endphp
-                                        <tr class="participant-row" data-nim="{{ $p->nim_username }}" data-nama="{{ $p->name }}" data-skor="{{ $p->total_skor ?? 0 }}" data-waktu="{{ $latestTime }}">
+                                        <tr class="participant-row" data-nim="{{ $p->nim_username }}" data-nama="{{ $p->name }}" data-skor="{{ $p->total_skor ?? 0 }}" data-waktu="{{ $p->total_waktu_detik ?? 9999999 }}">
                                             <td class="ps-4">{{ $p->nim_username }}</td>
                                             <td class="fw-semibold">{{ $p->name }}</td>
                                             <td>
@@ -249,6 +252,11 @@
                                                 @endif
 
                                             </td>
+                                            <td>
+                                                <span class="badge bg-secondary bg-opacity-10 text-body border border-secondary border-opacity-25 font-monospace">
+                                                    <i class="bi bi-stopwatch me-1 text-primary"></i>{{ $p->total_waktu_formatted ?? '-' }}
+                                                </span>
+                                            </td>
                                             <td><strong>{{ $p->total_skor ?? 0 }}</strong> Pts</td>
                                             <td class="pe-4 text-center">
                                                 <button class="btn btn-sm btn-outline-primary rounded-pill px-3"
@@ -262,7 +270,7 @@
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td colspan="5" class="p-0 border-0">
+                                            <td colspan="6" class="p-0 border-0">
                                                 <div class="collapse" id="collapseSubmissions{{ $p->user_id }}">
                                                     <div
                                                         class="card card-body border-0 bg-light rounded-0 border-start border-4 border-primary m-3 shadow-sm">
@@ -367,7 +375,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="5" class="text-center py-5 text-muted">
+                                            <td colspan="6" class="text-center py-5 text-muted">
                                                 <i class="bi bi-inbox fs-2 d-block mb-2"></i>
                                                 Belum ada peserta yang mengikuti ujian ini.
                                             </td>

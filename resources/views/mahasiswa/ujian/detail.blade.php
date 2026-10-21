@@ -23,6 +23,12 @@
                         <span><i class="bi bi-clock me-1"></i> Waktu: {{ $exam->durasi }} Menit</span>
                         <span><i class="bi bi-check2-square me-1"></i> Passing Grade: {{ $exam->passing_grade }} Pts</span>
                     </div>
+                    <div class="d-flex flex-wrap align-items-center gap-1 mt-2">
+                        <small class="opacity-75 me-1"><i class="bi bi-code-slash me-1"></i>Bahasa:</small>
+                        @foreach ($exam->getAllowedLanguages() as $lang)
+                            <span class="badge bg-white bg-opacity-25 text-white border border-white border-opacity-25 rounded-pill px-2 py-0" style="font-size: 0.75rem;">{{ strtoupper($lang) }}</span>
+                        @endforeach
+                    </div>
                 </div>
                 <div class="text-md-end mt-3 mt-md-0 d-flex flex-wrap gap-3 justify-content-md-end">
                     <!-- Box 1: Progress Anda -->
@@ -135,8 +141,14 @@
                                                 <span class="badge bg-primary ms-1 small flex-shrink-0">Anda</span>
                                             @endif
                                         </div>
-                                        <span class="fw-bold {{ $textClass }} flex-shrink-0">{{ $lb->total_skor }}
-                                            Pts</span>
+                                        <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                            @if (!empty($lb->total_waktu_formatted) && $lb->total_waktu_formatted !== '-')
+                                                <span class="badge bg-white text-muted border font-monospace small px-2 py-1" title="Waktu Pengerjaan">
+                                                    <i class="bi bi-stopwatch me-1 text-primary"></i>{{ $lb->total_waktu_formatted }}
+                                                </span>
+                                            @endif
+                                            <span class="fw-bold {{ $textClass }}">{{ $lb->total_skor }} Pts</span>
+                                        </div>
                                     </li>
                                 @empty
                                     <li class="list-group-item text-center text-muted py-4 border-0">
@@ -209,9 +221,14 @@
                                             class="fw-semibold me-1 text-nowrap text-truncate">{{ $myLeaderboardItem->name }}</span>
                                         <span class="badge bg-primary ms-1 small flex-shrink-0">Anda</span>
                                     </div>
-                                    <span
-                                        class="fw-bold {{ $myTextClass }} flex-shrink-0">{{ $myLeaderboardItem->total_skor }}
-                                        Pts</span>
+                                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                        @if (!empty($myLeaderboardItem->total_waktu_formatted) && $myLeaderboardItem->total_waktu_formatted !== '-')
+                                            <span class="badge bg-white text-muted border font-monospace small px-2 py-1" title="Waktu Pengerjaan">
+                                                <i class="bi bi-stopwatch me-1 text-primary"></i>{{ $myLeaderboardItem->total_waktu_formatted }}
+                                            </span>
+                                        @endif
+                                        <span class="fw-bold {{ $myTextClass }}">{{ $myLeaderboardItem->total_skor }} Pts</span>
+                                    </div>
                                 </div>
                             </div>
 

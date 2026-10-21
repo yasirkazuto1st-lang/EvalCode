@@ -116,8 +116,15 @@
                     <p class="mb-1 opacity-75 small">{{ $exam->deskripsi }}</p>
                     <div class="d-flex flex-wrap align-items-center gap-3 opacity-75 fs-6 mt-1">
                         <span><i class="bi bi-clock me-1"></i> Durasi: {{ $exam->durasi }} Menit</span>
+                        <span><i class="bi bi-arrow-repeat me-1"></i> Token: Tiap {{ $exam->token_interval ?? 3 }} Menit</span>
                         <span><i class="bi bi-check2-square me-1"></i> Passing Grade: {{ $exam->passing_grade }} Pts</span>
                         <span><i class="bi bi-file-text me-1"></i> {{ $exam->soals->count() }} Soal</span>
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center gap-1 mt-2">
+                        <small class="opacity-75 me-1"><i class="bi bi-code-slash me-1"></i>Bahasa:</small>
+                        @foreach ($exam->getAllowedLanguages() as $lang)
+                            <span class="badge bg-white bg-opacity-25 text-white border border-white border-opacity-25 rounded-pill px-2 py-0" style="font-size: 0.75rem;">{{ strtoupper($lang) }}</span>
+                        @endforeach
                     </div>
                 </div>
 
@@ -171,7 +178,7 @@
                                 </div>
                                 <small id="countdownText" class="d-block opacity-75 mt-1" style="font-size: 10px;">
                                     <i class="bi bi-arrow-repeat me-1"></i>Token baru dalam <span
-                                        id="countdownSeconds">60</span> detik
+                                        id="countdownSeconds">{{ ($exam->token_interval ?? 3) * 60 }}</span> detik
                                 </small>
                             </div>
 
@@ -334,6 +341,7 @@
                                         <th class="py-3">Nama Mahasiswa</th>
                                         <th class="py-3">Status</th>
                                         <th class="py-3">Total Skor</th>
+                                        <th class="py-3">Waktu</th>
                                         <th class="py-3">Similarity Tertinggi</th>
                                         <th class="pe-4 py-3 text-center">Aksi</th>
                                     </tr>
@@ -365,6 +373,11 @@
                                             </td>
                                             <td><strong>{{ $p->total_skor ?? 0 }}</strong> Pts</td>
                                             <td>
+                                                <span class="badge bg-light text-dark border font-monospace">
+                                                    <i class="bi bi-stopwatch me-1 text-primary"></i>{{ $p->total_waktu_formatted ?? '-' }}
+                                                </span>
+                                            </td>
+                                            <td>
                                                 @if ($p->highest_similarity !== null)
                                                     @php
                                                         $threshold = config('judge.plagiarism_threshold', 0.75) * 100;
@@ -394,7 +407,7 @@
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td colspan="6" class="p-0 border-0">
+                                            <td colspan="7" class="p-0 border-0">
                                                 <div class="collapse" id="collapseSubmissions{{ $p->user_id }}">
                                                     <div
                                                         class="card card-body border-0 bg-light rounded-0 border-start border-4 border-primary m-3 shadow-sm">
@@ -701,7 +714,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="text-center py-5 text-muted">
+                                            <td colspan="7" class="text-center py-5 text-muted">
                                                 <i class="bi bi-inbox fs-2 d-block mb-2"></i>
                                                 Belum ada peserta yang memulai ujian ini.
                                             </td>
@@ -811,7 +824,7 @@
         (function() {
             const examId = {{ $exam->ujian_id }};
             const isActive = {{ $exam->status === 'active' ? 'true' : 'false' }};
-            const REFRESH_INTERVAL = 180; // seconds
+            const REFRESH_INTERVAL = {{ ($exam->token_interval ?? 3) * 60 }}; // seconds
 
             // Token toggle visibility state
             let tokenHidden = true;

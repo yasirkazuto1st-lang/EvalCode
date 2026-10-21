@@ -46,18 +46,18 @@ class UjianExport implements FromArray, WithStyles, WithColumnWidths
             ['Passing Grade', ': ' . $this->examInfo['passing_grade']],
             ['Waktu Export', ': ' . $this->examInfo['tanggal']],
             [''],
-            ['NIM', 'Nama Mahasiswa', 'Status Kelulusan', 'Skor Akhir'], // Row 8
+            ['NIM', 'Nama Mahasiswa', 'Status Kelulusan', 'Waktu Pengerjaan', 'Skor Akhir'], // Row 8
         ];
 
         // 2. Main Participants Data
         $rows = array_merge($header, $this->data);
 
         // 3. Spacer Rows before Table 2
-        $rows[] = ['', '', '', '']; // Blank row
-        $rows[] = ['', '', '', '']; // Blank row
+        $rows[] = ['', '', '', '', '']; // Blank row
+        $rows[] = ['', '', '', '', '']; // Blank row
 
         // 4. Table 2 Header
-        $rows[] = ['No. Soal', 'Nama Soal', 'Menyelesaikan', 'Kategori'];
+        $rows[] = ['No. Soal', 'Nama Soal', 'Menyelesaikan', 'Kategori', ''];
 
         // 5. Table 2 Data
         foreach ($this->soalData as $soal) {
@@ -66,6 +66,7 @@ class UjianExport implements FromArray, WithStyles, WithColumnWidths
                 $soal['nama_soal'],
                 $soal['selesai'],
                 $soal['kategori'],
+                '',
             ];
         }
 
@@ -82,8 +83,9 @@ class UjianExport implements FromArray, WithStyles, WithColumnWidths
         return [
             'A' => 20, // NIM / No. Soal
             'B' => 35, // Nama Mahasiswa / Nama Soal
-            'C' => 22, // Status Kelulusan / Menyelesaikan
-            'D' => 15, // Skor Akhir / Kategori
+            'C' => 20, // Status Kelulusan / Menyelesaikan
+            'D' => 20, // Waktu Pengerjaan / Kategori
+            'E' => 15, // Skor Akhir
         ];
     }
 
@@ -102,8 +104,8 @@ class UjianExport implements FromArray, WithStyles, WithColumnWidths
         $sheet->getPageSetup()->setFitToHeight(0);
         $sheet->getPageSetup()->setFitToPage(true);
 
-        // Title Styling (Merge across Columns A to D)
-        $sheet->mergeCells('A1:D1');
+        // Title Styling (Merge across Columns A to E)
+        $sheet->mergeCells('A1:E1');
         $sheet->getStyle('A1')->applyFromArray([
             'font' => ['bold' => true, 'size' => 16],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
@@ -132,14 +134,14 @@ class UjianExport implements FromArray, WithStyles, WithColumnWidths
         // ==========================================
         // STYLING TABLE 1 (Peserta)
         // ==========================================
-        $sheet->getStyle('A8:D8')->applyFromArray($headerStyle);
+        $sheet->getStyle('A8:E8')->applyFromArray($headerStyle);
         $sheet->getRowDimension(8)->setRowHeight(25);
 
         $pCount = count($this->data);
         $endTable1 = 8 + $pCount;
 
         if ($pCount > 0) {
-            $sheet->getStyle('A8:D' . $endTable1)->applyFromArray([
+            $sheet->getStyle('A8:E' . $endTable1)->applyFromArray([
                 'borders' => [
                     'allBorders' => [
                         'borderStyle' => Border::BORDER_THIN,
@@ -148,9 +150,9 @@ class UjianExport implements FromArray, WithStyles, WithColumnWidths
                 ],
             ]);
             $sheet->getStyle('A9:A' . $endTable1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle('C9:D' . $endTable1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('C9:E' . $endTable1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         } else {
-            $sheet->getStyle('A8:D8')->applyFromArray([
+            $sheet->getStyle('A8:E8')->applyFromArray([
                 'borders' => [
                     'allBorders' => [
                         'borderStyle' => Border::BORDER_THIN,

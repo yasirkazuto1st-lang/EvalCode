@@ -18,18 +18,58 @@ class Ujian extends Model
         'judul',
         'deskripsi',
         'durasi',
+        'token_interval',
         'status',
         'passing_grade',
         'max_attempt',
+        'bahasa_pemrograman',
         'started_at',
         'sisa_waktu',
     ];
 
     protected $casts = [
+        'durasi' => 'integer',
+        'token_interval' => 'integer',
         'passing_grade' => 'integer',
         'max_attempt' => 'integer',
+        'bahasa_pemrograman' => 'array',
         'started_at' => 'datetime',
     ];
+
+    /**
+     * Mendapatkan daftar bahasa pemrograman yang diizinkan untuk ujian ini.
+     * Default ke semua bahasa (python, cpp, java, dart) jika belum diatur.
+     */
+    public function getAllowedLanguages(): array
+    {
+        if (is_array($this->bahasa_pemrograman) && !empty($this->bahasa_pemrograman)) {
+            return $this->bahasa_pemrograman;
+        }
+        if (is_string($this->bahasa_pemrograman)) {
+            $decoded = json_decode($this->bahasa_pemrograman, true);
+            if (is_array($decoded) && !empty($decoded)) {
+                return $decoded;
+            }
+        }
+        return ['python', 'cpp', 'java', 'dart'];
+    }
+
+    /**
+     * Format durasi detik pengerjaan menjadi format terbaca (misal: "25m 40s" atau "01j 12m 30s").
+     */
+    public static function formatWaktuPengerjaan(?int $seconds): string
+    {
+        if ($seconds === null || $seconds < 0) {
+            return '-';
+        }
+        $h = floor($seconds / 3600);
+        $m = floor(($seconds % 3600) / 60);
+        $s = $seconds % 60;
+        if ($h > 0) {
+            return sprintf('%02dj %02dm %02ds', $h, $m, $s);
+        }
+        return sprintf('%02dm %02ds', $m, $s);
+    }
 
     /**
      * Relasi ke model Soal.
