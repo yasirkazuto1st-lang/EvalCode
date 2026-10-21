@@ -65,7 +65,15 @@
                         <span><i class="bi bi-clock me-1"></i> Durasi: {{ $exam->durasi }} Menit</span>
                         <span><i class="bi bi-key me-1"></i> Refresh Token: {{ $exam->token_interval ?? 3 }} Menit</span>
                         <span><i class="bi bi-check2-square me-1"></i> Passing Grade: {{ $exam->passing_grade }} Pts</span>
-                        <span><i class="bi bi-code-slash me-1"></i> Bahasa: {{ strtoupper(implode(', ', $exam->getAllowedLanguages())) }}</span>
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center gap-1 mt-2">
+                        <small class="opacity-75 me-1"><i class="bi bi-code-slash me-1"></i>Bahasa:</small>
+                        @foreach ($exam->getAllowedLanguages() as $lang)
+                            @php $b = \App\Models\Ujian::getLanguageBadge($lang); @endphp
+                            <span class="{{ $b['class'] }}" style="{{ $b['style'] }}">
+                                {{ $b['label'] }}
+                            </span>
+                        @endforeach
                     </div>
                 </div>
             </div>

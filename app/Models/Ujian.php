@@ -55,6 +55,67 @@ class Ujian extends Model
     }
 
     /**
+     * Mendapatkan label human-readable untuk bahasa pemrograman (misal: 'cpp' -> 'C++').
+     */
+    public static function getLanguageLabel(string $lang): string
+    {
+        return match (strtolower(trim($lang))) {
+            'cpp' => 'C++',
+            'python' => 'Python',
+            'c' => 'C',
+            'java' => 'Java',
+            'dart' => 'Dart',
+            default => strtoupper($lang)
+        };
+    }
+
+    /**
+     * Mendapatkan metadata badge bahasa pemrograman (label, class CSS, icon, inline style).
+     */
+    public static function getLanguageBadge(string $lang): array
+    {
+        $lang = strtolower(trim($lang));
+        return match ($lang) {
+            'python' => [
+                'label' => 'Python',
+                'class' => 'badge badge-lang badge-lang-python',
+                'icon' => 'bi-filetype-py',
+                'style' => 'background-color: #2b5b84 !important; color: #ffd43b !important; border: 1px solid rgba(255, 212, 59, 0.5) !important;'
+            ],
+            'c' => [
+                'label' => 'C',
+                'class' => 'badge badge-lang badge-lang-c',
+                'icon' => 'bi-file-code',
+                'style' => 'background-color: #3b4252 !important; color: #eceff4 !important; border: 1px solid rgba(216, 222, 233, 0.45) !important;'
+            ],
+            'cpp' => [
+                'label' => 'C++',
+                'class' => 'badge badge-lang badge-lang-cpp',
+                'icon' => 'bi-file-code-fill',
+                'style' => 'background-color: #00599c !important; color: #ffffff !important; border: 1px solid rgba(96, 165, 250, 0.55) !important;'
+            ],
+            'java' => [
+                'label' => 'Java',
+                'class' => 'badge badge-lang badge-lang-java',
+                'icon' => 'bi-filetype-java',
+                'style' => 'background-color: #c2410c !important; color: #ffffff !important; border: 1px solid rgba(254, 215, 170, 0.45) !important;'
+            ],
+            'dart' => [
+                'label' => 'Dart',
+                'class' => 'badge badge-lang badge-lang-dart',
+                'icon' => 'bi-code-slash',
+                'style' => 'background-color: #0284c7 !important; color: #ffffff !important; border: 1px solid rgba(56, 189, 248, 0.6) !important;'
+            ],
+            default => [
+                'label' => strtoupper($lang),
+                'class' => 'badge badge-lang bg-secondary text-white',
+                'icon' => 'bi-code',
+                'style' => 'background-color: #64748b !important; color: #ffffff !important;'
+            ]
+        };
+    }
+
+    /**
      * Format durasi detik pengerjaan menjadi format terbaca (misal: "25m 40s" atau "01j 12m 30s").
      */
     public static function formatWaktuPengerjaan(?int $seconds): string

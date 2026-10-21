@@ -123,7 +123,10 @@
                     <div class="d-flex flex-wrap align-items-center gap-1 mt-2">
                         <small class="opacity-75 me-1"><i class="bi bi-code-slash me-1"></i>Bahasa:</small>
                         @foreach ($exam->getAllowedLanguages() as $lang)
-                            <span class="badge bg-white bg-opacity-25 text-white border border-white border-opacity-25 rounded-pill px-2 py-0" style="font-size: 0.75rem;">{{ strtoupper($lang) }}</span>
+                            @php $b = \App\Models\Ujian::getLanguageBadge($lang); @endphp
+                            <span class="{{ $b['class'] }}" style="{{ $b['style'] }}">
+                                {{ $b['label'] }}
+                            </span>
                         @endforeach
                     </div>
                 </div>

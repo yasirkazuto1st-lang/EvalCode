@@ -146,27 +146,16 @@
                                                     @endphp
                                                     <div class="mb-3">
                                                         <label class="form-label d-block fw-semibold">Bahasa Pemrograman Diizinkan</label>
-                                                        <div class="d-flex flex-wrap gap-3 pt-1">
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="checkbox" name="bahasa_pemrograman[]" value="python" id="editLangPython{{ $exam->ujian_id }}" {{ in_array('python', $allowedLangs) ? 'checked' : '' }}>
-                                                                <label class="form-check-label" for="editLangPython{{ $exam->ujian_id }}">Python</label>
-                                                            </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="checkbox" name="bahasa_pemrograman[]" value="c" id="editLangC{{ $exam->ujian_id }}" {{ in_array('c', $allowedLangs) ? 'checked' : '' }}>
-                                                                <label class="form-check-label" for="editLangC{{ $exam->ujian_id }}">C</label>
-                                                            </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="checkbox" name="bahasa_pemrograman[]" value="cpp" id="editLangCpp{{ $exam->ujian_id }}" {{ in_array('cpp', $allowedLangs) ? 'checked' : '' }}>
-                                                                <label class="form-check-label" for="editLangCpp{{ $exam->ujian_id }}">C++</label>
-                                                            </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="checkbox" name="bahasa_pemrograman[]" value="java" id="editLangJava{{ $exam->ujian_id }}" {{ in_array('java', $allowedLangs) ? 'checked' : '' }}>
-                                                                <label class="form-check-label" for="editLangJava{{ $exam->ujian_id }}">Java</label>
-                                                            </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="checkbox" name="bahasa_pemrograman[]" value="dart" id="editLangDart{{ $exam->ujian_id }}" {{ in_array('dart', $allowedLangs) ? 'checked' : '' }}>
-                                                                <label class="form-check-label" for="editLangDart{{ $exam->ujian_id }}">Dart</label>
-                                                            </div>
+                                                        <div class="d-flex flex-wrap gap-2 pt-1">
+                                                            @foreach(['python', 'c', 'cpp', 'java', 'dart'] as $l)
+                                                                @php $b = \App\Models\Ujian::getLanguageBadge($l); @endphp
+                                                                <div class="form-check d-inline-flex align-items-center gap-1 me-2 mb-1">
+                                                                    <input class="form-check-input mt-0" type="checkbox" name="bahasa_pemrograman[]" value="{{ $l }}" id="editLang{{ ucfirst($l) }}{{ $exam->ujian_id }}" {{ in_array($l, $allowedLangs) ? 'checked' : '' }}>
+                                                                    <label class="form-check-label mb-0" for="editLang{{ ucfirst($l) }}{{ $exam->ujian_id }}">
+                                                                        <span class="{{ $b['class'] }}" style="{{ $b['style'] }}">{{ $b['label'] }}</span>
+                                                                    </label>
+                                                                </div>
+                                                            @endforeach
                                                         </div>
                                                     </div>
                                                     <div class="mb-3">
@@ -263,27 +252,16 @@
                                 name="max_attempt" class="form-control" placeholder="3" required min="1" value="3"></div>
                         <div class="mb-3">
                             <label class="form-label d-block fw-semibold">Bahasa Pemrograman Diizinkan</label>
-                            <div class="d-flex flex-wrap gap-3 pt-1">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="bahasa_pemrograman[]" value="python" id="addLangPython" checked>
-                                    <label class="form-check-label" for="addLangPython">Python</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="bahasa_pemrograman[]" value="c" id="addLangC" checked>
-                                    <label class="form-check-label" for="addLangC">C</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="bahasa_pemrograman[]" value="cpp" id="addLangCpp" checked>
-                                    <label class="form-check-label" for="addLangCpp">C++</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="bahasa_pemrograman[]" value="java" id="addLangJava" checked>
-                                    <label class="form-check-label" for="addLangJava">Java</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="bahasa_pemrograman[]" value="dart" id="addLangDart" checked>
-                                    <label class="form-check-label" for="addLangDart">Dart</label>
-                                </div>
+                            <div class="d-flex flex-wrap gap-2 pt-1">
+                                @foreach(['python', 'c', 'cpp', 'java', 'dart'] as $l)
+                                    @php $b = \App\Models\Ujian::getLanguageBadge($l); @endphp
+                                    <div class="form-check d-inline-flex align-items-center gap-1 me-2 mb-1">
+                                        <input class="form-check-input mt-0" type="checkbox" name="bahasa_pemrograman[]" value="{{ $l }}" id="addLang{{ ucfirst($l) }}" checked>
+                                        <label class="form-check-label mb-0" for="addLang{{ ucfirst($l) }}">
+                                            <span class="{{ $b['class'] }}" style="{{ $b['style'] }}">{{ $b['label'] }}</span>
+                                        </label>
+                                    </div>
+                                @endforeach
                             </div>
                         </div>
                     </div>
