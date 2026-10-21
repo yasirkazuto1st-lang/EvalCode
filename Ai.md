@@ -18,7 +18,7 @@ Dokumen ini berfungsi sebagai panduan referensi sentral untuk memudahkan para _d
 - **Frontend**: Blade Templating Engine + Bootstrap 5 (Styling) + React (sedikit implementasi khusus pada bagian Workspace)
 - **Database**: MySQL (relasional)
 - **Code Editor**: Monaco Editor (untuk _syntax highlighting_ di halaman pengerjaan)
-- **Autograder API**: Judge0 (berjalan di background untuk mengeksekusi kode berbagai bahasa pemrograman seperti **Python, Java, C++, dan Dart**)
+- **Autograder API**: Judge0 (berjalan di background untuk mengeksekusi kode berbagai bahasa pemrograman seperti **Python, C, C++, Java, dan Dart**)
 - **Exporting**: Laravel Excel / PhpSpreadsheet (ekspor laporan XLSX).
 
 ## 3. Architecture & Core Workflow (Arsitektur & Alur Kerja)
@@ -181,31 +181,41 @@ Untuk mencegah penyalahgunaan kuota API dan menjaga keamanan kredensial, kunci A
 Sistem EvalCode mengimplementasikan tiga fitur baru untuk fleksibilitas pengaturan ujian dan penentuan pemenang kompetisi yang adil:
 
 1. **Interval Waktu Token Dinamis (`token_interval`)**:
-   - Admin dapat menentukan frekuensi perputaran/regenerasi token ujian (dalam satuan menit) saat membuat atau mengedit ujian.
-   - Nilai default adalah 3 menit (dapat diatur dari 1 sampai 60 menit).
-   - Pengawas dan background service mengikuti interval ini untuk memperbarui token aktif secara otomatis.
+    - Admin dapat menentukan frekuensi perputaran/regenerasi token ujian (dalam satuan menit) saat membuat atau mengedit ujian.
+    - Nilai default adalah 3 menit (dapat diatur dari 1 sampai 60 menit).
+    - Pengawas dan background service mengikuti interval ini untuk memperbarui token aktif secara otomatis.
 
 2. **Pembatasan Bahasa Pemrograman per Ujian (`allowed_languages`)**:
-   - Admin dapat memilih bahasa pemrograman mana saja yang diizinkan untuk setiap ujian tertentu melalui checkbox (Python, C++, Java, Dart).
-   - Nilai disimpan dalam kolom JSON `allowed_languages` pada tabel `ujians`.
-   - Di Workspace mahasiswa (React Monaco Editor), dropdown bahasa hanya menampilkan bahasa yang diizinkan oleh ujian tersebut.
-   - Backend (`MahasiswaUjianController@submit`) melakukan validasi ketat sehingga submisi dengan bahasa di luar daftar yang diizinkan akan ditolak dengan pesan error yang jelas.
+    - Admin dapat memilih bahasa pemrograman mana saja yang diizinkan untuk setiap ujian tertentu melalui checkbox (**Python, C, C++, Java, Dart**).
+    - Nilai disimpan dalam kolom JSON `allowed_languages` pada tabel `ujians`.
+    - Di Workspace mahasiswa (React Monaco Editor), dropdown bahasa hanya menampilkan bahasa yang diizinkan oleh ujian tersebut beserta boilerplate resmi bahasa C (`#include <stdio.h>`).
+    - Backend (`MahasiswaUjianController@submit`) melakukan validasi ketat sehingga submisi dengan bahasa di luar daftar yang diizinkan akan ditolak dengan pesan error yang jelas.
+    - Autograder Judge0 memetakan bahasa C ke language ID 50 (GCC).
 
-3. **Total Waktu Pengerjaan & Tie-Breaker Ranking**:
-   - Untuk menentukan peringkat juara saat terdapat peserta dengan total skor yang sama, sistem menghitung durasi pengerjaan resmi peserta (`total_waktu_detik`).
-   - Rumus: Diambil dari waktu submisi benar pertama pada soal terakhir yang diselesaikan (`last_correct_at` = `MAX(first_correct_at)` tiap soal), dihitung terhadap waktu mulai sesi ujian yang relevan (`started_at` jika submisi terjadi pada sesi berjalan, atau `first_submission_at` jika berasal dari sesi pengerjaan mandiri/lampau).
-   - Pengaman Batas Maksimal & Multi-Sesi: Total waktu pengerjaan otomatis dibatasi (*capped*) maksimal sebesar durasi ujian (`durasi * 60` detik), sehingga data pengujian lama atau jeda antar sesi tidak akan menyebabkan bug lonjakan waktu hingga ratusan jam.
-   - Peserta diurutkan dengan aturan:
-     1. Total Skor tertinggi (`total_skor DESC`).
-     2. Jika skor sama, peserta yang menyelesaikan lebih cepat diprioritaskan (`total_waktu_detik ASC`).
-     3. Jika waktu pengerjaan juga sama, diurutkan berdasarkan nama mahasiswa (`name ASC`).
-   - Kolom "Waktu Pengerjaan" ditampilkan secara terformat (`MMm SSs` atau `HHj MMm SSs`) pada:
-     - Panel Rekapitulasi Detail Ujian Admin (`admin.ujian.detail`).
-     - Panel Monitoring Pengawas (`pengawas.ujian.detail`).
-     - Papan Peringkat / Leaderboard Mahasiswa (`mahasiswa.ujian.detail`).
-     - Ekspor Laporan Excel XLSX (`UjianExport`).
+3. **Total Waktu Pengerjaan & Tie-Breaker Ranking (Real-World Elapsed Time)**:
+    - Untuk menentukan peringkat juara saat terdapat peserta dengan total skor yang sama, sistem menghitung durasi pengerjaan resmi peserta (`total_waktu_detik`) berdasarkan waktu nyata di dunia nyata (*wall-clock real time*).
+    - **Titik Awal (Start Time)**: Ditentukan secara akurat dari waktu mulai sesi pertama yang diikuti oleh peserta (`getOfficialStartTime($firstActivity)`). Jika peserta baru mulai ikut di Sesi 2 (Shift 2), waktu mulainya dihitung dari Sesi 2. Namun jika peserta sudah mulai dari Sesi 1 lalu melanjutkan di Sesi 2, titik awalnya tetap terkunci di Sesi 1.
+    - **Titik Selesai (End Time)**: Diambil dari waktu submisi benar pertama pada soal terakhir yang diselesaikan (`last_correct_at` = `MAX(first_correct_at)` tiap soal). Submisi ulang pada soal yang sudah benar tidak akan merusak catatan waktu terbaik sebelumnya.
+    - **Perhitungan Waktu Dunia Nyata**: Selisih waktu pengerjaan dihitung murni `diffInSeconds(startTime, lastTime)` tanpa dipotong batas durasi per sesi. Jika peserta mengikuti banyak sesi atau ujian terjeda multi-hari (misal Minggu sampai Senin), seluruh rentang waktu riil tersebut tetap tercatat apa adanya, sehingga pengawas dapat melihat jelas siapa peserta yang menyelesaikan dalam 1 sesi versus peserta yang membutuhkan banyak sesi lanjutan.
+    - **Persistensi Saat Ujian Selesai/Dijeda**: Nilai `started_at` tidak dihapus (tidak di-null-kan) saat ujian berstatus `closed` atau `finished`, menjamin waktu pengerjaan tidak menciut atau ter-reset menjadi 0 detik.
+    - Peserta diurutkan dengan aturan:
+        1. Total Skor tertinggi (`total_skor DESC`).
+        2. Jika skor sama, peserta yang menyelesaikan lebih cepat diprioritaskan (`total_waktu_detik ASC`).
+        3. Jika waktu pengerjaan juga sama, diurutkan berdasarkan nama mahasiswa (`name ASC`).
+    - Kolom "Waktu Pengerjaan" ditampilkan secara terformat (`MMm SSs` atau `HHj MMm SSs`) pada:
+        - Panel Rekapitulasi Detail Ujian Admin (`admin.ujian.detail`).
+        - Panel Monitoring Pengawas (`pengawas.ujian.detail`).
+        - Papan Peringkat / Leaderboard Mahasiswa (`mahasiswa.ujian.detail`).
+4. **Pencatatan Resmi Sesi Ujian (`ujian_sessions`)**:
+    - Untuk memisahkan logika perputaran token keamanan (`token_interval`) dari jam mulai ujian sesungguhnya, sistem mencatat riwayat setiap sesi resmi dalam tabel dedicated `ujian_sessions`.
+    - **Kolom Tabel**: `session_id`, `ujian_id`, `sesi_ke`, `started_at`, `ended_at`, `created_at`, `updated_at`.
+    - **Alur Kerja**:
+        - Saat Pengawas/Admin memulai ujian (`startExam` atau status diubah ke `active`), sistem membuat entri baru dengan `sesi_ke` bertambah, dan mencatat waktu presisi `started_at`.
+        - Saat Pengawas menjeda ujian (`endExam`), menyelesaikan ujian (`finishExam`), atau waktu ujian habis (`checkTimeout`), sistem otomatis mengunci sesi tersebut dengan mengisi `ended_at = now()`.
+    - **Pencocokan Peserta ke Sesi**: Titik awal pengerjaan mahasiswa (`getOfficialStartTime($firstActivity)`) mencocokkan waktu aktivitas pertama mahasiswa ke sesi resmi yang menaunginya.
+    - **Independen dari Token**: Perputaran token (refresh token tiap 3-5 menit) tidak lagi mengintervensi atau menggeser jam mulai sesi, sehingga mahasiswa yang baru submit di menit ke-50 tetap memiliki titik awal di menit ke-0 sesi tersebut.
+    - **Migrasi Aman & Backfill**: Skema baru tidak menghapus tabel/data yang sudah ada, serta otomatis membuat entri Sesi 1 untuk ujian-ujian terdahulu.
 
 ---
 
 _Dokumen ini diperbarui secara otomatis pada: 2026-10-21. Harap perbarui dokumen ini apabila ada perubahan arsitektur mayor pada masa mendatang._
-

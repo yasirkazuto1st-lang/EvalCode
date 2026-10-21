@@ -74,7 +74,7 @@ class AdminController extends Controller
             'passing_grade' => 'required|integer|min:0',
             'max_attempt' => 'required|integer|min:1',
             'bahasa_pemrograman' => 'nullable|array|min:1',
-            'bahasa_pemrograman.*' => 'in:python,cpp,java,dart',
+            'bahasa_pemrograman.*' => 'in:python,c,cpp,java,dart',
         ]);
 
         Ujian::create([
@@ -85,7 +85,7 @@ class AdminController extends Controller
             'token_interval' => $request->token_interval ?: 3,
             'passing_grade' => $request->passing_grade,
             'max_attempt' => $request->max_attempt,
-            'bahasa_pemrograman' => !empty($request->bahasa_pemrograman) ? $request->bahasa_pemrograman : ['python', 'cpp', 'java', 'dart'],
+            'bahasa_pemrograman' => !empty($request->bahasa_pemrograman) ? $request->bahasa_pemrograman : ['python', 'c', 'cpp', 'java', 'dart'],
         ]);
 
         return redirect()->route('admin.ujian.index')->with('success', 'Ujian berhasil ditambahkan.');
@@ -110,7 +110,7 @@ class AdminController extends Controller
             'passing_grade' => 'required|integer|min:0',
             'max_attempt' => 'required|integer|min:1',
             'bahasa_pemrograman' => 'nullable|array|min:1',
-            'bahasa_pemrograman.*' => 'in:python,cpp,java,dart',
+            'bahasa_pemrograman.*' => 'in:python,c,cpp,java,dart',
             'status' => 'nullable|in:active,closed,finished',
         ]);
 
@@ -123,13 +123,26 @@ class AdminController extends Controller
         $exam->token_interval = $request->token_interval ?: ($exam->token_interval ?: 3);
         $exam->passing_grade = $request->passing_grade;
         $exam->max_attempt = $request->max_attempt;
-        $exam->bahasa_pemrograman = !empty($request->bahasa_pemrograman) ? $request->bahasa_pemrograman : ($exam->bahasa_pemrograman ?: ['python', 'cpp', 'java', 'dart']);
+        $exam->bahasa_pemrograman = !empty($request->bahasa_pemrograman) ? $request->bahasa_pemrograman : ($exam->bahasa_pemrograman ?: ['python', 'c', 'cpp', 'java', 'dart']);
         $exam->status = $newStatus;
 
         if ($newStatus !== $oldStatus) {
             if ($newStatus === 'active') {
                 $exam->sisa_waktu = $request->durasi * 60;
                 $exam->started_at = \Carbon\Carbon::now();
+
+                // Tutup sesi sebelumnya yang belum tertutup
+                \App\Models\UjianSession::where('ujian_id', $exam->ujian_id)
+                    ->whereNull('ended_at')
+                    ->update(['ended_at' => $exam->started_at]);
+
+                // Buat sesi baru
+                $lastSession = \App\Models\UjianSession::where('ujian_id', $exam->ujian_id)->orderByDesc('sesi_ke')->first();
+                \App\Models\UjianSession::create([
+                    'ujian_id' => $exam->ujian_id,
+                    'sesi_ke' => $lastSession ? ($lastSession->sesi_ke + 1) : 1,
+                    'started_at' => $exam->started_at,
+                ]);
 
                 // Deactivate all old tokens
                 Token::where('ujian_id', $exam->ujian_id)->update(['status_aktif' => false]);
@@ -142,7 +155,11 @@ class AdminController extends Controller
                 ]);
             } else {
                 $exam->sisa_waktu = 0;
-                $exam->started_at = null;
+
+                // Tutup sesi aktif di tabel ujian_sessions
+                \App\Models\UjianSession::where('ujian_id', $exam->ujian_id)
+                    ->whereNull('ended_at')
+                    ->update(['ended_at' => \Carbon\Carbon::now()]);
 
                 // Deactivate all old tokens
                 Token::where('ujian_id', $exam->ujian_id)->update(['status_aktif' => false]);
@@ -262,7 +279,7 @@ class AdminController extends Controller
             ->get()
             ->groupBy('user_id');
 
-        $examStart = $exam->started_at ? \Carbon\Carbon::parse($exam->started_at) : null;
+        $examStart = $exam->getOfficialStartTime();
         $maxDurationSeconds = (int) ($exam->durasi * 60);
 
         // Tambahkan atribut persentase progres, status kelulusan, dan hitung waktu pengerjaan resmi untuk tie-breaker
@@ -276,11 +293,12 @@ class AdminController extends Controller
                 $lastTimeStr = $p->last_correct_at ?: $p->last_submission_at;
                 if ($lastTimeStr) {
                     $lastTime = \Carbon\Carbon::parse($lastTimeStr);
-                    $startTime = ($examStart && $lastTime->gte($examStart))
-                        ? $examStart
-                        : ($p->first_submission_at ? \Carbon\Carbon::parse($p->first_submission_at) : $lastTime);
-                    $rawSeconds = (int) abs($lastTime->diffInSeconds($startTime));
-                    $p->total_waktu_detik = min($maxDurationSeconds, $rawSeconds);
+                    $firstActivity = $p->first_submission_at ? \Carbon\Carbon::parse($p->first_submission_at) : $lastTime;
+                    $sessionStart = $exam->getOfficialStartTime($firstActivity);
+                    $startTime = ($sessionStart && $sessionStart->lte($firstActivity))
+                        ? $sessionStart
+                        : $firstActivity;
+                    $p->total_waktu_detik = (int) abs($lastTime->diffInSeconds($startTime));
                     $p->total_waktu_formatted = \App\Models\Ujian::formatWaktuPengerjaan($p->total_waktu_detik);
                 } else {
                     $p->total_waktu_detik = null;
@@ -385,7 +403,7 @@ class AdminController extends Controller
             ->groupBy('users.name', 'users.nim_username', 'users.user_id')
             ->get();
 
-        $examStart = $exam->started_at ? \Carbon\Carbon::parse($exam->started_at) : null;
+        $examStart = $exam->getOfficialStartTime();
         $maxDurationSeconds = (int) ($exam->durasi * 60);
 
         foreach ($participants as $p) {
@@ -393,11 +411,12 @@ class AdminController extends Controller
                 $lastTimeStr = $p->last_correct_at ?: $p->last_submission_at;
                 if ($lastTimeStr) {
                     $lastTime = \Carbon\Carbon::parse($lastTimeStr);
-                    $startTime = ($examStart && $lastTime->gte($examStart))
-                        ? $examStart
-                        : ($p->first_submission_at ? \Carbon\Carbon::parse($p->first_submission_at) : $lastTime);
-                    $rawSeconds = (int) abs($lastTime->diffInSeconds($startTime));
-                    $p->total_waktu_detik = min($maxDurationSeconds, $rawSeconds);
+                    $firstActivity = $p->first_submission_at ? \Carbon\Carbon::parse($p->first_submission_at) : $lastTime;
+                    $sessionStart = $exam->getOfficialStartTime($firstActivity);
+                    $startTime = ($sessionStart && $sessionStart->lte($firstActivity))
+                        ? $sessionStart
+                        : $firstActivity;
+                    $p->total_waktu_detik = (int) abs($lastTime->diffInSeconds($startTime));
                     $p->total_waktu_formatted = \App\Models\Ujian::formatWaktuPengerjaan($p->total_waktu_detik);
                 } else {
                     $p->total_waktu_detik = null;

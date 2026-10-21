@@ -152,6 +152,10 @@
                                                                 <label class="form-check-label" for="editLangPython{{ $exam->ujian_id }}">Python</label>
                                                             </div>
                                                             <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" name="bahasa_pemrograman[]" value="c" id="editLangC{{ $exam->ujian_id }}" {{ in_array('c', $allowedLangs) ? 'checked' : '' }}>
+                                                                <label class="form-check-label" for="editLangC{{ $exam->ujian_id }}">C</label>
+                                                            </div>
+                                                            <div class="form-check">
                                                                 <input class="form-check-input" type="checkbox" name="bahasa_pemrograman[]" value="cpp" id="editLangCpp{{ $exam->ujian_id }}" {{ in_array('cpp', $allowedLangs) ? 'checked' : '' }}>
                                                                 <label class="form-check-label" for="editLangCpp{{ $exam->ujian_id }}">C++</label>
                                                             </div>
@@ -263,6 +267,10 @@
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" name="bahasa_pemrograman[]" value="python" id="addLangPython" checked>
                                     <label class="form-check-label" for="addLangPython">Python</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="bahasa_pemrograman[]" value="c" id="addLangC" checked>
+                                    <label class="form-check-label" for="addLangC">C</label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" name="bahasa_pemrograman[]" value="cpp" id="addLangCpp" checked>

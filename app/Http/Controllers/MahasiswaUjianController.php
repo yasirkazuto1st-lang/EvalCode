@@ -87,7 +87,7 @@ class MahasiswaUjianController extends Controller
             ->groupBy('users.name', 'users.user_id')
             ->get();
 
-        $examStart = $exam->started_at ? \Carbon\Carbon::parse($exam->started_at) : null;
+        $examStart = $exam->getOfficialStartTime();
         $maxDurationSeconds = (int) ($exam->durasi * 60);
 
         foreach ($leaderboardRaw as $p) {
@@ -95,11 +95,12 @@ class MahasiswaUjianController extends Controller
                 $lastTimeStr = $p->last_correct_at ?: $p->last_submission_at;
                 if ($lastTimeStr) {
                     $lastTime = \Carbon\Carbon::parse($lastTimeStr);
-                    $startTime = ($examStart && $lastTime->gte($examStart))
-                        ? $examStart
-                        : ($p->first_submission_at ? \Carbon\Carbon::parse($p->first_submission_at) : $lastTime);
-                    $rawSeconds = (int) abs($lastTime->diffInSeconds($startTime));
-                    $p->total_waktu_detik = min($maxDurationSeconds, $rawSeconds);
+                    $firstActivity = $p->first_submission_at ? \Carbon\Carbon::parse($p->first_submission_at) : $lastTime;
+                    $sessionStart = $exam->getOfficialStartTime($firstActivity);
+                    $startTime = ($sessionStart && $sessionStart->lte($firstActivity))
+                        ? $sessionStart
+                        : $firstActivity;
+                    $p->total_waktu_detik = (int) abs($lastTime->diffInSeconds($startTime));
                     $p->total_waktu_formatted = \App\Models\Ujian::formatWaktuPengerjaan($p->total_waktu_detik);
                 } else {
                     $p->total_waktu_detik = null;
@@ -413,6 +414,7 @@ class MahasiswaUjianController extends Controller
         // Memetakan input string bahasa pemrograman dari frontend ke ID spesifik bahasa di Judge0 API.
         $langMap = [
             'python' => 71,
+            'c' => 50,
             'cpp' => 54,
             'java' => 62,
             'dart' => 90 // Dart 2.19.2 pada Judge0 CE v1.13.0+

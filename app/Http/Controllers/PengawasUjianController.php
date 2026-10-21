@@ -103,7 +103,7 @@ class PengawasUjianController extends Controller
             ->get()
             ->groupBy('user_id');
 
-        $examStart = $exam->started_at ? \Carbon\Carbon::parse($exam->started_at) : null;
+        $examStart = $exam->getOfficialStartTime();
         $maxDurationSeconds = (int) ($exam->durasi * 60);
 
         // Add progress percentage, pass status, and total execution time for tie-breaker
@@ -117,11 +117,12 @@ class PengawasUjianController extends Controller
                 $lastTimeStr = $p->last_correct_at ?: $p->last_submission_at;
                 if ($lastTimeStr) {
                     $lastTime = \Carbon\Carbon::parse($lastTimeStr);
-                    $startTime = ($examStart && $lastTime->gte($examStart))
-                        ? $examStart
-                        : ($p->first_submission_at ? \Carbon\Carbon::parse($p->first_submission_at) : $lastTime);
-                    $rawSeconds = (int) abs($lastTime->diffInSeconds($startTime));
-                    $p->total_waktu_detik = min($maxDurationSeconds, $rawSeconds);
+                    $firstActivity = $p->first_submission_at ? \Carbon\Carbon::parse($p->first_submission_at) : $lastTime;
+                    $sessionStart = $exam->getOfficialStartTime($firstActivity);
+                    $startTime = ($sessionStart && $sessionStart->lte($firstActivity))
+                        ? $sessionStart
+                        : $firstActivity;
+                    $p->total_waktu_detik = (int) abs($lastTime->diffInSeconds($startTime));
                     $p->total_waktu_formatted = \App\Models\Ujian::formatWaktuPengerjaan($p->total_waktu_detik);
                 } else {
                     $p->total_waktu_detik = null;
@@ -269,6 +270,19 @@ class PengawasUjianController extends Controller
         $exam->status = 'active';
         $exam->save();
 
+        // Tutup sesi sebelumnya yang mungkin belum tertutup
+        \App\Models\UjianSession::where('ujian_id', $exam->ujian_id)
+            ->whereNull('ended_at')
+            ->update(['ended_at' => $exam->started_at]);
+
+        // Buat sesi ujian baru di tabel ujian_sessions
+        $lastSession = \App\Models\UjianSession::where('ujian_id', $exam->ujian_id)->orderByDesc('sesi_ke')->first();
+        \App\Models\UjianSession::create([
+            'ujian_id' => $exam->ujian_id,
+            'sesi_ke' => $lastSession ? ($lastSession->sesi_ke + 1) : 1,
+            'started_at' => $exam->started_at,
+        ]);
+
         // Deactivate all old tokens
         Token::where('ujian_id', $exam->ujian_id)->update(['status_aktif' => false]);
 
@@ -292,11 +306,15 @@ class PengawasUjianController extends Controller
     {
         $exam = Ujian::findOrFail($id);
 
-        // Reset sisa_waktu ke 0 saat pause, next start akan mulai dari durasi penuh
+        // Reset sisa_waktu ke 0 saat pause, namun pertahankan started_at agar riwayat pengerjaan tidak hilang
         $exam->sisa_waktu = 0;
-        $exam->started_at = null;
         $exam->status = 'closed';
         $exam->save();
+
+        // Tutup sesi aktif di tabel ujian_sessions
+        \App\Models\UjianSession::where('ujian_id', $exam->ujian_id)
+            ->whereNull('ended_at')
+            ->update(['ended_at' => \Carbon\Carbon::now()]);
 
         Token::where('ujian_id', $exam->ujian_id)->update(['status_aktif' => false]);
 
@@ -314,9 +332,13 @@ class PengawasUjianController extends Controller
         $exam = Ujian::findOrFail($id);
         
         $exam->sisa_waktu = 0;
-        $exam->started_at = null;
         $exam->status = 'finished';
         $exam->save();
+
+        // Tutup sesi aktif di tabel ujian_sessions
+        \App\Models\UjianSession::where('ujian_id', $exam->ujian_id)
+            ->whereNull('ended_at')
+            ->update(['ended_at' => \Carbon\Carbon::now()]);
 
         Token::where('ujian_id', $exam->ujian_id)->update(['status_aktif' => false]);
 

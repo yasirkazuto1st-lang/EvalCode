@@ -186,6 +186,7 @@ const fetchWithRetry = async (url, options = {}, retries = 3, delay = 1000) => {
 
 const ALL_LANGUAGES = [
     { id: 'python', name: 'Python' },
+    { id: 'c', name: 'C' },
     { id: 'cpp', name: 'C++' },
     { id: 'java', name: 'Java' },
     { id: 'dart', name: 'Dart' }
@@ -193,6 +194,7 @@ const ALL_LANGUAGES = [
 
 const BOILERPLATE = {
     python: '# Tulis kode Python Anda di sini\n',
+    c: '#include <stdio.h>\n\nint main() {\n    // Tulis kode C Anda di sini\n    return 0;\n}\n',
     cpp: '#include <iostream>\nusing namespace std;\n\nint main() {\n    // Tulis kode C++ Anda di sini\n    return 0;\n}\n',
     java: 'public class Main {\n    public static void main(String[] args) {\n        // Tulis kode Java Anda di sini\n    }\n}\n',
     dart: 'void main() {\n  // Tulis kode Dart Anda di sini\n}\n'
@@ -204,7 +206,7 @@ const Workspace = ({ initialData }) => {
     const rawAllowed = exam?.bahasa_pemrograman;
     const allowedList = Array.isArray(rawAllowed)
         ? rawAllowed
-        : (typeof rawAllowed === 'string' ? JSON.parse(rawAllowed || '[]') : ['python', 'cpp', 'java', 'dart']);
+        : (typeof rawAllowed === 'string' ? JSON.parse(rawAllowed || '[]') : ['python', 'c', 'cpp', 'java', 'dart']);
 
     const languages = ALL_LANGUAGES.filter(lang =>
         !allowedList || allowedList.length === 0 || allowedList.includes(lang.id)

@@ -38,7 +38,7 @@ class Ujian extends Model
 
     /**
      * Mendapatkan daftar bahasa pemrograman yang diizinkan untuk ujian ini.
-     * Default ke semua bahasa (python, cpp, java, dart) jika belum diatur.
+     * Default ke semua bahasa (python, c, cpp, java, dart) jika belum diatur.
      */
     public function getAllowedLanguages(): array
     {
@@ -51,7 +51,7 @@ class Ujian extends Model
                 return $decoded;
             }
         }
-        return ['python', 'cpp', 'java', 'dart'];
+        return ['python', 'c', 'cpp', 'java', 'dart'];
     }
 
     /**
@@ -69,6 +69,89 @@ class Ujian extends Model
             return sprintf('%02dj %02dm %02ds', $h, $m, $s);
         }
         return sprintf('%02dm %02ds', $m, $s);
+    }
+
+    /**
+     * Mendapatkan waktu resmi dimulainya sesi ujian berdasarkan catatan tabel ujian_sessions.
+     * Jika referenceTime diberikan, sistem mengambil sesi ujian resmi yang menaungi aktivitas tersebut.
+     */
+    public function getOfficialStartTime(?\Carbon\Carbon $referenceTime = null): ?\Carbon\Carbon
+    {
+        $sessions = \App\Models\UjianSession::where('ujian_id', $this->ujian_id)
+            ->orderBy('started_at', 'asc')
+            ->get();
+
+        if ($sessions->isNotEmpty()) {
+            if ($referenceTime) {
+                // Cari sesi terbaru yang dimulai pada atau sebelum waktu aktivitas pertama mahasiswa
+                $session = $sessions->filter(function ($s) use ($referenceTime) {
+                    return $s->started_at && $s->started_at->lte($referenceTime);
+                })->last();
+
+                if ($session && $session->started_at) {
+                    return $session->started_at;
+                }
+
+                // Jika aktivitas mahasiswa terjadi sebelum sesi yang tercatat (misal ujian di-restart atau data lama):
+                // 1. Cari token yang terbit sebelum atau sama dengan waktu aktivitas mahasiswa
+                $token = \App\Models\Token::where('ujian_id', $this->ujian_id)
+                    ->where('created_at', '<=', $referenceTime)
+                    ->latest('created_at')
+                    ->first();
+                if ($token && $token->created_at) {
+                    return \Carbon\Carbon::parse($token->created_at);
+                }
+
+                // 2. Cek apakah started_at ujian lebih awal atau sama dengan referenceTime
+                if ($this->started_at) {
+                    $pStarted = $this->started_at instanceof \Carbon\Carbon ? $this->started_at : \Carbon\Carbon::parse($this->started_at);
+                    if ($pStarted->lte($referenceTime)) {
+                        return $pStarted;
+                    }
+                }
+
+                // 3. Fallback: gunakan referenceTime itu sendiri
+                return $referenceTime;
+            }
+
+            // Default ke sesi pertama
+            return $sessions->first()->started_at;
+        }
+
+        // Fallback untuk ujian tanpa tabel ujian_sessions (misal unit test mock atau data legacy):
+        if ($this->started_at) {
+            $pStarted = $this->started_at instanceof \Carbon\Carbon ? $this->started_at : \Carbon\Carbon::parse($this->started_at);
+            if (!$referenceTime || $pStarted->lte($referenceTime)) {
+                return $pStarted;
+            }
+        }
+
+        if ($referenceTime) {
+            $token = \App\Models\Token::where('ujian_id', $this->ujian_id)
+                ->where('created_at', '<=', $referenceTime)
+                ->latest('created_at')
+                ->first();
+            if ($token && $token->created_at) {
+                return \Carbon\Carbon::parse($token->created_at);
+            }
+            return $referenceTime;
+        }
+
+        $token = \App\Models\Token::where('ujian_id', $this->ujian_id)->orderBy('created_at', 'asc')->first();
+        if ($token && $token->created_at) {
+            return \Carbon\Carbon::parse($token->created_at);
+        }
+
+        return null;
+    }
+
+    /**
+     * Relasi ke model UjianSession.
+     * Satu ujian memiliki banyak riwayat sesi pengerjaan.
+     */
+    public function sessions()
+    {
+        return $this->hasMany(UjianSession::class, 'ujian_id', 'ujian_id')->orderBy('started_at', 'asc');
     }
 
     /**
@@ -120,8 +203,13 @@ class Ujian extends Model
             if ($remaining <= 0) {
                 $this->status = 'closed';
                 $this->sisa_waktu = 0;
-                $this->started_at = null;
+                // started_at dipertahankan agar histori rekapitulasi waktu peserta tetap akurat
                 $this->save();
+
+                // Tutup sesi aktif di tabel ujian_sessions
+                \App\Models\UjianSession::where('ujian_id', $this->ujian_id)
+                    ->whereNull('ended_at')
+                    ->update(['ended_at' => \Carbon\Carbon::now()]);
 
                 // Nonaktifkan semua token ujian ini
                 \App\Models\Token::where('ujian_id', $this->ujian_id)->update(['status_aktif' => false]);
