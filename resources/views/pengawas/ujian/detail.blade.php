@@ -301,34 +301,27 @@
                         class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3 gap-md-4">
                         <h5 class="fw-bold mb-0 text-nowrap flex-shrink-0"><i
                                 class="bi bi-people-fill text-primary me-2"></i> Monitoring Peserta Ujian</h5>
-                        <div class="row g-2 w-100 w-lg-auto ms-lg-auto m-0 justify-content-lg-end">
-                            <div class="col-12 col-sm-7 col-lg-auto p-0 pe-sm-2">
-                                <input type="text" id="searchParticipantInput"
-                                    class="form-control form-control-sm search-input rounded-pill w-100"
-                                    style="min-width: 200px;" placeholder="Cari peserta (NIM/Nama)...">
-                            </div>
-                            <div class="col-12 col-sm-5 col-lg-auto p-0 ps-sm-2">
-                                <div class="dropdown w-100">
-                                    <button
-                                        class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm dropdown-toggle d-flex align-items-center justify-content-center gap-1 w-100"
-                                        type="button" id="filterDropdown" data-bs-toggle="dropdown"
-                                        aria-expanded="false">
-                                        <i class="bi bi-funnel-fill"></i> <span id="activeFilterText">Urutkan:
-                                            Normal</span>
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-end shadow rounded-4 border-0"
-                                        aria-labelledby="filterDropdown">
-                                        <li><a class="dropdown-item filter-option active" href="#"
-                                                data-sort="normal"><i
-                                                    class="bi bi-sort-numeric-down me-2 text-primary"></i> Normal (Skor
-                                                Tertinggi)</a></li>
-                                        <li><a class="dropdown-item filter-option" href="#" data-sort="terbaru"><i
-                                                    class="bi bi-clock-history me-2 text-success"></i> Submission
-                                                Terakhir</a></li>
-                                        <li><a class="dropdown-item filter-option" href="#" data-sort="terlama"><i
-                                                    class="bi bi-clock me-2 text-warning"></i> Submission Terlama</a></li>
-                                    </ul>
-                                </div>
+                        <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2 w-100 w-lg-auto ms-lg-auto">
+                            <input type="text" id="searchParticipantInput"
+                                class="form-control form-control-sm search-input rounded-pill w-100 flex-grow-1 flex-lg-grow-0"
+                                style="min-width: 180px;" placeholder="Cari peserta (NIM/Nama)...">
+                            <div class="dropdown flex-shrink-0">
+                                <button
+                                    class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm dropdown-toggle d-flex align-items-center justify-content-center gap-2 w-100 text-nowrap"
+                                    type="button" id="filterDropdown" data-bs-toggle="dropdown"
+                                    aria-expanded="false" style="min-width: 150px;">
+                                    <i class="bi bi-funnel-fill"></i> <span id="activeFilterText">Urutkan: Normal</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow rounded-4 border-0 py-2"
+                                    aria-labelledby="filterDropdown" style="min-width: 240px;">
+                                    <li><a class="dropdown-item filter-option active py-2 px-3 text-nowrap" href="#"
+                                            data-sort="normal"><i
+                                                class="bi bi-sort-numeric-down me-2 text-primary"></i> Normal (Skor Tertinggi)</a></li>
+                                    <li><a class="dropdown-item filter-option py-2 px-3 text-nowrap" href="#" data-sort="terbaru"><i
+                                                class="bi bi-clock-history me-2 text-success"></i> Submission Terakhir</a></li>
+                                    <li><a class="dropdown-item filter-option py-2 px-3 text-nowrap" href="#" data-sort="terlama"><i
+                                                class="bi bi-clock me-2 text-warning"></i> Submission Terlama</a></li>
+                                </ul>
                             </div>
                         </div>
                     </div>
