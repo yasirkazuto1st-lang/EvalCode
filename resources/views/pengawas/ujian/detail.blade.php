@@ -298,22 +298,22 @@
             <div class="col-md-9">
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                     <div
-                        class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3 gap-md-4">
-                        <h5 class="fw-bold mb-0 text-nowrap flex-shrink-0"><i
+                        class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <h5 class="fw-bold mb-0 text-nowrap"><i
                                 class="bi bi-people-fill text-primary me-2"></i> Monitoring Peserta Ujian</h5>
-                        <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2 w-100 w-lg-auto ms-lg-auto">
+                        <div class="d-flex align-items-center gap-2 flex-wrap flex-sm-nowrap ms-auto">
                             <input type="text" id="searchParticipantInput"
-                                class="form-control form-control-sm search-input rounded-pill w-100 flex-grow-1 flex-lg-grow-0"
-                                style="min-width: 180px;" placeholder="Cari peserta (NIM/Nama)...">
-                            <div class="dropdown flex-shrink-0">
+                                class="form-control form-control-sm search-input rounded-pill"
+                                style="min-width: 140px; max-width: 200px;" placeholder="Cari peserta...">
+                            <div class="dropdown">
                                 <button
-                                    class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm dropdown-toggle d-flex align-items-center justify-content-center gap-2 w-100 text-nowrap"
+                                    class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm dropdown-toggle d-inline-flex align-items-center justify-content-center gap-1 text-nowrap"
                                     type="button" id="filterDropdown" data-bs-toggle="dropdown"
-                                    aria-expanded="false" style="min-width: 150px;">
+                                    aria-expanded="false">
                                     <i class="bi bi-funnel-fill"></i> <span id="activeFilterText">Urutkan: Normal</span>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end shadow rounded-4 border-0 py-2"
-                                    aria-labelledby="filterDropdown" style="min-width: 240px;">
+                                    aria-labelledby="filterDropdown" style="min-width: 230px;">
                                     <li><a class="dropdown-item filter-option active py-2 px-3 text-nowrap" href="#"
                                             data-sort="normal"><i
                                                 class="bi bi-sort-numeric-down me-2 text-primary"></i> Normal (Skor Tertinggi)</a></li>
