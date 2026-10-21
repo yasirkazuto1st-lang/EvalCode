@@ -105,6 +105,7 @@ class PengawasUjianController extends Controller
 
         $examStart = $exam->getOfficialStartTime();
         $maxDurationSeconds = (int) ($exam->durasi * 60);
+        $sessionCount = \App\Models\UjianSession::where('ujian_id', $exam->ujian_id)->count();
 
         // Add progress percentage, pass status, and total execution time for tie-breaker
         foreach ($participants as $p) {
@@ -122,6 +123,9 @@ class PengawasUjianController extends Controller
                     $startTime = ($sessionStart && $sessionStart->lte($firstActivity))
                         ? $sessionStart
                         : $firstActivity;
+                    if ($sessionCount <= 1 && $startTime->lt($firstActivity->copy()->subSeconds($maxDurationSeconds))) {
+                        $startTime = $firstActivity;
+                    }
                     $p->total_waktu_detik = (int) abs($lastTime->diffInSeconds($startTime));
                     $p->total_waktu_formatted = \App\Models\Ujian::formatWaktuPengerjaan($p->total_waktu_detik);
                 } else {

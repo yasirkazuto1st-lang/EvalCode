@@ -89,6 +89,7 @@ class MahasiswaUjianController extends Controller
 
         $examStart = $exam->getOfficialStartTime();
         $maxDurationSeconds = (int) ($exam->durasi * 60);
+        $sessionCount = \App\Models\UjianSession::where('ujian_id', $exam->ujian_id)->count();
 
         foreach ($leaderboardRaw as $p) {
             if ($p->total_skor > 0) {
@@ -100,6 +101,9 @@ class MahasiswaUjianController extends Controller
                     $startTime = ($sessionStart && $sessionStart->lte($firstActivity))
                         ? $sessionStart
                         : $firstActivity;
+                    if ($sessionCount <= 1 && $startTime->lt($firstActivity->copy()->subSeconds($maxDurationSeconds))) {
+                        $startTime = $firstActivity;
+                    }
                     $p->total_waktu_detik = (int) abs($lastTime->diffInSeconds($startTime));
                     $p->total_waktu_formatted = \App\Models\Ujian::formatWaktuPengerjaan($p->total_waktu_detik);
                 } else {
