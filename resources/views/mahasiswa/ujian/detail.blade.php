@@ -759,6 +759,7 @@
                 if (backdrop) backdrop.style.display = 'none';
             };
 
+            // Menggunakan Page Visibility API murni agar tidak false positive saat muncul pop-up browser (seperti Translate, klik profil browser, extension)
             document.addEventListener('visibilitychange', function() {
                 if (document.hidden) {
                     handleDeparture();
@@ -766,9 +767,6 @@
                     handleReturn();
                 }
             });
-
-            window.addEventListener('blur', handleDeparture);
-            window.addEventListener('focus', handleReturn);
         })();
     </script>
     @endif

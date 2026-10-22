@@ -354,22 +354,12 @@ const Workspace = ({ initialData }) => {
             }
         };
 
-        const onWindowBlur = () => {
-            handleDeparture();
-        };
-
-        const onWindowFocus = () => {
-            handleReturn();
-        };
-
+        // Menggunakan Page Visibility API murni (hanya terpicu saat benar-benar ganti/tutup tab atau minimize browser)
+        // Menghindari false positive dari window.blur (seperti pop-up Google Translate, klik profil browser, extension, dsb)
         document.addEventListener('visibilitychange', onVisibilityChange);
-        window.addEventListener('blur', onWindowBlur);
-        window.addEventListener('focus', onWindowFocus);
 
         return () => {
             document.removeEventListener('visibilitychange', onVisibilityChange);
-            window.removeEventListener('blur', onWindowBlur);
-            window.removeEventListener('focus', onWindowFocus);
         };
     }, [exam]);
 
