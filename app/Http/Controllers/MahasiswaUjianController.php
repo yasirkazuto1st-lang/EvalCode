@@ -57,6 +57,11 @@ class MahasiswaUjianController extends Controller
             return redirect()->route('dashboard')->with('error', 'Ujian belum dimulai atau sudah ditutup.');
         }
 
+        // Cek proteksi token sesi jika fitur tab switch protection aktif
+        if ($exam->tab_switch_protection && !session("ujian_token_verified_{$exam->ujian_id}")) {
+            return redirect()->route('dashboard')->with('error', 'Sesi ujian Anda belum aktif atau telah berakhir karena batas keluar tab. Silakan masukkan token ujian dari Pengawas.');
+        }
+
         // Leaderboard Calculation dengan Tie-Breaker
         $subQuery = \Illuminate\Support\Facades\DB::table('submissions')
             ->join('soals', 'submissions.soal_id', '=', 'soals.soal_id')
@@ -192,8 +197,12 @@ class MahasiswaUjianController extends Controller
             return back()->with('error', 'Token ujian tidak valid atau sudah kadaluarsa!');
         }
 
-        // Token matches! For now, redirect to detail view to select questions.
-        // In a real scenario, we might create a participant record here if it doesn't exist.
+        // Token matches! Set session token verified dan reset hitungan pelanggaran tab
+        session([
+            "ujian_token_verified_{$exam->ujian_id}" => true,
+            "ujian_tab_violations_{$exam->ujian_id}" => 0,
+        ]);
+
         return redirect()->route('ujian.detail', $exam->ujian_id)->with('success', 'Berhasil masuk ke ujian!');
     }
 
@@ -211,6 +220,11 @@ class MahasiswaUjianController extends Controller
         
         if ($exam->status !== 'active') {
             return redirect()->route('dashboard')->with('error', 'Ujian tidak aktif.');
+        }
+
+        // Cek proteksi token sesi jika fitur tab switch protection aktif
+        if ($exam->tab_switch_protection && !session("ujian_token_verified_{$exam->ujian_id}")) {
+            return redirect()->route('dashboard')->with('error', 'Sesi ujian Anda belum aktif atau telah berakhir karena batas keluar tab. Silakan masukkan token ujian dari Pengawas.');
         }
 
         $soal = \App\Models\Soal::with('testCases')->where('ujian_id', $examId)->findOrFail($soalId);
@@ -367,6 +381,14 @@ class MahasiswaUjianController extends Controller
         $exam->checkTimeout();
         if ($exam->status !== 'active') {
             return response()->json(['success' => false, 'message' => 'Ujian tidak aktif atau sudah ditutup karena waktu habis.']);
+        }
+
+        // Cek proteksi token sesi jika tab switch protection aktif
+        if ($exam->tab_switch_protection && !session("ujian_token_verified_{$exam->ujian_id}")) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sesi ujian Anda telah berakhir karena melebihi batas perpindahan tab/jendela. Hubungi pengawas untuk meminta token baru.'
+            ]);
         }
 
         // 2b. VALIDASI BAHASA PEMROGRAMAN YANG DIIZINKAN
@@ -706,6 +728,65 @@ class MahasiswaUjianController extends Controller
         return response()->json([
             'status' => $exam->status,
             'remainingSeconds' => $exam->getRemainingSeconds()
+        ]);
+    }
+
+    /**
+     * Catat pelanggaran perpindahan tab/jendela oleh Mahasiswa selama ujian berlangsung.
+     * Jika melampaui batas toleransi (max_tab_switch), sesi ujian mahasiswa otomatis dibatalkan.
+     * 
+     * @param Request $request
+     * @param int $id ID Ujian
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function recordTabViolation(Request $request, $id)
+    {
+        $exam = Ujian::findOrFail($id);
+        $exam->checkTimeout();
+
+        if ($exam->status !== 'active') {
+            return response()->json([
+                'disqualified' => true,
+                'message' => 'Ujian tidak aktif atau sudah selesai.'
+            ]);
+        }
+
+        // Jika fitur proteksi tidak aktif pada ujian ini, abaikan
+        if (!$exam->tab_switch_protection) {
+            return response()->json([
+                'disqualified' => false,
+                'violations' => 0,
+                'max' => $exam->max_tab_switch !== null ? (int) $exam->max_tab_switch : 3
+            ]);
+        }
+
+        $sessionKey = "ujian_tab_violations_{$id}";
+        $currentViolations = (int) session($sessionKey, 0) + 1;
+        session([$sessionKey => $currentViolations]);
+
+        $max = $exam->max_tab_switch !== null ? (int) $exam->max_tab_switch : 3;
+
+        if ($currentViolations > $max) {
+            // Cabut verifikasi sesi token mahasiswa
+            session()->forget("ujian_token_verified_{$id}");
+
+            $msg = $max === 0 
+                ? "Ujian ini tidak memiliki batas toleransi pindah tab (0 kali). Sesi ujian Anda telah dinonaktifkan."
+                : "Batas toleransi keluar tab telah terlampaui ({$currentViolations}/{$max}). Sesi ujian Anda telah dinonaktifkan.";
+
+            return response()->json([
+                'disqualified' => true,
+                'violations' => $currentViolations,
+                'max' => $max,
+                'message' => $msg
+            ]);
+        }
+
+        return response()->json([
+            'disqualified' => false,
+            'violations' => $currentViolations,
+            'max' => $max,
+            'message' => "Peringatan perpindahan jendela/tab ({$currentViolations}/{$max})."
         ]);
     }
 }

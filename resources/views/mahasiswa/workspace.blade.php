@@ -20,7 +20,10 @@
         attemptsUsed: {{ $attemptsUsed }},
         maxAttempt: {{ $maxAttempt }},
         remainingSeconds: {{ $remainingSeconds }},
-        hasAccepted: @json($hasAccepted)
+        hasAccepted: @json($hasAccepted),
+        tab_violation_url: "{{ route('ujian.tab.violation', $exam->ujian_id) }}",
+        dashboard_url: "{{ route('dashboard') }}",
+        initialViolations: {{ (int) session('ujian_tab_violations_'.$exam->ujian_id, 0) }}
     };
 </script>
 @endsection

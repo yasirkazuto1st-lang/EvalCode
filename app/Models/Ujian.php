@@ -23,6 +23,8 @@ class Ujian extends Model
         'passing_grade',
         'max_attempt',
         'bahasa_pemrograman',
+        'tab_switch_protection',
+        'max_tab_switch',
         'started_at',
         'sisa_waktu',
     ];
@@ -33,6 +35,8 @@ class Ujian extends Model
         'passing_grade' => 'integer',
         'max_attempt' => 'integer',
         'bahasa_pemrograman' => 'array',
+        'tab_switch_protection' => 'boolean',
+        'max_tab_switch' => 'integer',
         'started_at' => 'datetime',
     ];
 

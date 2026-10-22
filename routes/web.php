@@ -61,6 +61,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/ujian/{id}/join', [\App\Http\Controllers\MahasiswaUjianController::class, 'joinExam'])->name('ujian.join');
         Route::get('/ujian/{examId}/soal/{soalId}/workspace', [\App\Http\Controllers\MahasiswaUjianController::class, 'workspace'])->name('workspace');
         Route::post('/ujian/{examId}/soal/{soalId}/workspace/submit', [\App\Http\Controllers\MahasiswaUjianController::class, 'submitCode'])->name('workspace.submit');
+        Route::post('/ujian/{id}/tab-violation', [\App\Http\Controllers\MahasiswaUjianController::class, 'recordTabViolation'])->name('ujian.tab.violation');
     });
 
     // ------------------------------------------

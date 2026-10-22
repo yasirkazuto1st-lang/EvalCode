@@ -530,6 +530,205 @@ class NewExamFeaturesTest extends TestCase
         $this->assertNotNull($session2);
         $this->assertNotNull($session2->ended_at);
     }
+
+    public function test_admin_can_configure_tab_switch_protection(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin Tab Test',
+            'nim_username' => 'admintab',
+            'role' => 'Admin',
+            'password' => bcrypt('password'),
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.ujian.store'), [
+            'judul' => 'Ujian Proteksi Tab',
+            'deskripsi' => 'Testing tab protection',
+            'durasi' => 60,
+            'token_interval' => 3,
+            'passing_grade' => 70,
+            'max_attempt' => 3,
+            'tab_switch_protection' => '1',
+            'max_tab_switch' => 2,
+        ]);
+
+        $response->assertRedirect(route('admin.ujian.index'));
+        $this->assertDatabaseHas('ujians', [
+            'judul' => 'Ujian Proteksi Tab',
+            'tab_switch_protection' => true,
+            'max_tab_switch' => 2,
+        ]);
+
+        $exam = Ujian::where('judul', 'Ujian Proteksi Tab')->first();
+
+        // Update to disable
+        $updateResponse = $this->actingAs($admin)->put(route('admin.ujian.update', $exam->ujian_id), [
+            'judul' => 'Ujian Proteksi Tab Updated',
+            'durasi' => 45,
+            'passing_grade' => 60,
+            'max_attempt' => 3,
+            'tab_switch_protection' => '0',
+            'max_tab_switch' => 5,
+        ]);
+
+        $updateResponse->assertRedirect(route('admin.ujian.index'));
+        $exam->refresh();
+        $this->assertFalse($exam->tab_switch_protection);
+        $this->assertEquals(5, $exam->max_tab_switch);
+    }
+
+    public function test_tab_switch_violation_tracking_and_disqualification(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin Tab Viol',
+            'nim_username' => 'admintabviol',
+            'role' => 'Admin',
+            'password' => bcrypt('password'),
+        ]);
+
+        $student = User::create([
+            'name' => 'Mahasiswa Tab Viol',
+            'nim_username' => 'mhstabviol',
+            'role' => 'Mahasiswa',
+            'password' => bcrypt('password'),
+        ]);
+
+        $exam = Ujian::create([
+            'user_id' => $admin->user_id,
+            'judul' => 'Ujian Pindah Tab',
+            'durasi' => 60,
+            'passing_grade' => 50,
+            'max_attempt' => 3,
+            'status' => 'active',
+            'tab_switch_protection' => true,
+            'max_tab_switch' => 2,
+        ]);
+
+        $soal = Soal::create([
+            'ujian_id' => $exam->ujian_id,
+            'nama_soal' => 'Soal 1',
+            'bobot_nilai' => 100,
+        ]);
+
+        $token = \App\Models\Token::create([
+            'ujian_id' => $exam->ujian_id,
+            'kode_token' => 'SEC-999',
+            'status_aktif' => true,
+        ]);
+
+        // 1. Student without token cannot directly access workspace
+        $resNoToken = $this->actingAs($student)->get(route('workspace', ['examId' => $exam->ujian_id, 'soalId' => $soal->soal_id]));
+        $resNoToken->assertRedirect(route('dashboard'));
+
+        // 2. Student joins with token
+        $joinRes = $this->actingAs($student)->post(route('ujian.join', $exam->ujian_id), [
+            'token' => 'SEC-999',
+        ]);
+        $joinRes->assertRedirect(route('ujian.detail', $exam->ujian_id));
+
+        // Now student can access workspace
+        $resWithToken = $this->actingAs($student)->get(route('workspace', ['examId' => $exam->ujian_id, 'soalId' => $soal->soal_id]));
+        $resWithToken->assertOk();
+
+        // 3. First violation
+        $v1 = $this->actingAs($student)->post(route('ujian.tab.violation', $exam->ujian_id));
+        $v1->assertOk()->assertJson([
+            'disqualified' => false,
+            'violations' => 1,
+            'max' => 2,
+        ]);
+
+        // 4. Second violation (at max limit, still allowed)
+        $v2 = $this->actingAs($student)->post(route('ujian.tab.violation', $exam->ujian_id));
+        $v2->assertOk()->assertJson([
+            'disqualified' => false,
+            'violations' => 2,
+            'max' => 2,
+        ]);
+
+        // 5. Third violation (exceeds max limit 2 -> disqualified!)
+        $v3 = $this->actingAs($student)->post(route('ujian.tab.violation', $exam->ujian_id));
+        $v3->assertOk()->assertJson([
+            'disqualified' => true,
+            'violations' => 3,
+            'max' => 2,
+        ]);
+
+        // 6. Accessing workspace again is now blocked and redirects to dashboard
+        $resAfterDisqualified = $this->actingAs($student)->get(route('workspace', ['examId' => $exam->ujian_id, 'soalId' => $soal->soal_id]));
+        $resAfterDisqualified->assertRedirect(route('dashboard'));
+
+        // 7. Student can rejoin when pengawas provides a valid token
+        $rejoin = $this->actingAs($student)->post(route('ujian.join', $exam->ujian_id), [
+            'token' => 'SEC-999',
+        ]);
+        $rejoin->assertRedirect(route('ujian.detail', $exam->ujian_id));
+
+        // Can access workspace again
+        $resRejoin = $this->actingAs($student)->get(route('workspace', ['examId' => $exam->ujian_id, 'soalId' => $soal->soal_id]));
+        $resRejoin->assertOk();
+    }
+
+    public function test_zero_tolerance_tab_switch_protection_disqualifies_on_first_violation(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin Test Strict',
+            'nim_username' => 'adminstrict',
+            'role' => 'Admin',
+            'password' => bcrypt('password'),
+        ]);
+
+        $student = User::create([
+            'name' => 'Mhs Zero Tolerance',
+            'nim_username' => 'mhs_strict',
+            'role' => 'Mahasiswa',
+            'password' => bcrypt('password'),
+        ]);
+
+        $exam = Ujian::create([
+            'user_id' => $admin->user_id,
+            'judul' => 'Ujian Strict Zero Tolerance',
+            'durasi' => 60,
+            'passing_grade' => 50,
+            'max_attempt' => 3,
+            'status' => 'active',
+            'tab_switch_protection' => true,
+            'max_tab_switch' => 0, // Strict zero-tolerance mode
+        ]);
+
+        $soal = Soal::create([
+            'ujian_id' => $exam->ujian_id,
+            'nama_soal' => 'Soal Strict',
+            'bobot_nilai' => 100,
+        ]);
+
+        $token = \App\Models\Token::create([
+            'ujian_id' => $exam->ujian_id,
+            'kode_token' => 'STRICT-000',
+            'status_aktif' => true,
+        ]);
+
+        // 1. Join with token
+        $join = $this->actingAs($student)->post(route('ujian.join', $exam->ujian_id), [
+            'token' => 'STRICT-000',
+        ]);
+        $join->assertRedirect(route('ujian.detail', $exam->ujian_id));
+
+        // 2. Can access workspace
+        $res = $this->actingAs($student)->get(route('workspace', ['examId' => $exam->ujian_id, 'soalId' => $soal->soal_id]));
+        $res->assertOk();
+
+        // 3. First tab switch violation -> immediate disqualification because max is 0
+        $v1 = $this->actingAs($student)->post(route('ujian.tab.violation', $exam->ujian_id));
+        $v1->assertOk()->assertJson([
+            'disqualified' => true,
+            'violations' => 1,
+            'max' => 0,
+        ]);
+
+        // 4. Session token is lost, access blocked
+        $blocked = $this->actingAs($student)->get(route('workspace', ['examId' => $exam->ujian_id, 'soalId' => $soal->soal_id]));
+        $blocked->assertRedirect(route('dashboard'));
+    }
 }
 
 

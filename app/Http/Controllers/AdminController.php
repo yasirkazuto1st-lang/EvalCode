@@ -75,6 +75,8 @@ class AdminController extends Controller
             'max_attempt' => 'required|integer|min:1',
             'bahasa_pemrograman' => 'nullable|array|min:1',
             'bahasa_pemrograman.*' => 'in:python,c,cpp,java,dart',
+            'tab_switch_protection' => 'nullable|boolean',
+            'max_tab_switch' => 'nullable|integer|min:0',
         ]);
 
         Ujian::create([
@@ -86,6 +88,8 @@ class AdminController extends Controller
             'passing_grade' => $request->passing_grade,
             'max_attempt' => $request->max_attempt,
             'bahasa_pemrograman' => !empty($request->bahasa_pemrograman) ? $request->bahasa_pemrograman : ['python', 'c', 'cpp', 'java', 'dart'],
+            'tab_switch_protection' => $request->boolean('tab_switch_protection'),
+            'max_tab_switch' => ($request->has('max_tab_switch') && $request->max_tab_switch !== null && $request->max_tab_switch !== '') ? (int) $request->max_tab_switch : 3,
         ]);
 
         return redirect()->route('admin.ujian.index')->with('success', 'Ujian berhasil ditambahkan.');
@@ -111,6 +115,8 @@ class AdminController extends Controller
             'max_attempt' => 'required|integer|min:1',
             'bahasa_pemrograman' => 'nullable|array|min:1',
             'bahasa_pemrograman.*' => 'in:python,c,cpp,java,dart',
+            'tab_switch_protection' => 'nullable|boolean',
+            'max_tab_switch' => 'nullable|integer|min:0',
             'status' => 'nullable|in:active,closed,finished',
         ]);
 
@@ -124,6 +130,8 @@ class AdminController extends Controller
         $exam->passing_grade = $request->passing_grade;
         $exam->max_attempt = $request->max_attempt;
         $exam->bahasa_pemrograman = !empty($request->bahasa_pemrograman) ? $request->bahasa_pemrograman : ($exam->bahasa_pemrograman ?: ['python', 'c', 'cpp', 'java', 'dart']);
+        $exam->tab_switch_protection = $request->boolean('tab_switch_protection');
+        $exam->max_tab_switch = ($request->has('max_tab_switch') && $request->max_tab_switch !== null && $request->max_tab_switch !== '') ? (int) $request->max_tab_switch : 3;
         $exam->status = $newStatus;
 
         if ($newStatus !== $oldStatus) {
@@ -181,6 +189,8 @@ class AdminController extends Controller
                     'passing_grade' => $exam->passing_grade,
                     'max_attempt' => $exam->max_attempt,
                     'bahasa_pemrograman' => $exam->getAllowedLanguages(),
+                    'tab_switch_protection' => $exam->tab_switch_protection,
+                    'max_tab_switch' => $exam->max_tab_switch,
                     'status' => $exam->status
                 ]
             ]);

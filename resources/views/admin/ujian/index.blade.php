@@ -158,6 +158,20 @@
                                                             @endforeach
                                                         </div>
                                                     </div>
+                                                    <div class="mb-3 p-3 rounded-3 border bg-light bg-opacity-50">
+                                                        <div class="form-check form-switch mb-2">
+                                                            <input class="form-check-input" type="checkbox" name="tab_switch_protection" value="1" id="tabSwitchEdit{{ $exam->ujian_id }}" {{ $exam->tab_switch_protection ? 'checked' : '' }} onchange="toggleTabSwitchInput(this, 'maxTabEditBox{{ $exam->ujian_id }}')">
+                                                            <label class="form-check-label fw-semibold" for="tabSwitchEdit{{ $exam->ujian_id }}">
+                                                                <i class="bi bi-shield-lock me-1 text-primary"></i> Batasi Pindah Tab / Jendela
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-text small mb-2">Jika aktif, mahasiswa yang keluar jendela ujian melebihi batas akan otomatis dikeluarkan dari sesi ujian.</div>
+                                                        <div id="maxTabEditBox{{ $exam->ujian_id }}" style="{{ $exam->tab_switch_protection ? '' : 'display: none;' }}">
+                                                            <label class="form-label small fw-semibold">Batas Toleransi Keluar Tab (kali)</label>
+                                                            <input type="number" name="max_tab_switch" class="form-control form-control-sm" value="{{ isset($exam->max_tab_switch) ? $exam->max_tab_switch : 3 }}" min="0" max="50">
+                                                            <div class="form-text text-muted" style="font-size: 0.75rem;">Isi <strong>0</strong> untuk mode tanpa toleransi (sekali keluar langsung dikeluarkan).</div>
+                                                        </div>
+                                                    </div>
                                                     <div class="mb-3">
                                                         <label class="form-label">Status</label>
                                                         <select name="status" class="form-select">
@@ -264,6 +278,20 @@
                                 @endforeach
                             </div>
                         </div>
+                        <div class="mb-3 p-3 rounded-3 border bg-light bg-opacity-50">
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" name="tab_switch_protection" value="1" id="tabSwitchAdd" onchange="toggleTabSwitchInput(this, 'maxTabAddBox')">
+                                <label class="form-check-label fw-semibold" for="tabSwitchAdd">
+                                    <i class="bi bi-shield-lock me-1 text-primary"></i> Batasi Pindah Tab / Jendela
+                                </label>
+                            </div>
+                            <div class="form-text small mb-2">Jika aktif, mahasiswa yang keluar jendela ujian melebihi batas akan otomatis dikeluarkan dari sesi ujian.</div>
+                            <div id="maxTabAddBox" style="display: none;">
+                                <label class="form-label small fw-semibold">Batas Toleransi Keluar Tab (kali)</label>
+                                <input type="number" name="max_tab_switch" class="form-control form-control-sm" value="3" min="0" max="50">
+                                <div class="form-text text-muted" style="font-size: 0.75rem;">Isi <strong>0</strong> untuk mode tanpa toleransi (sekali keluar langsung dikeluarkan).</div>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
@@ -276,6 +304,13 @@
     @endpush
 
     <script>
+        function toggleTabSwitchInput(checkbox, targetId) {
+            const box = document.getElementById(targetId);
+            if (box) {
+                box.style.display = checkbox.checked ? 'block' : 'none';
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('searchUjianInput');
             const tableBody = document.getElementById('ujianTableBody');

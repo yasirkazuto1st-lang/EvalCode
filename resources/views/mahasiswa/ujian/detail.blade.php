@@ -22,6 +22,9 @@
                     <div class="d-flex flex-wrap align-items-center gap-3 opacity-75 fs-6 mt-1">
                         <span><i class="bi bi-clock me-1"></i> Waktu: {{ $exam->durasi }} Menit</span>
                         <span><i class="bi bi-check2-square me-1"></i> Passing Grade: {{ $exam->passing_grade }} Pts</span>
+                        @if ($exam->tab_switch_protection)
+                            <span><i class="bi bi-shield-lock me-1"></i> Maks. Pindah Tab: {{ $exam->max_tab_switch }}x</span>
+                        @endif
                     </div>
                     <div class="d-flex flex-wrap align-items-center gap-1 mt-2">
                         <small class="opacity-75 me-1"><i class="bi bi-code-slash me-1"></i>Bahasa:</small>
@@ -621,4 +624,152 @@
             </div>
         </div>
     </div>
+
+    @if ($exam->tab_switch_protection)
+    <!-- Custom Centered Tab Switch Violation Modal for Detail Page -->
+    <div id="tabViolationBackdrop" style="display: none; position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); z-index: 999999; align-items: center; justify-content: center; padding: 1.25rem;">
+        <div class="card border-0 shadow-lg text-center p-4 p-md-5 animate__animated animate__zoomIn animate__faster" style="max-width: 480px; width: 100%; border-radius: 1.5rem; background-color: var(--bs-body-bg, #ffffff); color: var(--bs-body-color, #212529); animation-duration: 0.15s !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);">
+            <!-- Icon -->
+            <div class="mb-3" id="tabViolationIconBox">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-warning bg-opacity-10 text-warning" style="width: 80px; height: 80px;">
+                    <i class="bi bi-exclamation-triangle-fill" style="font-size: 2.5rem;"></i>
+                </div>
+            </div>
+
+            <!-- Title -->
+            <h4 class="fw-bold mb-2" id="tabViolationTitle">Peringatan Pindah Jendela / Tab!</h4>
+
+            <!-- Violation Counter Badge -->
+            <div class="mb-3">
+                <span id="tabViolationBadge" class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50 px-3 py-2 rounded-pill fs-6 fw-bold">
+                    Pelanggaran: 1 / {{ $exam->max_tab_switch }}
+                </span>
+            </div>
+
+            <!-- Description -->
+            <p id="tabViolationDesc" class="text-muted mb-4 small" style="line-height: 1.6;">
+                Anda terdeteksi meninggalkan halaman ujian! Harap tetap berada di halaman ujian hingga selesai.<br>
+                Jika Anda keluar melebihi batas (<strong>{{ $exam->max_tab_switch }}</strong> kali), Anda otomatis dikeluarkan dari sesi ujian!
+            </p>
+
+            <!-- Action Buttons -->
+            <div id="tabViolationActionBox">
+                <button type="button" class="btn btn-primary w-100 py-2 fw-semibold rounded-pill shadow-sm" onclick="closeTabViolationModal()">
+                    <i class="bi bi-check2-circle me-2"></i>Saya Mengerti & Lanjutkan Ujian
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            let hasLeft = false;
+            let isProcessing = false;
+            let departureTime = 0;
+            let localViolations = {{ (int) session('ujian_tab_violations_'.$exam->ujian_id, 0) }};
+            const maxViolations = {{ $exam->max_tab_switch ?? 3 }};
+            const violationUrl = "{{ route('ujian.tab.violation', $exam->ujian_id) }}";
+            const csrfToken = "{{ csrf_token() }}";
+            const dashboardUrl = "{{ route('dashboard') }}";
+
+            function handleDeparture() {
+                hasLeft = true;
+                departureTime = Date.now();
+            }
+
+            function handleReturn() {
+                if (!hasLeft || isProcessing) return;
+                hasLeft = false;
+
+                if (Date.now() - departureTime < 50) return;
+
+                isProcessing = true;
+
+                // 1. Tampilkan modal SECARA INSTAN (0ms delay)
+                localViolations++;
+                const isDisqualified = localViolations > maxViolations;
+                showTabViolationModal({
+                    violations: localViolations,
+                    max: maxViolations,
+                    disqualified: isDisqualified
+                });
+
+                // 2. Sinkronisasi pencatatan ke server secara paralel
+                fetch(violationUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.violations !== undefined) {
+                        localViolations = data.violations;
+                        showTabViolationModal(data);
+                    }
+                })
+                .catch(e => {
+                    console.error("Gagal sinkronisasi pelanggaran tab:", e);
+                })
+                .finally(() => {
+                    isProcessing = false;
+                });
+            }
+
+            function showTabViolationModal(data) {
+                const backdrop = document.getElementById('tabViolationBackdrop');
+                const title = document.getElementById('tabViolationTitle');
+                const badge = document.getElementById('tabViolationBadge');
+                const desc = document.getElementById('tabViolationDesc');
+                const iconBox = document.getElementById('tabViolationIconBox');
+                const actionBox = document.getElementById('tabViolationActionBox');
+
+                if (!backdrop) return;
+
+                const violations = data.violations || 1;
+                const max = data.max !== undefined && data.max !== null ? data.max : maxViolations;
+
+                badge.innerText = `Pelanggaran: ${violations} / ${max}`;
+
+                if (data.disqualified) {
+                    iconBox.innerHTML = `<div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-danger bg-opacity-10 text-danger" style="width: 80px; height: 80px;"><i class="bi bi-shield-x" style="font-size: 2.5rem;"></i></div>`;
+                    title.innerText = 'Sesi Ujian Dinonaktifkan!';
+                    badge.className = 'badge bg-danger text-white px-3 py-2 rounded-pill fs-6 fw-bold';
+                    if (max === 0) {
+                        desc.innerHTML = `Ujian ini diatur dalam mode <strong>ketat tanpa toleransi (0 kali)</strong>. Anda terdeteksi keluar dari jendela ujian dan sesi ujian Anda telah dinonaktifkan secara otomatis.<br>Jawaban soal yang sudah tersimpan sebelumnya tetap aman. Hubungi Pengawas jika Anda diizinkan meminta token masuk kembali.`;
+                    } else {
+                        desc.innerHTML = `Anda telah keluar dari jendela ujian melebihi batas toleransi yang diizinkan (<strong>${violations}</strong> dari <strong>${max}</strong> kali).<br>Sesi ujian Anda telah ditutup secara otomatis. Jawaban soal yang sudah tersimpan sebelumnya tetap aman.`;
+                    }
+                    actionBox.innerHTML = `<button type="button" class="btn btn-danger w-100 py-2 fw-semibold rounded-pill shadow-sm" onclick="window.location.href='${dashboardUrl}'"><i class="bi bi-box-arrow-right me-2"></i>Kembali ke Dashboard</button>`;
+                } else {
+                    iconBox.innerHTML = `<div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-warning bg-opacity-10 text-warning" style="width: 80px; height: 80px;"><i class="bi bi-exclamation-triangle-fill" style="font-size: 2.5rem;"></i></div>`;
+                    title.innerText = 'Peringatan Pindah Jendela / Tab!';
+                    badge.className = 'badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50 px-3 py-2 rounded-pill fs-6 fw-bold';
+                    desc.innerHTML = `Anda terdeteksi meninggalkan halaman ujian! Harap tetap berada di halaman ujian hingga seluruh pengerjaan selesai.<br>Jika Anda berpindah tab melebihi batas (<strong>${max}</strong> kali), Anda akan otomatis dikeluarkan dari sesi ujian!`;
+                    actionBox.innerHTML = `<button type="button" class="btn btn-primary w-100 py-2 fw-semibold rounded-pill shadow-sm" onclick="closeTabViolationModal()"><i class="bi bi-check2-circle me-2"></i>Saya Mengerti & Lanjutkan Ujian</button>`;
+                }
+
+                backdrop.style.display = 'flex';
+            }
+
+            window.closeTabViolationModal = function() {
+                const backdrop = document.getElementById('tabViolationBackdrop');
+                if (backdrop) backdrop.style.display = 'none';
+            };
+
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    handleDeparture();
+                } else {
+                    handleReturn();
+                }
+            });
+
+            window.addEventListener('blur', handleDeparture);
+            window.addEventListener('focus', handleReturn);
+        })();
+    </script>
+    @endif
 @endsection

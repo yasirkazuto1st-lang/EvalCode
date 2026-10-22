@@ -119,6 +119,7 @@
                         <span><i class="bi bi-arrow-repeat me-1"></i> Token: Tiap {{ $exam->token_interval ?? 3 }} Menit</span>
                         <span><i class="bi bi-check2-square me-1"></i> Passing Grade: {{ $exam->passing_grade }} Pts</span>
                         <span><i class="bi bi-file-text me-1"></i> {{ $exam->soals->count() }} Soal</span>
+                        <span><i class="bi bi-shield-lock me-1"></i> Batasi Pindah Tab: {{ $exam->tab_switch_protection ? ($exam->max_tab_switch . 'x') : 'Nonaktif' }}</span>
                     </div>
                     <div class="d-flex flex-wrap align-items-center gap-1 mt-2">
                         <small class="opacity-75 me-1"><i class="bi bi-code-slash me-1"></i>Bahasa:</small>

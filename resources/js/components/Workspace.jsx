@@ -261,6 +261,118 @@ const Workspace = ({ initialData }) => {
 
     const isRedirectingRef = useRef(false);
 
+    // Tab violation protection state
+    const [tabViolationModal, setTabViolationModal] = useState({
+        show: false,
+        violations: initialData?.initialViolations || 0,
+        max: (exam?.max_tab_switch !== undefined && exam?.max_tab_switch !== null) ? Number(exam.max_tab_switch) : 3,
+        disqualified: false,
+        message: ''
+    });
+
+    const hasLeftRef = useRef(false);
+    const isProcessingViolationRef = useRef(false);
+    const departureTimeRef = useRef(0);
+    const violationsRef = useRef(initialData?.initialViolations || 0);
+
+    // Tab switch violation listener
+    useEffect(() => {
+        if (!exam?.tab_switch_protection) return;
+
+        const handleDeparture = () => {
+            hasLeftRef.current = true;
+            departureTimeRef.current = Date.now();
+        };
+
+        const handleReturn = () => {
+            if (!hasLeftRef.current || isProcessingViolationRef.current) return;
+            hasLeftRef.current = false;
+
+            // Abaikan jika hanya micro-glitch di bawah 50ms
+            if (Date.now() - departureTimeRef.current < 50) {
+                return;
+            }
+
+            isProcessingViolationRef.current = true;
+
+            // 1. Tampilkan pop-up SECARA INSTAN (0ms delay) tanpa menunggu respon network
+            const currentCount = violationsRef.current + 1;
+            violationsRef.current = currentCount;
+            const maxLimit = (exam?.max_tab_switch !== undefined && exam?.max_tab_switch !== null) ? Number(exam.max_tab_switch) : 3;
+            const isExceeded = currentCount > maxLimit;
+
+            setTabViolationModal({
+                show: true,
+                violations: currentCount,
+                max: maxLimit,
+                disqualified: isExceeded,
+                message: isExceeded
+                    ? (maxLimit === 0 
+                        ? 'Ujian ini tidak memiliki batas toleransi pindah tab (0 kali). Sesi ujian Anda telah dinonaktifkan.'
+                        : `Batas toleransi keluar tab telah terlampaui (${currentCount}/${maxLimit}). Sesi ujian Anda telah dinonaktifkan.`)
+                    : `Peringatan perpindahan jendela/tab (${currentCount}/${maxLimit}).`
+            });
+
+            // 2. Sinkronisasi pencatatan ke server secara paralel di latar belakang
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const violationUrl = initialData?.tab_violation_url || `/ujian/${exam.ujian_id}/tab-violation`;
+
+            fetch(violationUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken || '',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.violations !== undefined) {
+                    violationsRef.current = data.violations;
+                    setTabViolationModal(prev => ({
+                        ...prev,
+                        violations: data.violations,
+                        max: data.max !== undefined && data.max !== null ? data.max : maxLimit,
+                        disqualified: !!data.disqualified,
+                        message: data.message || prev.message
+                    }));
+                }
+            })
+            .catch(err => {
+                console.error("Gagal sync pelanggaran tab:", err);
+            })
+            .finally(() => {
+                isProcessingViolationRef.current = false;
+            });
+        };
+
+        const onVisibilityChange = () => {
+            if (document.hidden) {
+                handleDeparture();
+            } else {
+                handleReturn();
+            }
+        };
+
+        const onWindowBlur = () => {
+            handleDeparture();
+        };
+
+        const onWindowFocus = () => {
+            handleReturn();
+        };
+
+        document.addEventListener('visibilitychange', onVisibilityChange);
+        window.addEventListener('blur', onWindowBlur);
+        window.addEventListener('focus', onWindowFocus);
+
+        return () => {
+            document.removeEventListener('visibilitychange', onVisibilityChange);
+            window.removeEventListener('blur', onWindowBlur);
+            window.removeEventListener('focus', onWindowFocus);
+        };
+    }, [exam]);
+
     const handleRedirect = (message) => {
         if (isRedirectingRef.current) return;
         isRedirectingRef.current = true;
@@ -1079,6 +1191,119 @@ const Workspace = ({ initialData }) => {
                     <i className="bi bi-terminal-fill fs-5 text-warning"></i>
                 </button>
             </div>
+
+            {/* Custom Tab Switch Violation Modal */}
+            {tabViolationModal.show && (
+                <div 
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.75)',
+                        backdropFilter: 'blur(8px)',
+                        zIndex: 999999,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '1.25rem'
+                    }}
+                >
+                    <div 
+                        className="card border-0 shadow-lg text-center p-4 p-md-5 animate__animated animate__zoomIn animate__faster"
+                        style={{
+                            maxWidth: '480px',
+                            width: '100%',
+                            borderRadius: '1.5rem',
+                            backgroundColor: 'var(--bs-body-bg, #ffffff)',
+                            color: 'var(--bs-body-color, #212529)',
+                            animationDuration: '0.15s',
+                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.45)'
+                        }}
+                    >
+                        {/* Icon */}
+                        <div className="mb-3">
+                            {tabViolationModal.disqualified ? (
+                                <div 
+                                    className="d-inline-flex align-items-center justify-content-center rounded-circle bg-danger bg-opacity-10 text-danger"
+                                    style={{ width: '80px', height: '80px' }}
+                                >
+                                    <i className="bi bi-shield-x" style={{ fontSize: '2.5rem' }}></i>
+                                </div>
+                            ) : (
+                                <div 
+                                    className="d-inline-flex align-items-center justify-content-center rounded-circle bg-warning bg-opacity-10 text-warning"
+                                    style={{ width: '80px', height: '80px' }}
+                                >
+                                    <i className="bi bi-exclamation-triangle-fill" style={{ fontSize: '2.5rem' }}></i>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Title */}
+                        <h4 className="fw-bold mb-2">
+                            {tabViolationModal.disqualified ? 'Sesi Ujian Dinonaktifkan!' : 'Peringatan Pindah Jendela / Tab!'}
+                        </h4>
+
+                        {/* Violation Counter Badge */}
+                        <div className="mb-3">
+                            <span 
+                                className={`badge px-3 py-2 rounded-pill fs-6 fw-bold ${tabViolationModal.disqualified ? 'bg-danger text-white' : 'bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50'}`}
+                            >
+                                Pelanggaran: {tabViolationModal.violations} / {tabViolationModal.max}
+                            </span>
+                        </div>
+
+                        {/* Description */}
+                        <p className="text-muted mb-4 small" style={{ lineHeight: '1.6' }}>
+                            {tabViolationModal.disqualified ? (
+                                tabViolationModal.max === 0 ? (
+                                    <>
+                                        Ujian ini diatur dalam mode <strong>ketat tanpa toleransi (0 kali)</strong>. Anda terdeteksi keluar dari jendela ujian dan sesi ujian Anda telah dinonaktifkan secara otomatis.
+                                        <br />
+                                        Jawaban soal yang sudah tersimpan sebelumnya tetap aman. Hubungi Pengawas jika Anda diizinkan untuk meminta token masuk kembali.
+                                    </>
+                                ) : (
+                                    <>
+                                        Anda telah keluar dari jendela ujian melebihi batas toleransi yang diizinkan (<strong>{tabViolationModal.violations}</strong> dari <strong>{tabViolationModal.max}</strong> kali).
+                                        <br />
+                                        Sesi ujian Anda telah ditutup secara otomatis. Jawaban soal yang sudah tersimpan sebelumnya tetap aman. Hubungi Pengawas jika Anda diizinkan untuk meminta token masuk kembali.
+                                    </>
+                                )
+                            ) : (
+                                <>
+                                    Anda terdeteksi meninggalkan halaman ujian! Harap tetap berada di halaman ujian hingga seluruh pengerjaan selesai.
+                                    <br />
+                                    Jika Anda berpindah tab melebihi batas (<strong>{tabViolationModal.max}</strong> kali), Anda akan otomatis dikeluarkan dari sesi ujian!
+                                </>
+                            )}
+                        </p>
+
+                        {/* Action Buttons */}
+                        <div>
+                            {tabViolationModal.disqualified ? (
+                                <button
+                                    type="button"
+                                    className="btn btn-danger w-100 py-2 fw-semibold rounded-pill shadow-sm"
+                                    onClick={() => {
+                                        window.location.href = initialData?.dashboard_url || '/dashboard';
+                                    }}
+                                >
+                                    <i className="bi bi-box-arrow-right me-2"></i>Kembali ke Dashboard
+                                </button>
+                            ) : (
+                                <button
+                                    type="button"
+                                    className="btn btn-primary w-100 py-2 fw-semibold rounded-pill shadow-sm"
+                                    onClick={() => {
+                                        setTabViolationModal(prev => ({ ...prev, show: false }));
+                                    }}
+                                >
+                                    <i className="bi bi-check2-circle me-2"></i>Saya Mengerti & Lanjutkan Ujian
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
