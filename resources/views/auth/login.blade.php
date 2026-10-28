@@ -15,11 +15,11 @@
                             @csrf
 
                             <div class="mb-3">
-                                <label for="nim_username" class="form-label text-muted small fw-semibold">NIM / Username</label>
+                                <label for="nim_username" class="form-label text-muted small fw-semibold">Username</label>
                                 <input id="nim_username" type="text"
                                     class="form-control @error('nim_username') is-invalid @enderror" name="nim_username"
                                     value="{{ old('nim_username') }}" required autocomplete="nim_username" autofocus
-                                    placeholder="Masukkan Identitas Anda">
+                                    placeholder="Masukkan username">
                                 @error('nim_username')
                                     <span class="invalid-feedback" role="alert">
                                         <strong>{{ $message }}</strong>

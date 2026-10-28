@@ -83,12 +83,10 @@ class AuthController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'nim_username' => ['required', 'string', 'size:8', 'regex:/^[A-Za-z]/', 'unique:users,nim_username'],
+            'nim_username' => ['required', 'string', 'max:255', 'unique:users,nim_username'],
             'password' => 'required|string|min:8|confirmed',
         ], [
-            'nim_username.size' => 'NIM harus tepat 8 karakter.',
-            'nim_username.regex' => 'Karakter pertama NIM harus berupa huruf.',
-            'nim_username.unique' => 'NIM sudah terdaftar.',
+            'nim_username.unique' => 'Username sudah terdaftar.',
             'password.confirmed' => 'Konfirmasi password tidak cocok.'
         ]);
 

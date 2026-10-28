@@ -261,7 +261,7 @@
                         <div class="d-flex align-items-center gap-2 w-100 w-md-auto ms-md-auto justify-content-md-end">
                             <input type="text" id="searchMahasiswaInput"
                                 class="form-control form-control-sm search-input rounded-pill flex-grow-1 flex-md-grow-0 w-100 w-md-auto"
-                                placeholder="Cari Mahasiswa (NIM/Nama)...">
+                                placeholder="Cari Mahasiswa (Username/Nama)...">
                             <button class="btn btn-sm btn-primary rounded-pill px-2 px-md-3 shadow-sm d-flex align-items-center justify-content-center flex-shrink-0" data-bs-toggle="modal"
                                 data-bs-target="#addMahasiswaModal">
                                 <i class="bi bi-plus-circle"></i>
@@ -274,7 +274,7 @@
                             <table class="table table-hover align-top">
                                 <thead class="table-light">
                                     <tr class="text-nowrap">
-                                        <th style="width: 25%;">NIM</th>
+                                        <th style="width: 25%;">Username</th>
                                         <th style="width: 55%;">Nama</th>
                                         <th style="width: 20%;">Aksi</th>
                                     </tr>
@@ -464,17 +464,24 @@
                         <div class="modal-body">
                             <input type="hidden" name="role" value="Mahasiswa">
                             <div class="mb-3"><label
-                                    class="form-label">NIM</label><input type="text"
+                                    class="form-label">Username</label><input type="text"
                                     name="nim_username" class="form-control"
                                     value="{{ $u->nim_username }}" required></div>
                             <div class="mb-3"><label
                                     class="form-label">Nama</label><input type="text"
                                     name="name" class="form-control"
                                     value="{{ $u->name }}" required></div>
-                            <div class="mb-3"><label class="form-label">Password Baru
-                                    (Opsional)
-                                </label><input type="password" name="password"
-                                    class="form-control" minlength="8">
+                            <div class="mb-3">
+                                <label class="form-label">Password Baru (Opsional)</label>
+                                <div class="input-group">
+                                    <input type="password" id="editMahasiswaPassword{{ $u->user_id }}" name="password"
+                                        class="form-control" minlength="8" placeholder="Kosongkan jika tidak diubah">
+                                    <button type="button" class="btn btn-outline-warning px-3 d-flex align-items-center justify-content-center"
+                                        onclick="quickResetPassword(this, 'editMahasiswaPassword{{ $u->user_id }}')"
+                                        title="Quick Reset ke 12345678">
+                                        <i class="bi bi-arrow-counterclockwise fs-5"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -581,8 +588,8 @@
                     @csrf
                     <div class="modal-body">
                         <input type="hidden" name="role" value="Mahasiswa">
-                        <div class="mb-3"><label class="form-label">NIM</label><input type="text" name="nim_username"
-                                class="form-control" placeholder="Contoh: D0221001" required></div>
+                        <div class="mb-3"><label class="form-label">Username</label><input type="text" name="nim_username"
+                                class="form-control" placeholder="Masukkan username" required></div>
                         <div class="mb-3"><label class="form-label">Nama</label><input type="text" name="name"
                                 class="form-control" required></div>
                         <div class="mb-3"><label class="form-label">Password</label><input type="password"
@@ -599,6 +606,39 @@
     @endpush
 
     <script>
+        // Quick Reset Password Handler
+        window.quickResetPassword = function(btnOrId, inputId) {
+            const targetId = inputId || btnOrId;
+            const input = document.getElementById(targetId);
+            if (!input) return;
+
+            input.value = '12345678';
+            input.type = 'text'; // Tampilkan password agar terlihat jelas oleh admin
+            input.focus();
+
+            // Animasi rotasi ikon jika tombol disertakan
+            if (btnOrId && typeof btnOrId !== 'string') {
+                const icon = btnOrId.querySelector('i');
+                if (icon) {
+                    icon.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+                    icon.style.transform = 'rotate(-360deg)';
+                    setTimeout(() => {
+                        icon.style.transition = 'none';
+                        icon.style.transform = 'none';
+                    }, 400);
+                }
+            }
+
+            input.classList.add('is-valid');
+            setTimeout(() => {
+                input.classList.remove('is-valid');
+            }, 1200);
+
+            if (window.showToast) {
+                window.showToast('Password diisi: 12345678', 'info');
+            }
+        };
+
         document.addEventListener('DOMContentLoaded', function() {
             // ========================
             // TAB ACTIVATION LOGIC

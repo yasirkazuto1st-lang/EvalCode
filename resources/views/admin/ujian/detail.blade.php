@@ -65,7 +65,8 @@
                         <span><i class="bi bi-clock me-1"></i> Durasi: {{ $exam->durasi }} Menit</span>
                         <span><i class="bi bi-key me-1"></i> Refresh Token: {{ $exam->token_interval ?? 3 }} Menit</span>
                         <span><i class="bi bi-check2-square me-1"></i> Passing Grade: {{ $exam->passing_grade }} Pts</span>
-                        <span><i class="bi bi-shield-lock me-1"></i> Batasi Pindah Tab: {{ $exam->tab_switch_protection ? ($exam->max_tab_switch . 'x') : 'Nonaktif' }}</span>
+                        <span><i class="bi bi-shield-lock me-1"></i> Batasi Pindah Tab:
+                            {{ $exam->tab_switch_protection ? $exam->max_tab_switch . 'x' : 'Nonaktif' }}</span>
                     </div>
                     <div class="d-flex flex-wrap align-items-center gap-1 mt-2">
                         <small class="opacity-75 me-1"><i class="bi bi-code-slash me-1"></i>Bahasa:</small>
@@ -86,9 +87,11 @@
                 <div class="card border-0 shadow-sm rounded-4">
                     <div
                         class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex justify-content-between align-items-center gap-3 gap-md-4">
-                        <h5 class="fw-bold mb-0 text-nowrap flex-shrink-0"><i class="bi bi-list-task text-primary me-2"></i> Daftar Soal</h5>
-                        <button class="btn btn-sm btn-primary rounded-pill px-2 px-md-3 shadow-sm d-flex align-items-center ms-auto text-nowrap" data-bs-toggle="modal"
-                            data-bs-target="#addQuestionModal">
+                        <h5 class="fw-bold mb-0 text-nowrap flex-shrink-0"><i class="bi bi-list-task text-primary me-2"></i>
+                            Daftar Soal</h5>
+                        <button
+                            class="btn btn-sm btn-primary rounded-pill px-2 px-md-3 shadow-sm d-flex align-items-center ms-auto text-nowrap"
+                            data-bs-toggle="modal" data-bs-target="#addQuestionModal">
                             <i class="bi bi-plus-circle"></i>
                             <span class="d-none d-md-inline ms-1">Tambah Soal</span>
                         </button>
@@ -123,67 +126,68 @@
                                         </tr>
 
                                         @push('modals')
-                                        <!-- Edit Soal Modal -->
-                                        <div class="modal fade" id="editSoalModal{{ $q->soal_id }}" tabindex="-1"
-                                            aria-hidden="true">
-                                            <div class="modal-dialog">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title">Edit Soal</h5><button type="button"
-                                                            class="btn-close" data-bs-dismiss="modal"></button>
+                                            <!-- Edit Soal Modal -->
+                                            <div class="modal fade" id="editSoalModal{{ $q->soal_id }}" tabindex="-1"
+                                                aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Edit Soal</h5><button type="button"
+                                                                class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <form method="POST"
+                                                            action="{{ route('admin.soal.update', ['examId' => $exam->ujian_id, 'soalId' => $q->soal_id]) }}"
+                                                            enctype="multipart/form-data" class="update-soal-form">
+                                                            @csrf
+                                                            <div class="modal-body">
+                                                                <div class="mb-3"><label class="form-label">Nama
+                                                                        Soal</label><input type="text" name="nama_soal"
+                                                                        class="form-control" value="{{ $q->nama_soal }}"
+                                                                        required></div>
+                                                                <div class="mb-3"><label class="form-label">File PDF Soal
+                                                                        (Opsional)
+                                                                    </label><input type="file" name="soal_pdf"
+                                                                        class="form-control" accept="application/pdf"></div>
+                                                                <div class="mb-3"><label class="form-label">Bobot
+                                                                        Nilai</label><input type="number" name="bobot_nilai"
+                                                                        class="form-control" value="{{ $q->bobot_nilai }}"
+                                                                        required min="0"></div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary"
+                                                                    data-bs-dismiss="modal">Batal</button>
+                                                                <button type="submit" class="btn btn-primary">Simpan</button>
+                                                            </div>
+                                                        </form>
                                                     </div>
-                                                    <form method="POST"
-                                                        action="{{ route('admin.soal.update', ['examId' => $exam->ujian_id, 'soalId' => $q->soal_id]) }}"
-                                                        enctype="multipart/form-data" class="update-soal-form">
-                                                        @csrf
-                                                        <div class="modal-body">
-                                                            <div class="mb-3"><label class="form-label">Nama
-                                                                    Soal</label><input type="text" name="nama_soal"
-                                                                    class="form-control" value="{{ $q->nama_soal }}"
-                                                                    required></div>
-                                                            <div class="mb-3"><label class="form-label">File PDF Soal
-                                                                    (Opsional)
-                                                                </label><input type="file" name="soal_pdf"
-                                                                    class="form-control" accept="application/pdf"></div>
-                                                            <div class="mb-3"><label class="form-label">Bobot
-                                                                    Nilai</label><input type="number" name="bobot_nilai"
-                                                                    class="form-control" value="{{ $q->bobot_nilai }}"
-                                                                    required min="0"></div>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary"
-                                                                data-bs-dismiss="modal">Batal</button>
-                                                            <button type="submit" class="btn btn-primary">Simpan</button>
-                                                        </div>
-                                                    </form>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        <!-- Delete Soal Modal -->
-                                        <div class="modal fade" id="deleteSoalModal{{ $q->soal_id }}" tabindex="-1"
-                                            aria-hidden="true">
-                                            <div class="modal-dialog">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title">Hapus Soal?</h5>
+                                            <!-- Delete Soal Modal -->
+                                            <div class="modal fade" id="deleteSoalModal{{ $q->soal_id }}" tabindex="-1"
+                                                aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Hapus Soal?</h5>
+                                                        </div>
+                                                        <form method="POST"
+                                                            action="{{ route('admin.soal.destroy', ['examId' => $exam->ujian_id, 'soalId' => $q->soal_id]) }}"
+                                                            class="destroy-soal-form">
+                                                            @csrf @method('DELETE')
+                                                            <div class="modal-body">Hapus soal
+                                                                <strong>{{ $q->nama_soal }}</strong>? Semua test case di
+                                                                dalamnya juga akan terhapus.
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary"
+                                                                    data-bs-dismiss="modal">Batal</button>
+                                                                <button type="submit" class="btn btn-danger">Hapus</button>
+                                                            </div>
+                                                        </form>
                                                     </div>
-                                                    <form method="POST"
-                                                        action="{{ route('admin.soal.destroy', ['examId' => $exam->ujian_id, 'soalId' => $q->soal_id]) }}" class="destroy-soal-form">
-                                                        @csrf @method('DELETE')
-                                                        <div class="modal-body">Hapus soal
-                                                            <strong>{{ $q->nama_soal }}</strong>? Semua test case di
-                                                            dalamnya juga akan terhapus.
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary"
-                                                                data-bs-dismiss="modal">Batal</button>
-                                                            <button type="submit" class="btn btn-danger">Hapus</button>
-                                                        </div>
-                                                    </form>
                                                 </div>
                                             </div>
-                                        </div>
                                         @endpush
                                     @empty
                                         <tr>
@@ -205,17 +209,29 @@
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                     <div
                         class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
-                        <h5 class="fw-bold mb-0 text-nowrap"><i class="bi bi-people-fill text-warning me-2"></i> Peserta Ujian</h5>
+                        <h5 class="fw-bold mb-0 text-nowrap"><i class="bi bi-people-fill text-warning me-2"></i> Peserta
+                            Ujian</h5>
                         <div class="d-flex align-items-center gap-2 flex-wrap flex-sm-nowrap ms-auto">
-                            <input type="text" id="searchParticipantInput" class="form-control form-control-sm search-input rounded-pill" style="min-width: 140px; max-width: 200px;" placeholder="Cari peserta...">
+                            <input type="text" id="searchParticipantInput"
+                                class="form-control form-control-sm search-input rounded-pill"
+                                style="min-width: 140px; max-width: 200px;" placeholder="Cari peserta...">
                             <div class="dropdown">
-                                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm dropdown-toggle d-inline-flex align-items-center justify-content-center gap-1 text-nowrap" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <button
+                                    class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm dropdown-toggle d-inline-flex align-items-center justify-content-center gap-1 text-nowrap"
+                                    type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="bi bi-funnel-fill"></i> <span id="activeFilterText">Urutkan: Normal</span>
                                 </button>
-                                <ul class="dropdown-menu dropdown-menu-end shadow rounded-4 border-0 py-2" aria-labelledby="filterDropdown" style="min-width: 230px;">
-                                    <li><a class="dropdown-item filter-option active py-2 px-3 text-nowrap" href="#" data-sort="normal"><i class="bi bi-sort-numeric-down me-2 text-primary"></i> Normal (Skor Tertinggi)</a></li>
-                                    <li><a class="dropdown-item filter-option py-2 px-3 text-nowrap" href="#" data-sort="terbaru"><i class="bi bi-clock-history me-2 text-success"></i> Submission Terakhir</a></li>
-                                    <li><a class="dropdown-item filter-option py-2 px-3 text-nowrap" href="#" data-sort="terlama"><i class="bi bi-clock me-2 text-warning"></i> Submission Terlama</a></li>
+                                <ul class="dropdown-menu dropdown-menu-end shadow rounded-4 border-0 py-2"
+                                    aria-labelledby="filterDropdown" style="min-width: 230px;">
+                                    <li><a class="dropdown-item filter-option active py-2 px-3 text-nowrap" href="#"
+                                            data-sort="normal"><i class="bi bi-sort-numeric-down me-2 text-primary"></i>
+                                            Normal (Skor Tertinggi)</a></li>
+                                    <li><a class="dropdown-item filter-option py-2 px-3 text-nowrap" href="#"
+                                            data-sort="terbaru"><i class="bi bi-clock-history me-2 text-success"></i>
+                                            Submission Terakhir</a></li>
+                                    <li><a class="dropdown-item filter-option py-2 px-3 text-nowrap" href="#"
+                                            data-sort="terlama"><i class="bi bi-clock me-2 text-warning"></i> Submission
+                                            Terlama</a></li>
                                 </ul>
                             </div>
                             <a href="{{ route('admin.ujian.export', $exam->ujian_id) }}"
@@ -230,21 +246,25 @@
                             <table id="participantTable" class="table table-hover align-middle mb-0">
                                 <thead class="table-light">
                                     <tr class="text-nowrap border-bottom border-warning border-2">
-                                        <th class="ps-4 py-3">NIM</th>
-                                        <th class="py-3">Nama Mahasiswa</th>
+                                        <th class="ps-4 py-3">Username</th>
+                                        <th class="py-3">Nama</th>
                                         <th class="py-3">Status</th>
                                         <th class="py-3">Waktu</th>
                                         <th class="py-3">Skor</th>
-                                        <th class="pe-4 py-3 text-center">Aksi</th>
+                                        <th class="pe-4 py-3 text-center text-nowrap" style="width: 70px;">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody class="border-top-0">
                                     @forelse($participants as $p)
                                         @php
                                             $latestSub = $p->submissions->sortByDesc('created_at')->first();
-                                            $latestTime = $latestSub ? \Carbon\Carbon::parse($latestSub->created_at)->timestamp : 0;
+                                            $latestTime = $latestSub
+                                                ? \Carbon\Carbon::parse($latestSub->created_at)->timestamp
+                                                : 0;
                                         @endphp
-                                        <tr class="participant-row" data-nim="{{ $p->nim_username }}" data-nama="{{ $p->name }}" data-skor="{{ $p->total_skor ?? 0 }}" data-waktu="{{ $p->total_waktu_detik ?? 9999999 }}">
+                                        <tr class="participant-row" data-nim="{{ $p->nim_username }}"
+                                            data-nama="{{ $p->name }}" data-skor="{{ $p->total_skor ?? 0 }}"
+                                            data-waktu="{{ $p->total_waktu_detik ?? 9999999 }}">
                                             <td class="ps-4">{{ $p->nim_username }}</td>
                                             <td class="fw-semibold">{{ $p->name }}</td>
                                             <td>
@@ -260,19 +280,24 @@
 
                                             </td>
                                             <td>
-                                                <span class="badge bg-secondary bg-opacity-10 text-body border border-secondary border-opacity-25 font-monospace">
-                                                    <i class="bi bi-stopwatch me-1 text-primary"></i>{{ $p->total_waktu_formatted ?? '-' }}
+                                                <span
+                                                    class="badge bg-secondary bg-opacity-10 text-body border border-secondary border-opacity-25 font-monospace">
+                                                    <i
+                                                        class="bi bi-stopwatch me-1 text-primary"></i>{{ $p->total_waktu_formatted ?? '-' }}
                                                 </span>
                                             </td>
                                             <td><strong>{{ $p->total_skor ?? 0 }}</strong> Pts</td>
-                                            <td class="pe-4 text-center">
-                                                <button class="btn btn-sm btn-outline-primary rounded-pill px-3"
-                                                    type="button" data-bs-toggle="collapse"
+                                            <td class="pe-4 text-center text-nowrap" style="width: 70px;">
+                                                <button
+                                                    class="btn btn-sm btn-outline-primary rounded-circle d-inline-flex align-items-center justify-content-center shadow-xs"
+                                                    style="width: 32px; height: 32px; padding: 0;" type="button"
+                                                    data-bs-toggle="collapse"
                                                     data-bs-target="#collapseSubmissions{{ $p->user_id }}"
                                                     aria-expanded="false"
-                                                    aria-controls="collapseSubmissions{{ $p->user_id }}">
-                                                    Detail <i class="bi bi-chevron-down ms-1"
-                                                        style="transition: transform 0.3s ease; display: inline-block;"></i>
+                                                    aria-controls="collapseSubmissions{{ $p->user_id }}"
+                                                    title="Lihat Detail Submisi">
+                                                    <i class="bi bi-chevron-down"
+                                                        style="transition: transform 0.3s ease; display: inline-block; font-size: 0.85rem;"></i>
                                                 </button>
                                             </td>
                                         </tr>
@@ -281,17 +306,20 @@
                                                 <div class="collapse" id="collapseSubmissions{{ $p->user_id }}">
                                                     <div
                                                         class="card card-body border-0 bg-light rounded-0 border-start border-4 border-primary m-3 shadow-sm">
-                                                         <div class="d-flex justify-content-between align-items-center mb-3">
-                                                             <h6 class="fw-bold mb-0">Riwayat Submission</h6>
-                                                             <select class="form-select form-select-sm w-auto" onchange="window.filterSubmissions('{{ $p->user_id }}', this.value)">
-                                                                 <option value="">Semua Soal</option>
-                                                                 @foreach($exam->soals as $soal)
-                                                                     <option value="{{ $soal->soal_id }}">{{ $soal->nama_soal }}</option>
-                                                                 @endforeach
-                                                             </select>
-                                                         </div>
-                                                         <table id="table-sub-{{ $p->user_id }}"
-                                                             class="table table-sm table-bordered mb-0 submission-table">
+                                                        <div
+                                                            class="d-flex justify-content-between align-items-center mb-3">
+                                                            <h6 class="fw-bold mb-0">Riwayat Submission</h6>
+                                                            <select class="form-select form-select-sm w-auto"
+                                                                onchange="window.filterSubmissions('{{ $p->user_id }}', this.value)">
+                                                                <option value="">Semua Soal</option>
+                                                                @foreach ($exam->soals as $soal)
+                                                                    <option value="{{ $soal->soal_id }}">
+                                                                        {{ $soal->nama_soal }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                        <table id="table-sub-{{ $p->user_id }}"
+                                                            class="table table-sm table-bordered mb-0 submission-table">
                                                             <thead class="table-secondary">
                                                                 <tr>
                                                                     <th>Waktu</th>
@@ -304,24 +332,36 @@
                                                             </thead>
                                                             <tbody>
                                                                 @forelse($p->submissions as $s)
-                                                                    <tr class="submission-row" data-soal="{{ $s->soal_id }}">
+                                                                    <tr class="submission-row"
+                                                                        data-soal="{{ $s->soal_id }}">
                                                                         <td class="text-nowrap">
                                                                             {{ \Carbon\Carbon::parse($s->created_at)->format('d M Y, H:i') }}
                                                                         </td>
                                                                         <td>{{ $s->nama_soal }}</td>
                                                                         <td>
                                                                             @if ($s->status == 'Accepted')
-                                                                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">Accepted</span>
+                                                                                <span
+                                                                                    class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">Accepted</span>
                                                                             @elseif($s->status == 'Wrong Answer')
-                                                                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">Wrong Answer</span>
+                                                                                <span
+                                                                                    class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">Wrong
+                                                                                    Answer</span>
                                                                             @elseif($s->status == 'Time Limit Exceeded')
-                                                                                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">Time Limit Exceeded</span>
+                                                                                <span
+                                                                                    class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">Time
+                                                                                    Limit Exceeded</span>
                                                                             @elseif($s->status == 'Compilation Error')
-                                                                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">Compilation Error</span>
+                                                                                <span
+                                                                                    class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">Compilation
+                                                                                    Error</span>
                                                                             @elseif($s->status == 'Runtime Error')
-                                                                                <span class="badge border border-opacity-25" style="color: #a855f7; background-color: rgba(168,85,247,0.15); border-color: rgba(168,85,247,0.3);">Runtime Error</span>
+                                                                                <span
+                                                                                    class="badge border border-opacity-25"
+                                                                                    style="color: #a855f7; background-color: rgba(168,85,247,0.15); border-color: rgba(168,85,247,0.3);">Runtime
+                                                                                    Error</span>
                                                                             @else
-                                                                                <span class="badge bg-dark bg-opacity-10 text-dark border border-dark border-opacity-25">{{ $s->status }}</span>
+                                                                                <span
+                                                                                    class="badge bg-dark bg-opacity-10 text-dark border border-dark border-opacity-25">{{ $s->status }}</span>
                                                                             @endif
                                                                         </td>
                                                                         <td>{{ $s->skor }}</td>
@@ -357,26 +397,26 @@
                                                 </div>
 
                                                 @push('modals')
-                                                <!-- Modals for source code -->
-                                                @foreach ($p->submissions as $s)
-                                                    <div class="modal fade" id="codeModal{{ $s->submission_id }}"
-                                                        tabindex="-1" aria-hidden="true">
-                                                        <div class="modal-dialog modal-lg modal-dialog-centered">
-                                                            <div class="modal-content rounded-4 border-0 shadow">
-                                                                <div class="modal-header border-0 pb-0">
-                                                                    <h5 class="modal-title fw-bold"><i
-                                                                            class="bi bi-file-earmark-code text-primary me-2"></i>Source
-                                                                        Code</h5>
-                                                                    <button type="button" class="btn-close"
-                                                                        data-bs-dismiss="modal"></button>
-                                                                </div>
-                                                                <div class="modal-body">
-                                                                    <pre class="bg-dark text-light p-3 rounded mt-2" style="max-height: 400px; overflow-y: auto;"><code>{{ $s->source_code }}</code></pre>
+                                                    <!-- Modals for source code -->
+                                                    @foreach ($p->submissions as $s)
+                                                        <div class="modal fade" id="codeModal{{ $s->submission_id }}"
+                                                            tabindex="-1" aria-hidden="true">
+                                                            <div class="modal-dialog modal-lg modal-dialog-centered">
+                                                                <div class="modal-content rounded-4 border-0 shadow">
+                                                                    <div class="modal-header border-0 pb-0">
+                                                                        <h5 class="modal-title fw-bold"><i
+                                                                                class="bi bi-file-earmark-code text-primary me-2"></i>Source
+                                                                            Code</h5>
+                                                                        <button type="button" class="btn-close"
+                                                                            data-bs-dismiss="modal"></button>
+                                                                    </div>
+                                                                    <div class="modal-body">
+                                                                        <pre class="bg-dark text-light p-3 rounded mt-2" style="max-height: 400px; overflow-y: auto;"><code>{{ $s->source_code }}</code></pre>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                @endforeach
+                                                    @endforeach
                                                 @endpush
                                             </td>
                                         </tr>
@@ -398,34 +438,34 @@
     </div>
 
     @push('modals')
-    <!-- Add Question Modal -->
-    <div class="modal fade" id="addQuestionModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Tambah Soal Baru</h5><button type="button" class="btn-close"
-                        data-bs-dismiss="modal"></button>
+        <!-- Add Question Modal -->
+        <div class="modal fade" id="addQuestionModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Tambah Soal Baru</h5><button type="button" class="btn-close"
+                            data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="POST" action="{{ route('admin.soal.store', $exam->ujian_id) }}"
+                        enctype="multipart/form-data">
+                        @csrf
+                        <div class="modal-body">
+                            <div class="mb-3"><label class="form-label">Nama Soal</label><input type="text"
+                                    name="nama_soal" class="form-control" placeholder="Contoh: Soal 1 - Hello World"
+                                    required></div>
+                            <div class="mb-3"><label class="form-label">File PDF Soal</label><input type="file"
+                                    name="soal_pdf" class="form-control" accept="application/pdf" required></div>
+                            <div class="mb-3"><label class="form-label">Bobot Nilai</label><input type="number"
+                                    name="bobot_nilai" class="form-control" placeholder="20" required min="0"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary">Simpan</button>
+                        </div>
+                    </form>
                 </div>
-                <form method="POST" action="{{ route('admin.soal.store', $exam->ujian_id) }}"
-                    enctype="multipart/form-data">
-                    @csrf
-                    <div class="modal-body">
-                        <div class="mb-3"><label class="form-label">Nama Soal</label><input type="text"
-                                name="nama_soal" class="form-control" placeholder="Contoh: Soal 1 - Hello World"
-                                required></div>
-                        <div class="mb-3"><label class="form-label">File PDF Soal</label><input type="file"
-                                name="soal_pdf" class="form-control" accept="application/pdf" required></div>
-                        <div class="mb-3"><label class="form-label">Bobot Nilai</label><input type="number"
-                                name="bobot_nilai" class="form-control" placeholder="20" required min="0"></div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary">Simpan</button>
-                    </div>
-                </form>
             </div>
         </div>
-    </div>
     @endpush
 @endsection
 
@@ -472,7 +512,8 @@
                     const emptyRow = document.createElement('tr');
                     emptyRow.className = 'empty-state-row';
                     const colCount = table.querySelector('thead tr').children.length;
-                    emptyRow.innerHTML = `<td colspan="${colCount}" class="text-center text-muted">Tidak ada submission untuk soal ini.</td>`;
+                    emptyRow.innerHTML =
+                        `<td colspan="${colCount}" class="text-center text-muted">Tidak ada submission untuk soal ini.</td>`;
                     tbody.appendChild(emptyRow);
                     return;
                 }
@@ -495,7 +536,8 @@
                 const totalPages = Math.ceil(totalRows / rowsPerPage);
 
                 const paginationContainer = document.createElement('div');
-                paginationContainer.className = 'd-flex flex-column flex-md-row justify-content-between align-items-center mt-2 px-2';
+                paginationContainer.className =
+                    'd-flex flex-column flex-md-row justify-content-between align-items-center mt-2 px-2';
                 paginationContainer.id = tableId + '-pagination';
                 table.parentNode.insertBefore(paginationContainer, table.nextSibling);
 
@@ -520,7 +562,8 @@
 
                     const summarySpan = document.createElement('span');
                     summarySpan.className = 'text-muted small fw-semibold mb-2 mb-md-0';
-                    summarySpan.innerText = `Menampilkan ${startItem} hingga ${endItem} dari ${totalRows} submisi`;
+                    summarySpan.innerText =
+                        `Menampilkan ${startItem} hingga ${endItem} dari ${totalRows} submisi`;
                     paginationContainer.appendChild(summarySpan);
 
                     const nav = document.createElement('nav');
@@ -609,13 +652,15 @@
                 let currentSort = 'normal';
 
                 const paginationContainer = document.createElement('div');
-                paginationContainer.className = 'd-flex flex-column flex-md-row justify-content-between align-items-center mt-3 px-3 pb-3';
+                paginationContainer.className =
+                    'd-flex flex-column flex-md-row justify-content-between align-items-center mt-3 px-3 pb-3';
                 paginationContainer.id = 'participantTable-pagination';
                 table.parentNode.insertBefore(paginationContainer, table.nextSibling);
 
                 function updateTable() {
                     let filteredItems = allRows.filter(item => {
-                        return item.nim.includes(currentSearchTerm) || item.nama.includes(currentSearchTerm);
+                        return item.nim.includes(currentSearchTerm) || item.nama.includes(
+                        currentSearchTerm);
                     });
 
                     filteredItems.sort((a, b) => {
@@ -641,8 +686,8 @@
                     const start = (currentPage - 1) * rowsPerPage;
                     const end = start + rowsPerPage;
 
-                    allRows.forEach(item => { 
-                        item.mainRow.style.display = 'none'; 
+                    allRows.forEach(item => {
+                        item.mainRow.style.display = 'none';
                         if (item.collapseRow) item.collapseRow.style.display = 'none';
                     });
 
@@ -682,10 +727,14 @@
 
                     const prevLi = document.createElement('li');
                     prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
-                    prevLi.innerHTML = `<a class="page-link" href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>`;
+                    prevLi.innerHTML =
+                        `<a class="page-link" href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>`;
                     prevLi.onclick = (e) => {
                         e.preventDefault();
-                        if (currentPage > 1) { currentPage--; updateTable(); }
+                        if (currentPage > 1) {
+                            currentPage--;
+                            updateTable();
+                        }
                     };
                     ul.appendChild(prevLi);
 
@@ -708,10 +757,14 @@
 
                     const nextLi = document.createElement('li');
                     nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
-                    nextLi.innerHTML = `<a class="page-link" href="#" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>`;
+                    nextLi.innerHTML =
+                        `<a class="page-link" href="#" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>`;
                     nextLi.onclick = (e) => {
                         e.preventDefault();
-                        if (currentPage < totalPages) { currentPage++; updateTable(); }
+                        if (currentPage < totalPages) {
+                            currentPage++;
+                            updateTable();
+                        }
                     };
                     ul.appendChild(nextLi);
 
@@ -730,13 +783,16 @@
                 document.querySelectorAll('.filter-option').forEach(option => {
                     option.addEventListener('click', function(e) {
                         e.preventDefault();
-                        document.querySelectorAll('.filter-option').forEach(opt => opt.classList.remove('active'));
+                        document.querySelectorAll('.filter-option').forEach(opt => opt.classList
+                            .remove('active'));
                         this.classList.add('active');
                         currentSort = this.getAttribute('data-sort');
                         const activeText = document.getElementById('activeFilterText');
                         if (activeText) {
-                            if (currentSort === 'terbaru') activeText.innerText = 'Urutkan: Terbaru';
-                            else if (currentSort === 'terlama') activeText.innerText = 'Urutkan: Terlama';
+                            if (currentSort === 'terbaru') activeText.innerText =
+                            'Urutkan: Terbaru';
+                            else if (currentSort === 'terlama') activeText.innerText =
+                                'Urutkan: Terlama';
                             else activeText.innerText = 'Urutkan: Normal';
                         }
                         currentPage = 1;
@@ -754,12 +810,15 @@
             if (participantTable) {
                 participantTable.addEventListener('show.bs.collapse', function(e) {
                     const activeCollapse = e.target;
-                    
+
                     // Hide all other collapses under the participantTable
                     const allCollapses = participantTable.querySelectorAll('.collapse.show');
                     allCollapses.forEach(collapseEl => {
                         if (collapseEl !== activeCollapse) {
-                            const bsCollapse = bootstrap.Collapse.getInstance(collapseEl) || new bootstrap.Collapse(collapseEl, { toggle: false });
+                            const bsCollapse = bootstrap.Collapse.getInstance(collapseEl) ||
+                                new bootstrap.Collapse(collapseEl, {
+                                    toggle: false
+                                });
                             bsCollapse.hide();
                         }
                     });
@@ -820,7 +879,9 @@
                     })
                     .then(response => {
                         if (!response.ok) {
-                            return response.json().then(err => { throw err; });
+                            return response.json().then(err => {
+                                throw err;
+                            });
                         }
                         return response.json();
                     })
@@ -833,7 +894,8 @@
                                         row.remove();
                                     }
                                 } else if (isUpdate) {
-                                    const row = document.getElementById('soal-row-' + data.soal.soal_id);
+                                    const row = document.getElementById('soal-row-' + data.soal
+                                    .soal_id);
                                     if (row && row.cells && row.cells.length >= 3) {
                                         row.cells[1].textContent = data.soal.nama_soal;
                                         row.cells[2].textContent = data.soal.bobot_nilai;
@@ -855,19 +917,22 @@
                             } catch (modalErr) {
                                 console.error('Modal hide error:', modalErr);
                             }
-                            
+
                             if (window.showToast) window.showToast(data.message, 'success');
                         } else {
-                            if (window.showToast) window.showToast(data.message || 'Gagal memproses data.', 'danger');
+                            if (window.showToast) window.showToast(data.message ||
+                                'Gagal memproses data.', 'danger');
                         }
                         if (window.resetFormSubmitState) window.resetFormSubmitState(form);
                     })
                     .catch(error => {
                         console.error('Error:', error);
                         if (error.errors) {
-                            if (window.showToast) window.showToast(Object.values(error.errors).flat().join('\n'), 'danger');
+                            if (window.showToast) window.showToast(Object.values(error.errors).flat()
+                                .join('\n'), 'danger');
                         } else {
-                            if (window.showToast) window.showToast('Terjadi kesalahan koneksi.', 'danger');
+                            if (window.showToast) window.showToast('Terjadi kesalahan koneksi.',
+                                'danger');
                         }
                         if (window.resetFormSubmitState) window.resetFormSubmitState(form);
                     });
@@ -877,7 +942,7 @@
 
     <style>
         /* Sembunyikan teks bahasa Inggris bawaan Laravel dari pagination */
-        .pagination-sm nav div.d-sm-flex > div:first-child,
+        .pagination-sm nav div.d-sm-flex>div:first-child,
         .pagination-sm p.small.text-muted {
             display: none !important;
         }

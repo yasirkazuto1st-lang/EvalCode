@@ -471,7 +471,7 @@ class AdminController extends Controller
             $status = ($p->total_skor ?? 0) >= $passingGrade ? 'Lulus' : 'Tidak Lulus';
             
             $exportData[] = [
-                'NIM' => $p->nim_username,
+                'Username' => $p->nim_username,
                 'Nama Mahasiswa' => $p->name,
                 'Status' => $status,
                 'Waktu Pengerjaan' => $p->total_waktu_formatted ?? '-',
@@ -807,20 +807,13 @@ class AdminController extends Controller
     {
         $rules = [
             'name' => 'required|string|max:255',
+            'nim_username' => 'required|string|max:255|unique:users,nim_username',
             'role' => 'required|in:Admin,Pengawas,Mahasiswa',
             'password' => 'required|string|min:8',
         ];
 
-        if ($request->role === 'Mahasiswa') {
-            $rules['nim_username'] = ['required', 'string', 'size:8', 'regex:/^[A-Za-z]/', 'unique:users,nim_username'];
-        } else {
-            $rules['nim_username'] = 'required|string|unique:users,nim_username';
-        }
-
         $request->validate($rules, [
-            'nim_username.size' => 'NIM harus tepat 8 karakter.',
-            'nim_username.regex' => 'Karakter pertama NIM harus berupa huruf.',
-            'nim_username.unique' => $request->role === 'Mahasiswa' ? 'NIM sudah terdaftar.' : 'Username sudah terdaftar.',
+            'nim_username.unique' => 'Username sudah terdaftar.',
         ]);
 
         User::create([
@@ -847,23 +840,16 @@ class AdminController extends Controller
 
         $rules = [
             'name' => 'required|string|max:255',
+            'nim_username' => 'required|string|max:255|unique:users,nim_username,'.$id.',user_id',
             'role' => 'required|in:Admin,Pengawas,Mahasiswa',
         ];
-
-        if ($request->role === 'Mahasiswa') {
-            $rules['nim_username'] = ['required', 'string', 'size:8', 'regex:/^[A-Za-z]/', 'unique:users,nim_username,'.$id.',user_id'];
-        } else {
-            $rules['nim_username'] = 'required|string|unique:users,nim_username,'.$id.',user_id';
-        }
 
         if ($request->filled('password')) {
             $rules['password'] = 'string|min:8';
         }
 
         $request->validate($rules, [
-            'nim_username.size' => 'NIM harus tepat 8 karakter.',
-            'nim_username.regex' => 'Karakter pertama NIM harus berupa huruf.',
-            'nim_username.unique' => $request->role === 'Mahasiswa' ? 'NIM sudah terdaftar.' : 'Username sudah terdaftar.',
+            'nim_username.unique' => 'Username sudah terdaftar.',
         ]);
 
         $user->name = $request->name;

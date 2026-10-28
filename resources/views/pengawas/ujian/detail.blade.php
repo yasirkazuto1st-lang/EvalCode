@@ -116,10 +116,12 @@
                     <p class="mb-1 opacity-75 small">{{ $exam->deskripsi }}</p>
                     <div class="d-flex flex-wrap align-items-center gap-3 opacity-75 fs-6 mt-1">
                         <span><i class="bi bi-clock me-1"></i> Durasi: {{ $exam->durasi }} Menit</span>
-                        <span><i class="bi bi-arrow-repeat me-1"></i> Token: Tiap {{ $exam->token_interval ?? 3 }} Menit</span>
+                        <span><i class="bi bi-arrow-repeat me-1"></i> Token: Tiap {{ $exam->token_interval ?? 3 }}
+                            Menit</span>
                         <span><i class="bi bi-check2-square me-1"></i> Passing Grade: {{ $exam->passing_grade }} Pts</span>
                         <span><i class="bi bi-file-text me-1"></i> {{ $exam->soals->count() }} Soal</span>
-                        <span><i class="bi bi-shield-lock me-1"></i> Batasi Pindah Tab: {{ $exam->tab_switch_protection ? ($exam->max_tab_switch . 'x') : 'Nonaktif' }}</span>
+                        <span><i class="bi bi-shield-lock me-1"></i> Batasi Pindah Tab:
+                            {{ $exam->tab_switch_protection ? $exam->max_tab_switch . 'x' : 'Nonaktif' }}</span>
                     </div>
                     <div class="d-flex flex-wrap align-items-center gap-1 mt-2">
                         <small class="opacity-75 me-1"><i class="bi bi-code-slash me-1"></i>Bahasa:</small>
@@ -303,8 +305,8 @@
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                     <div
                         class="card-header bg-white border-bottom-0 pt-4 pb-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
-                        <h5 class="fw-bold mb-0 text-nowrap"><i
-                                class="bi bi-people-fill text-primary me-2"></i> Monitoring Peserta Ujian</h5>
+                        <h5 class="fw-bold mb-0 text-nowrap"><i class="bi bi-people-fill text-primary me-2"></i>
+                            Monitoring Peserta Ujian</h5>
                         <div class="d-flex align-items-center gap-2 flex-wrap flex-sm-nowrap ms-auto">
                             <input type="text" id="searchParticipantInput"
                                 class="form-control form-control-sm search-input rounded-pill"
@@ -312,19 +314,20 @@
                             <div class="dropdown">
                                 <button
                                     class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm dropdown-toggle d-inline-flex align-items-center justify-content-center gap-1 text-nowrap"
-                                    type="button" id="filterDropdown" data-bs-toggle="dropdown"
-                                    aria-expanded="false">
+                                    type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="bi bi-funnel-fill"></i> <span id="activeFilterText">Urutkan: Normal</span>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end shadow rounded-4 border-0 py-2"
                                     aria-labelledby="filterDropdown" style="min-width: 230px;">
                                     <li><a class="dropdown-item filter-option active py-2 px-3 text-nowrap" href="#"
-                                            data-sort="normal"><i
-                                                class="bi bi-sort-numeric-down me-2 text-primary"></i> Normal (Skor Tertinggi)</a></li>
-                                    <li><a class="dropdown-item filter-option py-2 px-3 text-nowrap" href="#" data-sort="terbaru"><i
-                                                class="bi bi-clock-history me-2 text-success"></i> Submission Terakhir</a></li>
-                                    <li><a class="dropdown-item filter-option py-2 px-3 text-nowrap" href="#" data-sort="terlama"><i
-                                                class="bi bi-clock me-2 text-warning"></i> Submission Terlama</a></li>
+                                            data-sort="normal"><i class="bi bi-sort-numeric-down me-2 text-primary"></i>
+                                            Normal (Skor Tertinggi)</a></li>
+                                    <li><a class="dropdown-item filter-option py-2 px-3 text-nowrap" href="#"
+                                            data-sort="terbaru"><i class="bi bi-clock-history me-2 text-success"></i>
+                                            Submission Terakhir</a></li>
+                                    <li><a class="dropdown-item filter-option py-2 px-3 text-nowrap" href="#"
+                                            data-sort="terlama"><i class="bi bi-clock me-2 text-warning"></i> Submission
+                                            Terlama</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -334,13 +337,13 @@
                             <table id="participantTable" class="table table-hover align-middle mb-0">
                                 <thead class="table-light">
                                     <tr class="text-nowrap border-bottom border-primary border-2">
-                                        <th class="ps-4 py-3">NIM</th>
-                                        <th class="py-3">Nama Mahasiswa</th>
+                                        <th class="ps-4 py-3">Username</th>
+                                        <th class="py-3">Nama</th>
                                         <th class="py-3">Status</th>
                                         <th class="py-3">Total Skor</th>
                                         <th class="py-3">Waktu</th>
                                         <th class="py-3">Similarity Tertinggi</th>
-                                        <th class="pe-4 py-3 text-center">Aksi</th>
+                                        <th class="pe-4 py-3 text-center text-nowrap" style="width: 70px;">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody class="border-top-0">
@@ -371,7 +374,8 @@
                                             <td><strong>{{ $p->total_skor ?? 0 }}</strong> Pts</td>
                                             <td>
                                                 <span class="badge bg-light text-dark border font-monospace">
-                                                    <i class="bi bi-stopwatch me-1 text-primary"></i>{{ $p->total_waktu_formatted ?? '-' }}
+                                                    <i
+                                                        class="bi bi-stopwatch me-1 text-primary"></i>{{ $p->total_waktu_formatted ?? '-' }}
                                                 </span>
                                             </td>
                                             <td>
@@ -392,14 +396,17 @@
                                                     <span class="text-muted small">-</span>
                                                 @endif
                                             </td>
-                                            <td class="pe-4 text-center">
-                                                <button class="btn btn-sm btn-outline-primary rounded-pill px-3"
-                                                    type="button" data-bs-toggle="collapse"
+                                            <td class="pe-4 text-center text-nowrap" style="width: 70px;">
+                                                <button
+                                                    class="btn btn-sm btn-outline-primary rounded-circle d-inline-flex align-items-center justify-content-center shadow-xs"
+                                                    style="width: 32px; height: 32px; padding: 0;" type="button"
+                                                    data-bs-toggle="collapse"
                                                     data-bs-target="#collapseSubmissions{{ $p->user_id }}"
                                                     aria-expanded="false"
-                                                    aria-controls="collapseSubmissions{{ $p->user_id }}">
-                                                    Detail <i class="bi bi-chevron-down ms-1"
-                                                        style="transition: transform 0.3s ease; display: inline-block;"></i>
+                                                    aria-controls="collapseSubmissions{{ $p->user_id }}"
+                                                    title="Lihat Detail Submisi">
+                                                    <i class="bi bi-chevron-down"
+                                                        style="transition: transform 0.3s ease; display: inline-block; font-size: 0.85rem;"></i>
                                                 </button>
                                             </td>
                                         </tr>
@@ -486,7 +493,8 @@
                                                                 </thead>
                                                                 <tbody>
                                                                     @forelse($p->submissions as $s)
-                                                                        <tr class="submission-row" id="sub-row-{{ $s->submission_id }}"
+                                                                        <tr class="submission-row"
+                                                                            id="sub-row-{{ $s->submission_id }}"
                                                                             data-soal="{{ $s->soal_id }}">
                                                                             <td class="text-nowrap">
                                                                                 {{ \Carbon\Carbon::parse($s->created_at)->format('d M Y, H:i') }}
@@ -631,8 +639,7 @@
                                                                     </div>
                                                                     <form
                                                                         action="{{ route('pengawas.submission.override', $s->submission_id) }}"
-                                                                        method="POST"
-                                                                        class="override-score-form">
+                                                                        method="POST" class="override-score-form">
                                                                         @csrf
                                                                         <div class="modal-body">
                                                                             <p class="mb-2">Soal:
@@ -674,25 +681,30 @@
                                                         </div>
 
                                                         <!-- Delete Submission Modal -->
-                                                        <div class="modal fade" id="deleteSubmissionModal{{ $s->submission_id }}"
-                                                            tabindex="-1" aria-hidden="true">
+                                                        <div class="modal fade"
+                                                            id="deleteSubmissionModal{{ $s->submission_id }}" tabindex="-1"
+                                                            aria-hidden="true">
                                                             <div class="modal-dialog">
                                                                 <div class="modal-content rounded-4 border-0 shadow">
                                                                     <div class="modal-header border-0 pb-0">
                                                                         <h5 class="modal-title fw-bold"><i
-                                                                                class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Hapus Submisi?</h5>
+                                                                                class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Hapus
+                                                                            Submisi?</h5>
                                                                         <button type="button" class="btn-close"
                                                                             data-bs-dismiss="modal"></button>
                                                                     </div>
                                                                     <form
                                                                         action="{{ route('pengawas.submission.destroy', $s->submission_id) }}"
-                                                                        method="POST"
-                                                                        class="destroy-submission-form">
+                                                                        method="POST" class="destroy-submission-form">
                                                                         @csrf
                                                                         @method('DELETE')
                                                                         <div class="modal-body">
-                                                                            <p class="mb-2">Yakin ingin menghapus submisi dari <strong>{{ $p->name }}</strong> untuk soal <strong>{{ $s->nama_soal }}</strong>?</p>
-                                                                            <p class="text-muted small mb-0"><i class="bi bi-info-circle me-1"></i>Tindakan ini tidak dapat dibatalkan.</p>
+                                                                            <p class="mb-2">Yakin ingin menghapus submisi
+                                                                                dari <strong>{{ $p->name }}</strong> untuk
+                                                                                soal <strong>{{ $s->nama_soal }}</strong>?</p>
+                                                                            <p class="text-muted small mb-0"><i
+                                                                                    class="bi bi-info-circle me-1"></i>Tindakan
+                                                                                ini tidak dapat dibatalkan.</p>
                                                                         </div>
                                                                         <div class="modal-footer border-0 pt-0">
                                                                             <button type="button"
@@ -1365,12 +1377,15 @@
             if (participantTable) {
                 participantTable.addEventListener('show.bs.collapse', function(e) {
                     const activeCollapse = e.target;
-                    
+
                     // Hide all other collapses under the participantTable
                     const allCollapses = participantTable.querySelectorAll('.collapse.show');
                     allCollapses.forEach(collapseEl => {
                         if (collapseEl !== activeCollapse) {
-                            const bsCollapse = bootstrap.Collapse.getInstance(collapseEl) || new bootstrap.Collapse(collapseEl, { toggle: false });
+                            const bsCollapse = bootstrap.Collapse.getInstance(collapseEl) ||
+                                new bootstrap.Collapse(collapseEl, {
+                                    toggle: false
+                                });
                             bsCollapse.hide();
                         }
                     });
@@ -1450,9 +1465,11 @@
                                 // Remove the form
                                 form.remove();
                             }
-                            if (window.showToast) window.showToast('Kesempatan submit berhasil direset.', 'success');
+                            if (window.showToast) window.showToast(
+                                'Kesempatan submit berhasil direset.', 'success');
                         } else {
-                            if (window.showToast) window.showToast('Gagal mereset kesempatan: ' + (data.message || 'Terjadi kesalahan'), 'danger');
+                            if (window.showToast) window.showToast('Gagal mereset kesempatan: ' + (data
+                                .message || 'Terjadi kesalahan'), 'danger');
                             if (window.resetFormSubmitState) window.resetFormSubmitState(form);
                         }
                     })
@@ -1502,9 +1519,10 @@
                                     const table = row.closest('table');
                                     const userId = table.id.replace('table-sub-', '');
                                     row.remove();
-                                    
+
                                     // Get current filter value from the select
-                                    const collapseDiv = document.getElementById('collapseSubmissions' + userId);
+                                    const collapseDiv = document.getElementById('collapseSubmissions' +
+                                        userId);
                                     let filterVal = '';
                                     if (collapseDiv) {
                                         const select = collapseDiv.querySelector('select');
@@ -1512,7 +1530,7 @@
                                             filterVal = select.value;
                                         }
                                     }
-                                    
+
                                     // Re-run pagination
                                     if (window.paginateTable) {
                                         window.paginateTable(table.id, 5, filterVal);
@@ -1536,7 +1554,8 @@
 
                             if (window.showToast) window.showToast(data.message, 'success');
                         } else {
-                            if (window.showToast) window.showToast(data.message || 'Gagal menghapus submisi.', 'danger');
+                            if (window.showToast) window.showToast(data.message ||
+                                'Gagal menghapus submisi.', 'danger');
                             if (window.resetFormSubmitState) window.resetFormSubmitState(form);
                         }
                     })
@@ -1576,7 +1595,9 @@
                     })
                     .then(response => {
                         if (!response.ok) {
-                            return response.json().then(err => { throw err; });
+                            return response.json().then(err => {
+                                throw err;
+                            });
                         }
                         return response.json();
                     })
@@ -1588,17 +1609,19 @@
                                 if (row && row.cells && row.cells.length >= 6) {
                                     const newSkor = formData.get('skor');
                                     row.cells[3].textContent = newSkor;
-                                    
+
                                     const note = formData.get('justification_note') || '';
                                     const justificationCell = row.cells[5];
                                     if (justificationCell) {
-                                        justificationCell.innerHTML = note ? `<span class="text-muted small" title="${note}">${note.substring(0, 30)}${note.length > 30 ? '...' : ''}</span>` : '<span class="text-muted small">-</span>';
+                                        justificationCell.innerHTML = note ?
+                                            `<span class="text-muted small" title="${note}">${note.substring(0, 30)}${note.length > 30 ? '...' : ''}</span>` :
+                                            '<span class="text-muted small">-</span>';
                                     }
                                 }
                             } catch (domErr) {
                                 console.error('DOM update error:', domErr);
                             }
-                            
+
                             try {
                                 const modalEl = form.closest('.modal');
                                 if (modalEl) {
@@ -1610,19 +1633,22 @@
                             } catch (modalErr) {
                                 console.error('Modal hide error:', modalErr);
                             }
-                            
+
                             if (window.showToast) window.showToast(data.message, 'success');
                         } else {
-                            if (window.showToast) window.showToast(data.message || 'Gagal mengubah skor.', 'danger');
+                            if (window.showToast) window.showToast(data.message ||
+                                'Gagal mengubah skor.', 'danger');
                         }
                         if (window.resetFormSubmitState) window.resetFormSubmitState(form);
                     })
                     .catch(error => {
                         console.error('Error:', error);
                         if (error.errors) {
-                            if (window.showToast) window.showToast(Object.values(error.errors).flat().join('\n'), 'danger');
+                            if (window.showToast) window.showToast(Object.values(error.errors).flat()
+                                .join('\n'), 'danger');
                         } else {
-                            if (window.showToast) window.showToast('Terjadi kesalahan koneksi.', 'danger');
+                            if (window.showToast) window.showToast('Terjadi kesalahan koneksi.',
+                                'danger');
                         }
                         if (window.resetFormSubmitState) window.resetFormSubmitState(form);
                     });
