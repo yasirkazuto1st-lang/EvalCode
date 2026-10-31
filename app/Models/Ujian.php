@@ -325,12 +325,16 @@ class Ujian extends Model
     }
 
     /**
-     * Mendapatkan format jam:menit dimulainya freeze (misal: "14:48").
+     * Mendapatkan format jam:menit dimulainya freeze (misal: "14:48 WITA").
      */
-    public function getFreezeTimeFormatted(): string
+    public function getFreezeTimeFormatted(?string $timezone = 'Asia/Makassar'): string
     {
         $freezeTime = $this->getFreezeTime();
-        return $freezeTime ? $freezeTime->format('H:i') : '-';
+        if (!$freezeTime) {
+            return '-';
+        }
+        $tz = $timezone ?? config('app.timezone', 'Asia/Makassar');
+        return $freezeTime->copy()->setTimezone($tz)->format('H:i') . ' WITA';
     }
 
     protected static function booted()

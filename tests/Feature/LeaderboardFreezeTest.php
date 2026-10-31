@@ -89,7 +89,7 @@ class LeaderboardFreezeTest extends TestCase
         // Sesi dimulai 50 menit lalu, threshold adalah 48 menit. Sudah lewat => frozen!
         $this->assertTrue($exam->isCurrentlyFrozen());
         $this->assertNotNull($exam->getFreezeTime());
-        $this->assertEquals($startTime->copy()->addMinutes(48)->format('H:i'), $exam->getFreezeTimeFormatted());
+        $this->assertEquals($startTime->copy()->addMinutes(48)->setTimezone('Asia/Makassar')->format('H:i') . ' WITA', $exam->getFreezeTimeFormatted());
 
         // Jika ujian belum aktif
         $exam->status = 'closed';
