@@ -77,6 +77,8 @@ class AdminController extends Controller
             'bahasa_pemrograman.*' => 'in:python,c,cpp,java,dart',
             'tab_switch_protection' => 'nullable|boolean',
             'max_tab_switch' => 'nullable|integer|min:0',
+            'is_freeze_enabled' => 'nullable|boolean',
+            'freeze_threshold' => 'nullable|integer|min:1|max:99',
         ]);
 
         Ujian::create([
@@ -90,6 +92,8 @@ class AdminController extends Controller
             'bahasa_pemrograman' => !empty($request->bahasa_pemrograman) ? $request->bahasa_pemrograman : ['python', 'c', 'cpp', 'java', 'dart'],
             'tab_switch_protection' => $request->boolean('tab_switch_protection'),
             'max_tab_switch' => ($request->has('max_tab_switch') && $request->max_tab_switch !== null && $request->max_tab_switch !== '') ? (int) $request->max_tab_switch : 3,
+            'is_freeze_enabled' => $request->boolean('is_freeze_enabled'),
+            'freeze_threshold' => ($request->has('freeze_threshold') && $request->freeze_threshold !== null && $request->freeze_threshold !== '') ? (int) $request->freeze_threshold : 80,
         ]);
 
         return redirect()->route('admin.ujian.index')->with('success', 'Ujian berhasil ditambahkan.');
@@ -117,6 +121,8 @@ class AdminController extends Controller
             'bahasa_pemrograman.*' => 'in:python,c,cpp,java,dart',
             'tab_switch_protection' => 'nullable|boolean',
             'max_tab_switch' => 'nullable|integer|min:0',
+            'is_freeze_enabled' => 'nullable|boolean',
+            'freeze_threshold' => 'nullable|integer|min:1|max:99',
             'status' => 'nullable|in:active,closed,finished',
         ]);
 
@@ -132,6 +138,8 @@ class AdminController extends Controller
         $exam->bahasa_pemrograman = !empty($request->bahasa_pemrograman) ? $request->bahasa_pemrograman : ($exam->bahasa_pemrograman ?: ['python', 'c', 'cpp', 'java', 'dart']);
         $exam->tab_switch_protection = $request->boolean('tab_switch_protection');
         $exam->max_tab_switch = ($request->has('max_tab_switch') && $request->max_tab_switch !== null && $request->max_tab_switch !== '') ? (int) $request->max_tab_switch : 3;
+        $exam->is_freeze_enabled = $request->boolean('is_freeze_enabled');
+        $exam->freeze_threshold = ($request->has('freeze_threshold') && $request->freeze_threshold !== null && $request->freeze_threshold !== '') ? (int) $request->freeze_threshold : 80;
         $exam->status = $newStatus;
 
         if ($newStatus !== $oldStatus) {
@@ -191,6 +199,8 @@ class AdminController extends Controller
                     'bahasa_pemrograman' => $exam->getAllowedLanguages(),
                     'tab_switch_protection' => $exam->tab_switch_protection,
                     'max_tab_switch' => $exam->max_tab_switch,
+                    'is_freeze_enabled' => $exam->is_freeze_enabled,
+                    'freeze_threshold' => $exam->freeze_threshold,
                     'status' => $exam->status
                 ]
             ]);

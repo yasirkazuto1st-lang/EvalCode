@@ -62,11 +62,26 @@ class MahasiswaUjianController extends Controller
             return redirect()->route('dashboard')->with('error', 'Sesi ujian Anda belum aktif atau telah berakhir karena batas keluar tab. Silakan masukkan token ujian dari Pengawas.');
         }
 
-        // Leaderboard Calculation dengan Tie-Breaker
+        // Leaderboard Calculation dengan Tie-Breaker & Leaderboard Freeze
+        $isFrozen = $exam->isCurrentlyFrozen();
+        $frozenAt = $isFrozen ? $exam->getFreezeTime() : null;
+        $frozenTimeFormatted = $isFrozen ? $exam->getFreezeTimeFormatted() : null;
+        $authUserId = \Illuminate\Support\Facades\Auth::id();
+
         $subQuery = \Illuminate\Support\Facades\DB::table('submissions')
             ->join('soals', 'submissions.soal_id', '=', 'soals.soal_id')
-            ->where('soals.ujian_id', $exam->ujian_id)
-            ->select(
+            ->where('soals.ujian_id', $exam->ujian_id);
+
+        // Jika leaderboard dibekukan, submission peserta lain setelah waktu freeze tidak dihitung (skor sticky)
+        // Sedangkan peserta yang login (Auth::id()) tetap dapat melihat skor dan submisi terbarunya secara real-time
+        if ($isFrozen && $frozenAt) {
+            $subQuery->where(function ($q) use ($authUserId, $frozenAt) {
+                $q->where('submissions.user_id', $authUserId)
+                  ->orWhere('submissions.created_at', '<=', $frozenAt);
+            });
+        }
+
+        $subQuery->select(
                 'submissions.user_id', 
                 'submissions.soal_id', 
                 \Illuminate\Support\Facades\DB::raw('MAX(submissions.skor) as max_skor'),
@@ -164,7 +179,7 @@ class MahasiswaUjianController extends Controller
             }
         }
 
-        return view('mahasiswa.ujian.detail', compact('exam', 'leaderboard', 'acceptedCount', 'myTotalScore'));
+        return view('mahasiswa.ujian.detail', compact('exam', 'leaderboard', 'acceptedCount', 'myTotalScore', 'isFrozen', 'frozenTimeFormatted'));
     }
 
     /**

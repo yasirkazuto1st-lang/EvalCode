@@ -83,10 +83,23 @@
             <!-- Kiri: Leaderboard -->
             <div class="col-xl-4 d-none d-xl-block">
                 <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold mb-0"><i class="bi bi-trophy text-warning me-2"></i> Leaderboard</h5>
+                        @if (!empty($isFrozen) && $isFrozen)
+                            <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-2 py-1 small">
+                                <i class="bi bi-snow me-1"></i> Dibekukan
+                            </span>
+                        @endif
                     </div>
                     <div class="card-body p-3 mt-2 position-relative d-flex flex-column">
+                        @if (!empty($isFrozen) && $isFrozen)
+                            <div class="alert alert-info border-0 rounded-3 py-2 px-3 mb-3 d-flex align-items-center" 
+                                style="background: #e0f2fe; color: #0369a1; border-left: 4px solid #0284c7 !important;">
+                                <div class="small lh-sm" style="font-size: 0.8rem;">
+                                    ❄️ Leaderboard telah dibekukan sejak <strong>{{ $frozenTimeFormatted ?? '-' }}</strong>. Skor peserta lain tidak diperbarui.
+                                </div>
+                            </div>
+                        @endif
                         <!-- Scrollable Leaderboard List (Max 5 items view) -->
                         <div id="leaderboardScrollContainer" class="leaderboard-scroll pe-2 mb-1"
                             style="max-height: 340px; overflow-y: auto;">
@@ -292,6 +305,9 @@
                             data-bs-toggle="offcanvas" data-bs-target="#leaderboardOffcanvas"
                             aria-controls="leaderboardOffcanvas">
                             <i class="bi bi-trophy-fill me-1 text-warning"></i> Leaderboard
+                            @if (!empty($isFrozen) && $isFrozen)
+                                <span class="badge bg-info text-dark ms-1 py-0 px-1" style="font-size: 0.7rem;"><i class="bi bi-snow"></i> Frozen</span>
+                            @endif
                         </button>
                     </div>
                     <div class="card-body">
@@ -558,10 +574,23 @@
         <div class="offcanvas-header border-bottom bg-white">
             <h5 class="offcanvas-title fw-bold" id="leaderboardOffcanvasLabel">
                 <i class="bi bi-trophy text-warning me-2"></i> Leaderboard
+                @if (!empty($isFrozen) && $isFrozen)
+                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-2 py-1 small ms-1" style="font-size: 0.75rem;">
+                        <i class="bi bi-snow me-1"></i> Dibekukan
+                    </span>
+                @endif
             </h5>
             <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body p-3 bg-light">
+            @if (!empty($isFrozen) && $isFrozen)
+                <div class="alert alert-info border-0 rounded-3 py-2 px-3 mb-3 d-flex align-items-center" 
+                    style="background: #e0f2fe; color: #0369a1; border-left: 4px solid #0284c7 !important;">
+                    <div class="small lh-sm" style="font-size: 0.8rem;">
+                        ❄️ Leaderboard telah dibekukan sejak <strong>{{ $frozenTimeFormatted ?? '-' }}</strong>. Skor peserta lain tidak diperbarui.
+                    </div>
+                </div>
+            @endif
             <div class="leaderboard-scroll pe-1" style="max-height: calc(100vh - 100px); overflow-y: auto;">
                 <ul class="list-group list-group-flush pb-2">
                     @forelse($leaderboard as $idx => $lb)

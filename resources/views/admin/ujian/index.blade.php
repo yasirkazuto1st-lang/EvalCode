@@ -172,6 +172,23 @@
                                                             <div class="form-text text-muted" style="font-size: 0.75rem;">Isi <strong>0</strong> untuk mode tanpa toleransi (sekali keluar langsung dikeluarkan).</div>
                                                         </div>
                                                     </div>
+                                                    <div class="mb-3 p-3 rounded-3 border bg-light bg-opacity-50">
+                                                        <div class="form-check form-switch mb-2">
+                                                            <input class="form-check-input" type="checkbox" name="is_freeze_enabled" value="1" id="freezeLeaderboardEdit{{ $exam->ujian_id }}" {{ $exam->is_freeze_enabled ? 'checked' : '' }} onchange="toggleFreezeInput(this, 'freezeThresholdEditBox{{ $exam->ujian_id }}')">
+                                                            <label class="form-check-label fw-semibold" for="freezeLeaderboardEdit{{ $exam->ujian_id }}">
+                                                                <i class="bi bi-snow me-1 text-info"></i> Aktifkan Leaderboard Freeze
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-text small mb-2">Jika aktif, leaderboard untuk mahasiswa akan dibekukan ketika ujian mencapai persentase durasi tertentu.</div>
+                                                        <div id="freezeThresholdEditBox{{ $exam->ujian_id }}" style="{{ $exam->is_freeze_enabled ? '' : 'display: none;' }}">
+                                                            <label class="form-label small fw-semibold">Freeze Threshold (%)</label>
+                                                            <div class="input-group input-group-sm">
+                                                                <input type="number" name="freeze_threshold" class="form-control" value="{{ $exam->freeze_threshold ?? 80 }}" min="1" max="99" placeholder="80">
+                                                                <span class="input-group-text">%</span>
+                                                            </div>
+                                                            <div class="form-text text-muted" style="font-size: 0.75rem;">Contoh: <strong>80</strong> berarti leaderboard membeku saat ujian sudah berjalan 80% dari total durasi.</div>
+                                                        </div>
+                                                    </div>
                                                     <div class="mb-3">
                                                         <label class="form-label">Status</label>
                                                         <select name="status" class="form-select">
@@ -292,6 +309,23 @@
                                 <div class="form-text text-muted" style="font-size: 0.75rem;">Isi <strong>0</strong> untuk mode tanpa toleransi (sekali keluar langsung dikeluarkan).</div>
                             </div>
                         </div>
+                        <div class="mb-3 p-3 rounded-3 border bg-light bg-opacity-50">
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" name="is_freeze_enabled" value="1" id="freezeLeaderboardAdd" onchange="toggleFreezeInput(this, 'freezeThresholdAddBox')">
+                                <label class="form-check-label fw-semibold" for="freezeLeaderboardAdd">
+                                    <i class="bi bi-snow me-1 text-info"></i> Aktifkan Leaderboard Freeze
+                                </label>
+                            </div>
+                            <div class="form-text small mb-2">Jika aktif, leaderboard untuk mahasiswa akan dibekukan ketika ujian mencapai persentase durasi tertentu.</div>
+                            <div id="freezeThresholdAddBox" style="display: none;">
+                                <label class="form-label small fw-semibold">Freeze Threshold (%)</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="number" name="freeze_threshold" class="form-control" value="80" min="1" max="99" placeholder="80">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                                <div class="form-text text-muted" style="font-size: 0.75rem;">Contoh: <strong>80</strong> berarti leaderboard membeku saat ujian sudah berjalan 80% dari total durasi.</div>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
@@ -305,6 +339,13 @@
 
     <script>
         function toggleTabSwitchInput(checkbox, targetId) {
+            const box = document.getElementById(targetId);
+            if (box) {
+                box.style.display = checkbox.checked ? 'block' : 'none';
+            }
+        }
+
+        function toggleFreezeInput(checkbox, targetId) {
             const box = document.getElementById(targetId);
             if (box) {
                 box.style.display = checkbox.checked ? 'block' : 'none';

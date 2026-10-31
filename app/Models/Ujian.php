@@ -25,6 +25,8 @@ class Ujian extends Model
         'bahasa_pemrograman',
         'tab_switch_protection',
         'max_tab_switch',
+        'is_freeze_enabled',
+        'freeze_threshold',
         'started_at',
         'sisa_waktu',
     ];
@@ -37,6 +39,8 @@ class Ujian extends Model
         'bahasa_pemrograman' => 'array',
         'tab_switch_protection' => 'boolean',
         'max_tab_switch' => 'integer',
+        'is_freeze_enabled' => 'boolean',
+        'freeze_threshold' => 'integer',
         'started_at' => 'datetime',
     ];
 
@@ -280,6 +284,53 @@ class Ujian extends Model
                 \App\Models\Token::where('ujian_id', $this->ujian_id)->update(['status_aktif' => false]);
             }
         }
+    }
+
+    /**
+     * Menghitung waktu (timestamp Carbon) dimulainya pembekuan leaderboard pada sesi aktif saat ini.
+     */
+    public function getFreezeTime(): ?\Carbon\Carbon
+    {
+        if (!$this->is_freeze_enabled || !$this->started_at) {
+            return null;
+        }
+
+        $threshold = $this->freeze_threshold !== null ? (int) $this->freeze_threshold : 80;
+        $threshold = max(1, min(99, $threshold));
+
+        $startedAt = $this->started_at instanceof \Carbon\Carbon 
+            ? $this->started_at 
+            : \Carbon\Carbon::parse($this->started_at);
+
+        $freezeOffsetSeconds = (int) (($this->durasi * 60) * ($threshold / 100));
+
+        return $startedAt->copy()->addSeconds($freezeOffsetSeconds);
+    }
+
+    /**
+     * Memeriksa apakah leaderboard saat ini sedang dalam status beku (frozen) untuk peserta.
+     */
+    public function isCurrentlyFrozen(): bool
+    {
+        if (!$this->is_freeze_enabled || $this->status !== 'active' || !$this->started_at) {
+            return false;
+        }
+
+        $freezeTime = $this->getFreezeTime();
+        if (!$freezeTime) {
+            return false;
+        }
+
+        return \Carbon\Carbon::now()->gte($freezeTime);
+    }
+
+    /**
+     * Mendapatkan format jam:menit dimulainya freeze (misal: "14:48").
+     */
+    public function getFreezeTimeFormatted(): string
+    {
+        $freezeTime = $this->getFreezeTime();
+        return $freezeTime ? $freezeTime->format('H:i') : '-';
     }
 
     protected static function booted()
